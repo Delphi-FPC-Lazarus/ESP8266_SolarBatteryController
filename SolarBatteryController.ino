@@ -79,17 +79,17 @@ void loop() {
   ModStatic_WebInterface::Handle();
 
   // Lokaler Timer (verwendet NTP Client, der muss nicht separat aufgerufen werden)
-  //modNTPClient_Handle(); // nicht nötig
+  //modNTPClient_Handle(); // nicht nötig, von mod_Timer verwendet
   mod_Timer.Handle();
 
   // PVClient
-  //mod_PVClient.Handle(); // nicht nötig
+  //mod_PVClient.Handle(); // nicht nötig, bei Bedarf
 
   // IO 
-  //mod_IO.Handle(); // nicht nötig 
+  mod_IO.Handle();
 
   // Logger
-  //mod_Logger.Handle(); // nicht nötig
+  //mod_Logger.Handle(); // nicht nötig, bei Bedarf
 
   // Controller für die automatische Steuerung
   prg_Controller.Handle();

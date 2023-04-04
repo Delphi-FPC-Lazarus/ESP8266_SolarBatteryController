@@ -103,9 +103,9 @@ void Mod_Timer::calcRunTime() {
 
       // lastmillis nicht auf millis() setzen sondern Rechnen, da nicht davon auszugehen ist das diese Funktion genau auf Punkt aufgerufen wurde
       runTime.lastmillis += 60*1000 - runTime.ntp_millisoffset;  
-      Serial.print("gerechneter Zeitstempel:"); Serial.println(runTime.lastmillis);
+      //Serial.print("gerechneter Zeitstempel:"); Serial.println(runTime.lastmillis);
       if (runTime.lastmillis > millis()) { // lastmillis darf nie > milis() sein wegen überlauferkennung. Sollte bei der Rechnung nie der Fall sein aber falls doch... 
-        Serial.print("Korrektur:"); Serial.println(runTime.lastmillis);
+        //Serial.print("Korrektur:"); Serial.println(runTime.lastmillis);
         runTime.lastmillis = millis(); 
       }
       runTime.ntp_millisoffset = 0;  // ntp offset zurücksetzen

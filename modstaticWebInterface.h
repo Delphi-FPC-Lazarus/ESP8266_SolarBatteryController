@@ -63,7 +63,10 @@ void handleMenue() {
 } 
 
 String generateMenue() {
-  String menu = "Manuelles Steuerungsmenue<br>";
+  String menu = "<a href='?'>Refresh</a><br>";
+  menu += "<br>";
+  
+  menu += "Manuelles Steuerungsmenue<br>";
   if (mod_IO.IsManMode() == true) {
     menu += "!!! Manueller Modus ist aktiv !!!<br>";
   }
