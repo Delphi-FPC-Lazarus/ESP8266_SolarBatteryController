@@ -87,7 +87,7 @@ double Mod_PVClient::GetCurrentPower() {
 void Mod_PVClient::Init()
 {
   Serial.println("modPVClient_Init()");
-  Serial.println(GetCurrentPower());
+  //Serial.println(GetCurrentPower());
 }
 
 void Mod_PVClient::Handle()
