@@ -37,16 +37,20 @@ void handleMenue() {
 
     // Laden und Entladen
     if (server.argName(i) == "off") {
-      mod_IO.SetManMode();
+      mod_IO.SetManModeOn();
       mod_IO.Off();
     }
     if (server.argName(i) == "charge") {
-      mod_IO.SetManMode();
+      mod_IO.SetManModeOn();
       mod_IO.Charge();
     }
     if (server.argName(i) == "discharge") {
-      mod_IO.SetManMode();
+      mod_IO.SetManModeOn();
       mod_IO.Discharge();
+    }
+    if (server.argName(i) == "auto") {
+      mod_IO.Off();
+      mod_IO.SetManModeOff();
     }
   
     // Messen
@@ -71,6 +75,7 @@ String generateMenue() {
     menu += "!!! Manueller Modus ist aktiv !!!<br>";
   }
   menu += "<br>";
+  menu += "<a href='?auto'>Automatikmodus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";

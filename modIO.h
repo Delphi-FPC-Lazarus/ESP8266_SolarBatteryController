@@ -11,7 +11,8 @@ class Mod_IO {
     bool manMode;
     float VBattMeasurement();
   public:
-    void SetManMode();
+    void SetManModeOn();
+    void SetManModeOff();
     bool IsManMode();
     
     void Off();
@@ -61,10 +62,16 @@ float Mod_IO::VBattMeasurement() {
   return volt;
 }
 
-void Mod_IO::SetManMode() {
+void Mod_IO::SetManModeOn() {
   if (manMode != true) {
     manMode = true;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOManMode,0);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOManModeOn,0);
+  }
+}
+void Mod_IO::SetManModeOff() {
+  if (manMode != false) {
+    manMode = false;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOManModeOff,0);
   }
 }
 bool Mod_IO::IsManMode() {

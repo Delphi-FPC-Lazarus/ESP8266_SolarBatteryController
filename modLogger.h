@@ -6,26 +6,29 @@ const byte logCode_InternalLogInit  = 1;
 const String logMsg_InternalLogInit = "Log gestartet";
 
 // ------------------------------------------
-// Benutzerdefinierte Codes, Meldung muss in logMsg hinterlegt werden
+// Benutzerdefinierte Codes, Meldung muss hinterlegt werden
 const byte logCode_Startup          = 0;
 const byte logCode_StartupDone      = 1;
 
-const byte logCode_IOManMode        = 2;
+const byte logCode_IOManModeOn      = 2;
+const byte logCode_IOManModeOff     = 3;
 
-const byte logCode_IOoff            = 3;
-const byte logCode_IOcharge         = 4;
-const byte logCode_IOdischarge      = 5;
-const byte logCode_Measure          = 6;
-const byte logCode_VBattGes         = 7;
-const byte logCode_VBatt1           = 8;
-const byte logCode_VBatt2           = 9;
+const byte logCode_IOoff            = 4;
+const byte logCode_IOcharge         = 5;
+const byte logCode_IOdischarge      = 6;
+const byte logCode_Measure          = 7;
+const byte logCode_VBattGes         = 8;
+const byte logCode_VBatt1           = 9;
+const byte logCode_VBatt2           = 10;
+const byte logCode_PVPower          = 11;
 
-const int logMsgCount = 10;   // Antahl de definierten Meldungen, nicht Loggröße. Mindestens Anzahl der Einträge (merkt der Compiler) kann aber auch mehr sein
+const int logMsgCount = 12;   // Antahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "Controller Init...",
   "Controller Init abgeschlossen",
 
   "Manueller IO Modus aktiviert",
+  "Menueller IO Modus deaktiviert",
   
   "IO: Aus",
   "IO: Laden",
@@ -33,7 +36,8 @@ const String logMsg[logMsgCount] = {
   "Messen",
   "Batteriespannung (ges)",
   "Batteriespannung (Batt 1)",
-  "Batteriespannung (Batt 2)"
+  "Batteriespannung (Batt 2)",
+  "PV Leistung (Entscheidungsbasis)"
 };
 
 // --------------------------------------------
