@@ -14,13 +14,18 @@ using namespace tinyxml2;
 // --------------------------------------------
 class Mod_PVClient {
   private:
+    float manPVSimu;
+
     WiFiClient wifi;
     HttpClient httpclient = HttpClient(wifi, "192.168.1.251", 80);
 
     XMLDocument doc;
   public:
+    void manPVSimuOn(float value);
+    void manPVSimuOff();
+
     // Abfragefunktion für den externen Zugriff
-    double GetCurrentPower();
+    float GetCurrentPower(bool dolog); 
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
@@ -28,10 +33,21 @@ class Mod_PVClient {
 };
 Mod_PVClient mod_PVClient;
 
+void Mod_PVClient::manPVSimuOn(float value) {
+  manPVSimu = value;
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_manPVSimuOn, value);
+}
+void Mod_PVClient::manPVSimuOff() {
+  if (manPVSimu > 0) {
+    manPVSimu = -1;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_manPVSimuOff, 0);
+  }
+}
+
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-double Mod_PVClient::GetCurrentPower() {
+float Mod_PVClient::GetCurrentPower(bool dolog) {
   Serial.println("modPVClient_GetCurrentPower()");
 
   httpclient.get("/measurements.xml");
@@ -68,10 +84,20 @@ double Mod_PVClient::GetCurrentPower() {
       String ValueStr = String(ValueChar);
       ValueStr.replace("-nan", "0");
       ValueStr.replace("nan", "0");
-      double Value = ValueStr.toDouble();
+      float Value = ValueStr.toFloat();
+
+      if (manPVSimu > 0) {
+        Value = manPVSimu;
+      }
+ 
       //Serial.println("");
-      //Serial.println(Value);
+      Serial.println(Value);
       //Serial.println("");
+
+      if (dolog == true) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVPower,Value);
+      }
+
       return Value;
     }
 
@@ -88,6 +114,7 @@ void Mod_PVClient::Init()
 {
   Serial.println("modPVClient_Init()");
   //Serial.println(GetCurrentPower());
+  manPVSimu = -1;
 }
 
 void Mod_PVClient::Handle()

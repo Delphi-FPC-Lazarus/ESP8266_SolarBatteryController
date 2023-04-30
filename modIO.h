@@ -8,12 +8,18 @@
 // --------------------------------------------------
 class Mod_IO {
   private:
-    bool manMode;
+    bool manIOMode;
+    float manBattSimu;
+
     float VBattMeasurement();
+    float vBattToProz(float spgvalue);
   public:
-    void SetManModeOn();
-    void SetManModeOff();
-    bool IsManMode();
+    void SetmanIOModeOn();
+    void SetmanIOModeOff();
+    bool IsmanIOMode();
+
+    void SetmanBattSimuOn(float value);
+    void SetmanBattSimuOff();
     
     void Off();
     void Charge();
@@ -22,6 +28,7 @@ class Mod_IO {
     void MeasureBattGes(bool dolog);
     void MeasureBatt12(bool dolog);
 
+    float vBatt_gesProz;
     float vBatt_ges;
     float vBatt_Batt1;
     float vBatt_Batt2;
@@ -55,6 +62,23 @@ const uint8_t R_OFF = HIGH;      // Initialzustand R_ON
 
 // --------------------------------------------
 
+float Mod_IO::vBattToProz(float spgvalue) {
+  float proz = -1;
+
+  // Tabelle nach Herstellerangabe für LiFePo4 Akku 
+  if (spgvalue/2 >= 9.5)  { proz = 0; }
+  if (spgvalue/2 >= 10.8) { proz = 1; }
+  if (spgvalue/2 >= 12.8) { proz = 10; }
+  if (spgvalue/2 >= 12.9) { proz = 20; }
+  if (spgvalue/2 >= 13.0) { proz = 30; }
+  if (spgvalue/2 >= 13.1) { proz = 40; }
+  if (spgvalue/2 >= 13.2) { proz = 70; }
+  if (spgvalue/2 >= 13.3) { proz = 90; }
+  if (spgvalue/2 >= 13.4) { proz = 99; }
+  if (spgvalue/2 >= 13.5) { proz = 100; }
+
+  return proz;
+}
 
 float Mod_IO::VBattMeasurement() {
   int value = analogRead(ain_VBatt);
@@ -62,20 +86,32 @@ float Mod_IO::VBattMeasurement() {
   return volt;
 }
 
-void Mod_IO::SetManModeOn() {
-  if (manMode != true) {
-    manMode = true;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOManModeOn,0);
+void Mod_IO::SetmanIOModeOn() {
+  if (manIOMode != true) {
+    manIOMode = true;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOn,0);
   }
 }
-void Mod_IO::SetManModeOff() {
-  if (manMode != false) {
-    manMode = false;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOManModeOff,0);
+void Mod_IO::SetmanIOModeOff() {
+  if (manIOMode != false) {
+    manIOMode = false;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOff,0);
   }
 }
-bool Mod_IO::IsManMode() {
-  return manMode;
+bool Mod_IO::IsmanIOMode() {
+  return manIOMode;
+}
+
+void Mod_IO::SetmanBattSimuOn(float value) {
+  manBattSimu = value;
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+}
+
+void Mod_IO::SetmanBattSimuOff() {
+  if (manBattSimu > 0) {
+    manBattSimu = -1;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 0);
+  }
 }
 
 void Mod_IO::Off() {
@@ -121,11 +157,19 @@ void Mod_IO::MeasureBattGes(bool dolog) {
   }
 
   if (digitalRead(dout_VBattmode) == R_OFF) {
-    vBatt_ges = VBattMeasurement();
+    if (manBattSimu > 0) {
+      vBatt_ges = manBattSimu;
+    } else {
+      vBatt_ges = VBattMeasurement();
+    }
+    Serial.println(vBatt_ges);
+    vBatt_gesProz = vBattToProz(vBatt_ges);
+    Serial.println(vBatt_gesProz);
   }
 
   if (dolog == true) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, vBatt_gesProz);
   }  
 }
 
@@ -141,19 +185,31 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   digitalWrite(dout_VBattmode, R_OFF);
   delay(1000);
 
-  vBatt_ges = VBattMeasurement();
+  if (manBattSimu > 0) {
+    vBatt_ges = manBattSimu;
+  } else {
+    vBatt_ges = VBattMeasurement();
+  }
 
   digitalWrite(dout_VBattmode, R_ON);
   delay(1000);
 
-  vBatt_Batt1 = VBattMeasurement();
+  if (manBattSimu > 0) {
+    vBatt_Batt1 = manBattSimu / 2;
+  } else {
+    vBatt_Batt1 = VBattMeasurement();
+  }
+
   vBatt_Batt2 = vBatt_ges - vBatt_Batt1;
+
+  Serial.println(vBatt_Batt1);
+  Serial.println(vBatt_Batt2);
 
   digitalWrite(dout_VBattmode, R_OFF);
 
   if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1,0);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2,0);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1,vBatt_Batt1);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2,vBatt_Batt2);
   }  
 }
 
@@ -164,7 +220,8 @@ void Mod_IO::MeasureBatt12(bool dolog) {
 void Mod_IO::Init() {
   Serial.println("modIO_Init()");
 
-  manMode = false;
+  manIOMode = false;
+  manBattSimu = -1;
 
   // Digitale Ausgänge initialisieren
   pinMode(dout_VBattmode, OUTPUT); 

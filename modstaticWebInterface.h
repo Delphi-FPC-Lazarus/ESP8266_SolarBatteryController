@@ -8,6 +8,7 @@
 #include "modIO.h"
 #include "modLogger.h"
 #include "modTimer.h"
+#include "modPVClient.h"
 
 // --------------------------------------------
 class ModStatic_WebInterface {
@@ -34,31 +35,67 @@ void handleMenue() {
   Serial.println(message);
   */
   for (int i = 0; i < server.args(); i++) {
+    Serial.println("handleMenue()"+server.argName(i));
 
     // Laden und Entladen
     if (server.argName(i) == "off") {
-      mod_IO.SetManModeOn();
+      mod_IO.SetmanIOModeOn();
       mod_IO.Off();
     }
     if (server.argName(i) == "charge") {
-      mod_IO.SetManModeOn();
+      mod_IO.SetmanIOModeOn();
       mod_IO.Charge();
     }
     if (server.argName(i) == "discharge") {
-      mod_IO.SetManModeOn();
+      mod_IO.SetmanIOModeOn();
       mod_IO.Discharge();
     }
     if (server.argName(i) == "auto") {
       mod_IO.Off();
-      mod_IO.SetManModeOff();
+      mod_IO.SetmanIOModeOff();
     }
-  
+
+    if (server.argName(i) == "simubattoff") {
+      mod_IO.SetmanBattSimuOff();
+    }
+    if (server.argName(i) == "simubatta") {
+      mod_IO.SetmanBattSimuOn(27.0);
+    }
+    if (server.argName(i) == "simubattb") {
+      mod_IO.SetmanBattSimuOn(26.5);
+    }
+    if (server.argName(i) == "simubattc") {
+      mod_IO.SetmanBattSimuOn(26);
+    }
+    if (server.argName(i) == "simubattd") {
+      mod_IO.SetmanBattSimuOn(25.5);
+    }
+
+    if (server.argName(i) == "simupvoff") {
+      mod_PVClient.manPVSimuOff();
+    }
+    if (server.argName(i) == "simupva") {
+      mod_PVClient.manPVSimuOn(1);
+    }
+    if (server.argName(i) == "simupvb") {
+      mod_PVClient.manPVSimuOn(500);
+    }
+    if (server.argName(i) == "simupvc") {
+      mod_PVClient.manPVSimuOn(1000);
+    }
+
+    //if (server.argName(i) == "") {
+    //}
+
     // Messen
     if (server.argName(i) == "measurebattges") {
       mod_IO.MeasureBattGes(true);
     }
     if (server.argName(i) == "measurebatt12") {
       mod_IO.MeasureBatt12(true);
+    }
+    if (server.argName(i) == "measurepv") {
+      mod_PVClient.GetCurrentPower(true);
     }
  
   }
@@ -70,18 +107,33 @@ String generateMenue() {
   String menu = "<a href='?'>Refresh</a><br>";
   menu += "<br>";
   
-  menu += "Manuelles Steuerungsmenue<br>";
-  if (mod_IO.IsManMode() == true) {
-    menu += "!!! Manueller Modus ist aktiv !!!<br>";
+  menu += "<b>Manuelles Steuerungsmenue</b><br>";
+  if ( (mod_IO.IsmanIOMode() == true) ) {
+    menu += "Manuelle Steuerung ist aktiv!<br>";
   }
-  menu += "<br>";
+  menu += "Modus:&nbsp;";
   menu += "<a href='?auto'>Automatikmodus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";
-
+  menu += "<br>";
+  menu += "Batterie&nbsp;";
+  menu += "<a href='?simubattoff'>Messwert</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatta'>27</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubattb'>26.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubattc'>26</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubattd'>25.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "PV&nbsp;";
+  menu += "<a href='?simupvoff'>Messwert</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simupva'>1</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simupvb'>500</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simupvc'>1000</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "Messen&nbsp;";
   menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
 
   menu += "<br>";
 
