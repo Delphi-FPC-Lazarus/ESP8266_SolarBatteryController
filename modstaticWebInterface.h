@@ -21,6 +21,7 @@ class ModStatic_WebInterface {
 };
 
 ESP8266WebServer server(80);
+bool DoESPreset = false;
 
 // --------------------------------------------
 
@@ -37,6 +38,9 @@ void handleMenue() {
   for (int i = 0; i < server.args(); i++) {
     Serial.println("handleMenue()"+server.argName(i));
 
+    if (server.argName(i) == "reset") {
+      DoESPreset = true;
+    }
     // Laden und Entladen
     if (server.argName(i) == "off") {
       mod_IO.SetmanIOModeOn();
@@ -111,6 +115,8 @@ String generateMenue() {
   if ( (mod_IO.IsmanIOMode() == true) ) {
     menu += "Manuelle Steuerung ist aktiv!<br>";
   }
+  menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
   menu += "Modus:&nbsp;";
   menu += "<a href='?auto'>Automatikmodus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
@@ -194,6 +200,8 @@ void handleDebug() {
 void ModStatic_WebInterface::Init() {
   Serial.println("prgWebinterface_Init()");
 
+  DoESPreset = false;
+
   server.on("/", handleRoot);
   server.on("/debug", handleDebug);
 
@@ -204,6 +212,15 @@ void ModStatic_WebInterface::Init() {
 void ModStatic_WebInterface::Handle() {
   // zyklisch aufgerufen
   server.handleClient();
+
+  if (DoESPreset == true) {
+    // warten, damit Client in jedem Falle noch die Antwort bekommt
+    Serial.println("delay");
+    delay(3000);
+    // Controller neu starten
+    Serial.println("ESP reset/restart");
+    ESP.restart(); //ESP.reset(); // restart ist der saubere Neustart
+  }
 }
 
 // --------------------------------------------

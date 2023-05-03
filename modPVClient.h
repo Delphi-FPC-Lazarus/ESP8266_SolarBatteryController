@@ -35,12 +35,12 @@ Mod_PVClient mod_PVClient;
 
 void Mod_PVClient::manPVSimuOn(float value) {
   manPVSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_manPVSimuOn, value);
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVSimuOn, value);
 }
 void Mod_PVClient::manPVSimuOff() {
   if (manPVSimu > 0) {
     manPVSimu = -1;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_manPVSimuOff, 0);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVSimuOff, 0);
   }
 }
 

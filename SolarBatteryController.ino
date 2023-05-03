@@ -66,6 +66,8 @@ void setup() {
   prg_Controller.Init(); 
 
   mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_StartupDone, 0); // <- Fertig
+
+  Serial.println("------------------------------------------------");
 }
 
 void loop() {

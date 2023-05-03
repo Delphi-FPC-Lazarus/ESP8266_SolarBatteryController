@@ -8,29 +8,39 @@ const String logMsg_InternalLogInit = "Log gestartet";
 // ------------------------------------------
 // Benutzerdefinierte Codes, Meldung muss hinterlegt im darauf folgenden Array werden
 // (da diese Codes nur zur Laufzeit gültig sind und nicht permanent gespeichert werden, können sie nachträglich geändert werden solange das Array mit angepasst wird)
-const byte logCode_Startup          = 0;
-const byte logCode_StartupDone      = 1;
+const byte logCode_Startup              = 0;
+const byte logCode_StartupDone          = 1;
 
-const byte logCode_IOoff            = 2;
-const byte logCode_IOcharge         = 3;
-const byte logCode_IOdischarge      = 4;
+const byte logCode_IOoff                = 2;
+const byte logCode_IOcharge             = 3;
+const byte logCode_IOdischarge          = 4;
 
-const byte logCode_Measure          = 5;
-const byte logCode_VBattGes         = 6;
-const byte logCode_VBattGesProz     = 7;
-const byte logCode_VBatt1           = 8;
-const byte logCode_VBatt2           = 9;
-const byte logCode_PVPower          = 10;
+const byte logCode_Measure              = 5;
+const byte logCode_VBattGes             = 6;
+const byte logCode_VBattGesProz         = 7;
+const byte logCode_VBatt1               = 8;
+const byte logCode_VBatt2               = 9;
+const byte logCode_PVPower              = 10;
 
-const byte logCode_IOmanIOModeOn    = 11;
-const byte logCode_IOmanIOModeOff   = 12;
+const byte logCode_IOmanIOModeOn        = 11;
+const byte logCode_IOmanIOModeOff       = 12;
 
-const byte logCode_IOmanBattSimuOn  = 13;
-const byte logCode_IOmanBattSimuOff = 14;
-const byte logCode_manPVSimuOn      = 15;
-const byte logCode_manPVSimuOff     = 16;
+const byte logCode_IOmanBattSimuOn      = 13;
+const byte logCode_IOmanBattSimuOff     = 14;
+const byte logCode_PVSimuOn             = 15;
+const byte logCode_PVSimuOff            = 16;
 
-const int logMsgCount = 17;   // Antahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_SystemFailure        = 17;
+
+const byte logCode_StartCharge          = 18;
+const byte logCode_StartDischarge       = 19;
+const byte logCode_StartChargeEmergency = 20;
+
+const byte logCode_StopCharge           = 21;
+const byte logCode_StopDischarge        = 22;
+const byte logCode_StopChargeEmergency  = 23;
+
+const int logMsgCount = 24;   // Antahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "Controller Init...",
   "Controller Init abgeschlossen",
@@ -44,7 +54,7 @@ const String logMsg[logMsgCount] = {
   "Batteriespannung (ges proz)",
   "Batteriespannung (Batt 1)",
   "Batteriespannung (Batt 2)",
-  "PV Leistung (Entscheidungsbasis)",
+  "PV Leistung",
 
   "Manueller IO Modus aktiviert",
   "Menueller IO Modus deaktiviert",
@@ -52,7 +62,17 @@ const String logMsg[logMsgCount] = {
   "Batteriesimulation an",
   "Batteriesimulation aus",
   "PVsimulation an",
-  "PVsimulation aus"
+  "PVsimulation aus",
+
+  "Steurung auf Fehlerzustand",
+
+  "Ladevorgang gestartet",
+  "Entladevorgang gestartet",
+  "Ladevorgang gestartet (Tiefentladeschutz)",
+
+  "Ladevorgang beendet",
+  "Entladevorgang beendet",
+  "Ladevorgang beendet (Tiefentladeschutz)"
 };
 
 // --------------------------------------------
