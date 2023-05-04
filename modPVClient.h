@@ -51,11 +51,18 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
   Serial.println("modPVClient_GetCurrentPower()");
 
   delay(1); // Yield()
+  Serial.println("http get");
   httpclient.get("/measurements.xml");
+  Serial.println("http get done");
   delay(1); // Yield()
 
   // read the status code and body of the response
   int statusCode = httpclient.responseStatusCode();
+  Serial.println("Responsecode:" + String(statusCode));
+  if ( statusCode != 200 ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVRequestFail,0);
+    return -1;
+  }
   String response = httpclient.responseBody();
 
   //Serial.print("Status code: "); Serial.println(statusCode);
@@ -64,6 +71,8 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
   response.replace("<?xml version='1.0' encoding='UTF-8'?>", "");
   const char* responsexmlchar = response.c_str();  
 	doc.Parse(responsexmlchar);
+
+  delay(1); // Yield()
 
   XMLElement* rootElement = doc.RootElement(); 
   //Serial.println(rootElement->Name());

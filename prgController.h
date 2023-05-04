@@ -63,6 +63,7 @@ boolean Prg_Controller::isDay() {
   // Ist es Tag? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert am Tag immer über 0 (sogar bei Schnee)
   delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  if ( pvPower < 0 ) { return false; } // Fehler
   delay(1); // Yield()
   //Serial.println(pvPower); // Debug
   if (pvPower > pvDayNight) {
@@ -76,6 +77,7 @@ boolean Prg_Controller::isNight() {
   // Ist es Nacht? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert nur in der Nacht wirklich 0
   delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  if ( pvPower < 0 ) { return false; } // Fehler
   delay(1); // Yield()
   //Serial.println(pvPower); // Debug
   if (pvPower < pvDayNight) {
@@ -90,6 +92,7 @@ bool Prg_Controller::triggerStatCharge() {
   // und auch nur wenn die Batterie nicht voll ist
   delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  if ( pvPower < 0 ) { return false; } // Fehler
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
@@ -108,6 +111,7 @@ bool Prg_Controller::triggerStopCharge() {
   // Abgebrochen werden muss wenn die PV Leistung nicht mehr ausreichen würde den Akku mit Solarenergie zu laden
   delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  if ( pvPower < 0 ) { return false; } // Fehler
   delay(1); // Yield()
   if ( isNight() || (pvPower < pvLoadPower) ) {
     return true;

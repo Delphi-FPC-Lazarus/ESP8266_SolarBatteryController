@@ -40,7 +40,9 @@ const byte logCode_StopCharge           = 21;
 const byte logCode_StopDischarge        = 22;
 const byte logCode_StopChargeEmergency  = 23;
 
-const int logMsgCount = 24;   // Antahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_PVRequestFail        = 24;
+
+const int logMsgCount = 25;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -72,7 +74,9 @@ const String logMsg[logMsgCount] = {
 
   "<b><font color=green>Ladevorgang beendet</font></b>",
   "<b><font color=green>Entladevorgang beendet</font></b>",
-  "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>"
+  "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>",
+
+  "<b><font color=red>PV Abfrage fehlgeschlagen</font></b>"
 };
 
 // --------------------------------------------
