@@ -50,7 +50,9 @@ void Mod_PVClient::manPVSimuOff() {
 float Mod_PVClient::GetCurrentPower(bool dolog) {
   Serial.println("modPVClient_GetCurrentPower()");
 
+  delay(1); // Yield()
   httpclient.get("/measurements.xml");
+  delay(1); // Yield()
 
   // read the status code and body of the response
   int statusCode = httpclient.responseStatusCode();
@@ -101,6 +103,7 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
       return Value;
     }
 
+    delay(1); // Yield()
     measurementNode = measurementNode->NextSibling();
   }
 
