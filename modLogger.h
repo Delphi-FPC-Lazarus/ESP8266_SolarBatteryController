@@ -42,8 +42,8 @@ const byte logCode_StopChargeEmergency  = 23;
 
 const int logMsgCount = 24;   // Antahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
-  "Controller Init...",
-  "Controller Init abgeschlossen",
+  "<b><font color=green>Controller Init...</font></b>",
+  "<b><font color=green>Controller Init abgeschlossen</font></b>",
 
   "IO: Aus",
   "IO: Laden",
@@ -56,23 +56,23 @@ const String logMsg[logMsgCount] = {
   "Batteriespannung (Batt 2)",
   "PV Leistung",
 
-  "Manueller IO Modus aktiviert",
-  "Menueller IO Modus deaktiviert",
+  "<b>Manueller IO Modus aktiviert</b>",
+  "<b>Menueller IO Modus deaktiviert</b>",
   
-  "Batteriesimulation an",
-  "Batteriesimulation aus",
-  "PVsimulation an",
-  "PVsimulation aus",
+  "<b>Batteriesimulation an</b>",
+  "<b>Batteriesimulation aus</b>",
+  "<b>PVsimulation an</b>",
+  "<b>PVsimulation aus</b>",
 
-  "Steurung auf Fehlerzustand",
+  "<b><font color=red>Steurung auf Fehlerzustand</font></b>",
 
-  "Ladevorgang gestartet",
-  "Entladevorgang gestartet",
-  "Ladevorgang gestartet (Tiefentladeschutz)",
+  "<b><font color=green>Ladevorgang gestartet</font></b>",
+  "<b><font color=green>Entladevorgang gestartet</font></b>",
+  "<b><font color=orange>Ladevorgang gestartet (Tiefentladeschutz)</font></b>",
 
-  "Ladevorgang beendet",
-  "Entladevorgang beendet",
-  "Ladevorgang beendet (Tiefentladeschutz)"
+  "<b><font color=green>Ladevorgang beendet</font></b>",
+  "<b><font color=green>Entladevorgang beendet</font></b>",
+  "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>"
 };
 
 // --------------------------------------------

@@ -29,6 +29,8 @@ class Prg_Controller {
     bool triggerStatDischarge();
     bool triggerStopDischarge();
   public:
+    String GetStateString();
+
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
     void Handle();
@@ -46,7 +48,9 @@ const float battStopDischarge=30;   // Entladevoragnag stoppen
 // --------------------------------------------
 
 bool Prg_Controller::CheckFailure() {
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   // Sicherung geflogen oder Akkufehler, hier können später noch weiter Bedingungen aufgenommen werden
   if (mod_IO.vBatt_gesProz < 0) {
     return true;
@@ -57,7 +61,9 @@ bool Prg_Controller::CheckFailure() {
 
 boolean Prg_Controller::isDay() {
   // Ist es Tag? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert am Tag immer über 0 (sogar bei Schnee)
+  delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  delay(1); // Yield()
   //Serial.println(pvPower); // Debug
   if (pvPower > pvDayNight) {
     return true;
@@ -68,7 +74,9 @@ boolean Prg_Controller::isDay() {
 
 boolean Prg_Controller::isNight() {
   // Ist es Nacht? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert nur in der Nacht wirklich 0
+  delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  delay(1); // Yield()
   //Serial.println(pvPower); // Debug
   if (pvPower < pvDayNight) {
     return true;
@@ -80,8 +88,11 @@ boolean Prg_Controller::isNight() {
 bool Prg_Controller::triggerStatCharge() {
   // Starttrigger über PV Leistung (damit startet das nicht gleich früh sondern erst wenn genügend Sonne da ist)
   // und auch nur wenn die Batterie nicht voll ist
+  delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   if ( isDay() && (pvPower >= pvLoadPower) && (mod_IO.vBatt_gesProz <= battFull) ) {
     return true;
   }
@@ -95,7 +106,9 @@ bool Prg_Controller::triggerStopCharge() {
   // und bei der entsprechenden Ladeschlussspannung abschaltet. Deshalb hier nicht auf auf Spannung triggern.
   // (ggf. wird hier später noch eine Erkennung eingebaut wenn das Ladegerät abgeschaltet hat)
   // Abgebrochen werden muss wenn die PV Leistung nicht mehr ausreichen würde den Akku mit Solarenergie zu laden
+  delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
+  delay(1); // Yield()
   if ( isNight() || (pvPower < pvLoadPower) ) {
     return true;
   }
@@ -107,7 +120,9 @@ bool Prg_Controller::triggerStopCharge() {
 bool Prg_Controller::triggerStatChargeEmergency() {
   // Starttrigger für Notfall Laden wenn der Akku zu weit runter ist, egal ob die Sonne scheint oder nicht
   // aber damit das nicht gleich ganz in der früh passiert, über Timer erst auf Mittag prüfen
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   if ( isDay() && (mod_IO.vBatt_gesProz <= battEmergencyStart) && (mod_Timer.runTime.h >= 12) ) {
     return true;
   }
@@ -118,7 +133,9 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 
 bool Prg_Controller::triggerStopChargeEmergency() {
   // Stoptrigger für das Notfall Laden, egal ob die Sonne scheint oder nicht
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   if ( isNight() || (mod_IO.vBatt_gesProz >= battEmergencyStop) ) {
     return true;
   }
@@ -129,7 +146,9 @@ bool Prg_Controller::triggerStopChargeEmergency() {
 
 bool Prg_Controller::triggerStatDischarge() {
   // Entladen über die Nachterkennung und wenn der Akku entsprechend gefüllt ist
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   if ( isNight() && (mod_IO.vBatt_gesProz > battApplicable) ) {
     return true;
   }
@@ -141,12 +160,41 @@ bool Prg_Controller::triggerStatDischarge() {
 bool Prg_Controller::triggerStopDischarge() {
   // Es muss unbedingt ein Akku mit BMS verwendet werden, welches den Entladevorgang überwacht
   // gestoppt wenn entweder die EntladeSpannung (höher als vom BMS um den Akku zu schonen) erreicht ist oder es wieder Tag ist
+  delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
+  delay(1); // Yield()
   if ( isDay() || (mod_IO.vBatt_gesProz < battStopDischarge) ) {
     return true;
   }
   else {
     return false;
+  }
+}
+
+// --------------------------------------------
+String Prg_Controller::GetStateString() {
+  switch (state) {
+      // Fehlerzustand
+      case State_Failure:
+        return "<font color=red>Systemfehler</font>";
+        break;
+      // Standby Zustand        
+      case State_Standby:
+        return "Standby";
+        break;
+      // Aktive Zustände
+      case State_Charge:      
+        return "<font color=green>Laden</font>";
+        break;
+      case State_ChargeEmergency:
+        return "<font color=orange>Laden (Tiefentladeschutz)</font>";
+        break;
+      case State_Discharge:
+        return "<font color=green>Entladen/Einspeisen</font>";
+        break;
+      default:
+        return "<font color=red>Status unbekannt</font>";
+        break;
   }
 }
 

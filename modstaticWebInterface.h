@@ -9,6 +9,7 @@
 #include "modLogger.h"
 #include "modTimer.h"
 #include "modPVClient.h"
+#include "prgController.h"
 
 // --------------------------------------------
 class ModStatic_WebInterface {
@@ -115,7 +116,6 @@ String generateMenue() {
   if ( (mod_IO.IsmanIOMode() == true) ) {
     menu += "Manuelle Steuerung ist aktiv!<br>";
   }
-  menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Modus:&nbsp;";
   menu += "<a href='?auto'>Automatikmodus</a>&nbsp;&nbsp;&nbsp;";
@@ -140,7 +140,9 @@ String generateMenue() {
   menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
-
+  menu += "<br>";
+  menu += "<hr>";
+  menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
 
   return menu;
@@ -162,10 +164,14 @@ void handleRoot() {
   message += "<br>";
   message += "IP: ";
   message += String(WiFi.localIP().toString()) + "<br>";
-  message += "<br>";
   message += "Freier Heap: "+String(ESP.getFreeHeap())+" bytes<br>";
-  message += "<hr><br>";
-  message += "Lokale Zeit: " + mod_Timer.runTimeAsString() + "<br>";
+  message += "<hr>";
+  message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString();
+  message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+  message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
+  message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+  mod_IO.MeasureBattGes(false);
+  message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
 
   message += "<hr><br>";
   message += "Log:<br>";
