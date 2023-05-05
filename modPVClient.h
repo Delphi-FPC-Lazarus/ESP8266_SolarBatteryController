@@ -74,11 +74,19 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
 
   delay(1); // Yield()
 
+  // root
   XMLElement* rootElement = doc.RootElement(); 
+  if (rootElement == NULL) { Serial.println("rootElement Null"); return -1; }
   //Serial.println(rootElement->Name());
+  
+  // device
   XMLNode* deviceNode = rootElement->FirstChild();
+  if (deviceNode == NULL) { Serial.println("deviceNode Null"); return -1; }
   //Serial.println(deviceNode->ToElement()->Attribute("DateTime"));
+
+  // measurements
   XMLNode* measurementsNode = deviceNode->FirstChild();
+  if (measurementsNode == NULL) { Serial.println("measurementsNode Null"); return -1; }
 
   // Measurement Elemente
   XMLNode* measurementNode = measurementsNode->FirstChild();
