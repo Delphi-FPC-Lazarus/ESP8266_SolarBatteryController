@@ -19,6 +19,7 @@
 #include "modNTPClient.h"
 #include "modTimer.h"
 #include "modPVClient.h"
+#include "modEMeterClient.h"
 #include "modIO.h"
 #include "modLogger.h"
 
@@ -57,6 +58,9 @@ void setup() {
   // PV Client
   mod_PVClient.Init();
 
+  // EMeter Client
+  mod_EMeterClient.Init();
+
   // I/O
   mod_IO.Init();
 
@@ -84,8 +88,11 @@ void loop() {
   //modNTPClient_Handle(); // nicht nötig, von mod_Timer verwendet
   mod_Timer.Handle();
 
-  // PVClient
+  // PV Client
   //mod_PVClient.Handle(); // nicht nötig, bei Bedarf
+
+  // EMeter Client
+  //mod_EMeterClient.Handle(); // nicht nötig, bei Bedarf
 
   // IO 
   mod_IO.Handle();

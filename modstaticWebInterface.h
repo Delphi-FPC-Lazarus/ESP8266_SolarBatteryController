@@ -9,6 +9,7 @@
 #include "modLogger.h"
 #include "modTimer.h"
 #include "modPVClient.h"
+#include "modEMeterClient.h"
 #include "prgController.h"
 
 // --------------------------------------------
@@ -39,9 +40,11 @@ void handleMenue() {
   for (int i = 0; i < server.args(); i++) {
     Serial.println("handleMenue()"+server.argName(i));
 
+    // Controller Neustart
     if (server.argName(i) == "reset") {
       DoESPreset = true;
     }
+
     // Laden und Entladen
     if (server.argName(i) == "off") {
       mod_IO.SetmanIOModeOn();
@@ -60,6 +63,7 @@ void handleMenue() {
       mod_IO.SetmanIOModeOff();
     }
 
+    // Batterie Simulation
     if (server.argName(i) == "simubattoff") {
       mod_IO.SetmanBattSimuOff();
     }
@@ -76,6 +80,7 @@ void handleMenue() {
       mod_IO.SetmanBattSimuOn(25.5);
     }
 
+    // PV Simulation
     if (server.argName(i) == "simupvoff") {
       mod_PVClient.manPVSimuOff();
     }
@@ -87,6 +92,20 @@ void handleMenue() {
     }
     if (server.argName(i) == "simupvc") {
       mod_PVClient.manPVSimuOn(1000);
+    }
+
+    // Emeter Simulation
+    if (server.argName(i) == "simuemeteroff") {
+      mod_EMeterClient.manEMeterSimuOff();
+    }
+    if (server.argName(i) == "simuemetera") {
+      mod_EMeterClient.manEMeterSimuOn(-600);
+    }
+    if (server.argName(i) == "simuemeterb") {
+      mod_EMeterClient.manEMeterSimuOn(-300);
+    }
+    if (server.argName(i) == "simuemeterc") {
+      mod_EMeterClient.manEMeterSimuOn(1000);
     }
 
     //if (server.argName(i) == "") {
@@ -102,6 +121,9 @@ void handleMenue() {
     if (server.argName(i) == "measurepv") {
       mod_PVClient.GetCurrentPower(true);
     }
+    if (server.argName(i) == "measureemeter") {
+      mod_EMeterClient.GetCurrentPower(true);
+    }
  
   }
 
@@ -109,38 +131,48 @@ void handleMenue() {
 } 
 
 String generateMenue() {
+
   String menu = "<a href='?'>Refresh</a><br>";
+  menu += "<br>";
+
+  menu += "<b>Messen</b><br>";
+  menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
   menu += "<br>";
   
   menu += "<b>Manuelles Steuerungsmenue</b><br>";
   if ( (mod_IO.IsmanIOMode() == true) ) {
     menu += "Manuelle Steuerung ist aktiv!<br>";
   }
-  menu += "<br>";
   menu += "Modus:&nbsp;";
-  menu += "<a href='?auto'>Automatikmodus</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?auto'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Batterie&nbsp;";
-  menu += "<a href='?simubattoff'>Messwert</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubattoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatta'>27</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattb'>26.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattc'>26</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattd'>25.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "PV&nbsp;";
-  menu += "<a href='?simupvoff'>Messwert</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simupvoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simupva'>1</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simupvb'>500</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simupvc'>1000</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
-  menu += "Messen&nbsp;";
-  menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
+  menu += "Emeter&nbsp;";
+  menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemetera'>-600</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemeterb'>-300</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemeterc'>1000</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
+
   menu += "<hr>";
   menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";

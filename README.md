@@ -16,7 +16,6 @@ modStatic_WebInterface: web interface\
 modStatic_Wifi: network (require WLANZUGANGSDATEN.h which defines STASSID and STAPSK for your network) \
 prgController: automatic solar battery controller\
 SolarBatteryController: program initialization\
-\
 
 # License
 
@@ -24,7 +23,7 @@ This Source Code Form is subject to the terms of the Mozilla Public \
 License, v. 2.0. If a copy of the MPL was not distributed with this \
 file, You can obtain one at https://mozilla.org/MPL/2.0/. \
 THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY \
-Author: Peter Lorenz \
+Author: Peter Lorenz 
 
 # You found the code useful? Donate!
 

@@ -21,14 +21,14 @@ const byte logCode_VBattGesProz         = 7;
 const byte logCode_VBatt1               = 8;
 const byte logCode_VBatt2               = 9;
 const byte logCode_PVPower              = 10;
+const byte logCode_EMeterPower          = 11;
 
-const byte logCode_IOmanIOModeOn        = 11;
-const byte logCode_IOmanIOModeOff       = 12;
+const byte logCode_IOmanIOModeOn        = 12;
+const byte logCode_IOmanIOModeOff       = 13;
 
-const byte logCode_IOmanBattSimuOn      = 13;
-const byte logCode_IOmanBattSimuOff     = 14;
-const byte logCode_PVSimuOn             = 15;
-const byte logCode_PVSimuOff            = 16;
+const byte logCode_IOmanBattSimuOn      = 14;
+const byte logCode_IOmanBattSimuOff     = 15;
+const byte logCode_Free1                = 16;
 
 const byte logCode_SystemFailure        = 17;
 
@@ -40,9 +40,15 @@ const byte logCode_StopCharge           = 21;
 const byte logCode_StopDischarge        = 22;
 const byte logCode_StopChargeEmergency  = 23;
 
-const byte logCode_PVRequestFail        = 24;
+const byte logCode_PVSimuOn             = 24;
+const byte logCode_PVSimuOff            = 25;
+const byte logCode_PVRequestFail        = 26;
 
-const int logMsgCount = 25;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_EMeterSimuOn         = 27;
+const byte logCode_EMeterSimuOff        = 28;
+const byte logCode_EMeterRequestFail    = 29;
+
+const int logMsgCount = 30;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -57,14 +63,13 @@ const String logMsg[logMsgCount] = {
   "Batteriespannung (Batt 1)",
   "Batteriespannung (Batt 2)",
   "PV Leistung",
+  "Bezug-/Einspeise Leistung",
 
   "<b>Manueller IO Modus aktiviert</b>",
-  "<b>Menueller IO Modus deaktiviert</b>",
-  
+  "<b>Menueller IO Modus deaktiviert</b>",  
   "<b>Batteriesimulation an</b>",
   "<b>Batteriesimulation aus</b>",
-  "<b>PVsimulation an</b>",
-  "<b>PVsimulation aus</b>",
+  "(free)",
 
   "<b><font color=red>Steurung auf Fehlerzustand</font></b>",
 
@@ -76,7 +81,13 @@ const String logMsg[logMsgCount] = {
   "<b><font color=green>Entladevorgang beendet</font></b>",
   "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>",
 
-  "<b><font color=red>PV Abfrage fehlgeschlagen</font></b>"
+  "<b>PVsimulation an</b>",
+  "<b>PVsimulation aus</b>",
+  "<b><font color=red>PV Abfrage fehlgeschlagen</font></b>",
+
+  "<b>EMetersimulation an</b>",
+  "<b>EMetersimulation aus</b>",
+  "<b><font color=red>EMeter Abfrage fehlgeschlagen</font></b>"
 };
 
 // --------------------------------------------
