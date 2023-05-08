@@ -39,7 +39,9 @@ class Prg_Controller {
 Prg_Controller prg_Controller;
 
 const float pvDayNight=5;           // Tag Nacht Erkennung über die PV Anlage
-const float pvLoadPower=750;        // Leistung der PV Anlage die zu Laden benötigt wird (Ladeleistung+HausStandby in erster Näheerung)     
+
+const float emeterChargePower=-500; // Einspeisung (negativ) entsprechend Ladeleistung des Batterieladers
+
 const float battEmergencyStart=25;  // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battEmergencyStop=50;   // %Akku Ladug bei der der Akkuschutz aufhört zu laden (unterhalb der Mindestladung zur Verwendung aber genug um Akkuschäden vorzubeugen)
 const float battFull=95;            // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
@@ -92,12 +94,12 @@ bool Prg_Controller::triggerStatCharge() {
   // Starttrigger über PV Leistung (damit startet das nicht gleich früh sondern erst wenn genügend Sonne da ist)
   // und auch nur wenn die Batterie nicht voll ist
   delay(1); // Yield()
-  float pvPower = mod_PVClient.GetCurrentPower(false);
-  if ( pvPower < 0 ) { return false; } // Fehler
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  if ( isDay() && (pvPower >= pvLoadPower) && (mod_IO.vBatt_gesProz <= battFull) ) {
+  if ( isDay() && (emeterPower < emeterChargePower) && (mod_IO.vBatt_gesProz <= battFull) ) {
     return true;
   }
   else {
@@ -111,10 +113,10 @@ bool Prg_Controller::triggerStopCharge() {
   // (ggf. wird hier später noch eine Erkennung eingebaut wenn das Ladegerät abgeschaltet hat)
   // Abgebrochen werden muss wenn die PV Leistung nicht mehr ausreichen würde den Akku mit Solarenergie zu laden
   delay(1); // Yield()
-  float pvPower = mod_PVClient.GetCurrentPower(false);
-  if ( pvPower < 0 ) { return false; } // Fehler
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
-  if ( isNight() || (pvPower < pvLoadPower) ) {
+  if ( isNight() || (emeterPower > 0) ) {
     return true;
   }
   else {
@@ -154,7 +156,7 @@ bool Prg_Controller::triggerStatDischarge() {
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  if ( isNight() && (mod_IO.vBatt_gesProz > battApplicable) ) {
+  if ( isNight() && (mod_IO.vBatt_gesProz >= battApplicable) ) {
     return true;
   }
   else {
@@ -168,7 +170,7 @@ bool Prg_Controller::triggerStopDischarge() {
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  if ( isDay() || (mod_IO.vBatt_gesProz < battStopDischarge) ) {
+  if ( isDay() || (mod_IO.vBatt_gesProz <= battStopDischarge) ) {
     return true;
   }
   else {
