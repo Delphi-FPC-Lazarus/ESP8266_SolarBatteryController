@@ -188,7 +188,8 @@ void handleRoot() {
   // zuerst die URL Parameter auswerten
   handleMenue();
 
-  String message = "<html><body>";
+  String message = "<html><head><meta http-equiv=\"refresh\" content=\"60; URL=?\"></head><body>";
+
   message += "<h1>esp8266 solar battery controller</h1><br>";
 
   message += "WiFi";
@@ -212,7 +213,6 @@ void handleRoot() {
   message += logdump;
 
   message += "<hr><br>";
-  message += "<br>";
   
   message += generateMenue();
 
