@@ -1,4 +1,4 @@
-// Solar PV Abfrage über http Client
+// Solar PV Abfrage Stecagrid 2500 über http Client
 
 #pragma once
 
@@ -133,7 +133,7 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
 void Mod_PVClient::Init()
 {
   Serial.println("modPVClient_Init()");
-  //Serial.println(GetCurrentPower());
+  //Serial.println(GetCurrentPower(true));
   manPVSimu = -1;
 }
 

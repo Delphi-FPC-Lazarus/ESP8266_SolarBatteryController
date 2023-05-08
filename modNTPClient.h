@@ -1,4 +1,4 @@
-// NTP Client zur Zeit Abfrage aus der Wolke
+// NTP Client zur Zeit Abfrage aus dem Web
 
 #pragma once
 

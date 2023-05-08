@@ -166,7 +166,7 @@ void handleRoot() {
   message += String(WiFi.localIP().toString()) + "<br>";
   message += "Freier Heap: "+String(ESP.getFreeHeap())+" bytes<br>";
   message += "<hr>";
-  message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString();
+  message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn:ss)";
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
   message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
