@@ -61,18 +61,22 @@ void handleMenue() {
 
     // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
+      prg_Controller.SetStandbyMode();
       mod_IO.SetmanIOModeOn();
       mod_IO.Off();
     }
     if (server.argName(i) == "charge") {
+      prg_Controller.SetStandbyMode();
       mod_IO.SetmanIOModeOn();
       mod_IO.Charge();
     }
     if (server.argName(i) == "discharge") {
+      prg_Controller.SetStandbyMode();
       mod_IO.SetmanIOModeOn();
       mod_IO.Discharge();
     }
     if (server.argName(i) == "auto") {
+      prg_Controller.SetStandbyMode();
       mod_IO.Off();
       mod_IO.SetmanIOModeOff();
     }
