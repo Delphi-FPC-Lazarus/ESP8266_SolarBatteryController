@@ -48,7 +48,11 @@ const byte logCode_EMeterSimuOn         = 27;
 const byte logCode_EMeterSimuOff        = 28;
 const byte logCode_EMeterRequestFail    = 29;
 
-const int logMsgCount = 30;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_TimeSimuOff          = 30;
+const byte logCode_TimeSimuDay          = 31;
+const byte logCode_TimeSimuNight        = 32;
+
+const int logMsgCount = 33;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -63,7 +67,7 @@ const String logMsg[logMsgCount] = {
   "Batteriespannung (Batt 1)",
   "Batteriespannung (Batt 2)",
   "PV Leistung",
-  "Bezug-/Einspeise Leistung",
+  "Bezug(+) Einspeisung(-) Leistung",
 
   "<b>Manueller IO Modus aktiviert</b>",
   "<b>Menueller IO Modus deaktiviert</b>",  
@@ -87,7 +91,12 @@ const String logMsg[logMsgCount] = {
 
   "<b>EMetersimulation an</b>",
   "<b>EMetersimulation aus</b>",
-  "<b><font color=red>EMeter Abfrage fehlgeschlagen</font></b>"
+  "<b><font color=red>EMeter Abfrage fehlgeschlagen</font></b>",
+
+  "<b>Zeitsimulation aus</b>",
+  "<b>Zeitsimulation Tag</b>",
+  "<b>Zeitsimulation Nacht</b>",
+
 };
 
 // --------------------------------------------

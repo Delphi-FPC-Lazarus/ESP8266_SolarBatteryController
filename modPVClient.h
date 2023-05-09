@@ -60,7 +60,7 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVRequestFail,0);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVRequestFail, float(statusCode));
     return -1;
   }
   String response = httpclient.responseBody();

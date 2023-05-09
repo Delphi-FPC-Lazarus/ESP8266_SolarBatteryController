@@ -57,7 +57,7 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterRequestFail,0);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterRequestFail, float(statusCode));
     return 0;
   }
   String response = httpclient.responseBody();

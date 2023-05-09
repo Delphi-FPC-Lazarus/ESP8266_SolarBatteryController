@@ -45,7 +45,21 @@ void handleMenue() {
       DoESPreset = true;
     }
 
-    // Laden und Entladen
+    // Messen
+    if (server.argName(i) == "measurebattges") {
+      mod_IO.MeasureBattGes(true);
+    }
+    if (server.argName(i) == "measurebatt12") {
+      mod_IO.MeasureBatt12(true);
+    }
+    if (server.argName(i) == "measurepv") {
+      mod_PVClient.GetCurrentPower(true);
+    }
+    if (server.argName(i) == "measureemeter") {
+      mod_EMeterClient.GetCurrentPower(true);
+    }
+
+    // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
       mod_IO.SetmanIOModeOn();
       mod_IO.Off();
@@ -108,23 +122,26 @@ void handleMenue() {
       mod_EMeterClient.manEMeterSimuOn(1000);
     }
 
+    if (server.argName(i) == "simutimeoff") {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
+        mod_Timer.syncFromNTP();
+    }
+    if (server.argName(i) == "simutimeday") {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
+        mod_Timer.runTime.h = 13;
+        mod_Timer.runTime.m = 0;
+        mod_Timer.runTime.s = 0;
+    }
+    if (server.argName(i) == "simutimenight") {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
+        mod_Timer.runTime.h = 3;
+        mod_Timer.runTime.m = 0;
+        mod_Timer.runTime.s = 0;
+    }
+
     //if (server.argName(i) == "") {
     //}
 
-    // Messen
-    if (server.argName(i) == "measurebattges") {
-      mod_IO.MeasureBattGes(true);
-    }
-    if (server.argName(i) == "measurebatt12") {
-      mod_IO.MeasureBatt12(true);
-    }
-    if (server.argName(i) == "measurepv") {
-      mod_PVClient.GetCurrentPower(true);
-    }
-    if (server.argName(i) == "measureemeter") {
-      mod_EMeterClient.GetCurrentPower(true);
-    }
- 
   }
 
 
@@ -134,24 +151,25 @@ String generateMenue() {
 
   String menu = "<a href='?'>Refresh</a><br>";
   menu += "<br>";
-
   menu += "<b>Messen</b><br>";
   menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
-  menu += "<br>";
-  
+
+  menu += "<hr>";
+
   menu += "<b>Manuelles Steuerungsmenue</b><br>";
-  if ( (mod_IO.IsmanIOMode() == true) ) {
-    menu += "Manuelle Steuerung ist aktiv!<br>";
-  }
+
   menu += "Modus:&nbsp;";
   menu += "<a href='?auto'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";
+  if ( (mod_IO.IsmanIOMode() == true) ) {
+    menu += "&nbsp;&nbsp;&nbsp; (Manuelle Steuerung ist aktiv!)<br>";
+  }  
   menu += "<br>";
   menu += "Batterie&nbsp;";
   menu += "<a href='?simubattoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -172,8 +190,13 @@ String generateMenue() {
   menu += "<a href='?simuemeterb'>-300</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemeterc'>1000</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
+  menu += "Zeit&nbsp;";
+  menu += "<a href='?simutimeoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simutimeday'>Tag</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simutimenight'>Nacht</a>&nbsp;&nbsp;&nbsp;";
 
-  menu += "<hr>";
+  menu += "<br>";
+  menu += "<br>";
   menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
 
@@ -212,7 +235,7 @@ void handleRoot() {
   logdump.replace("\r\n", "<br>");
   message += logdump;
 
-  message += "<hr><br>";
+  message += "<hr>";
   
   message += generateMenue();
 

@@ -29,12 +29,13 @@ class Mod_Timer {
   private:
     void initRunTime();
     void calcRunTime();
-    void syncFromNTP();
   public:
     // Laufzeitbereitstellung für den externen Zugriff
     _runTime runTime;
     // Laufzeitbereitstellung (Zeitstempel) für den Logger
     String runTimeAsString();
+
+    void syncFromNTP();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
