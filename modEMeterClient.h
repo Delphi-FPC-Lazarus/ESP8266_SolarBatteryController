@@ -47,11 +47,13 @@ void Mod_EMeterClient::manEMeterSimuOff() {
 float Mod_EMeterClient::GetCurrentPower(bool dolog) {
   Serial.println("modEMeterClient_GetCurrentPower()");
 
-  delay(1); // Yield()
+  delay(100); // Yield()
+
   Serial.println("http get");
   httpclient.get("/");
   Serial.println("http get done");
-  delay(1); // Yield()
+
+  delay(100); // Yield()
 
   // read the status code and body of the response
   int statusCode = httpclient.responseStatusCode();
