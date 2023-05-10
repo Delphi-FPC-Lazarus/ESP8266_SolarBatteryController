@@ -174,7 +174,7 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 
   if ( 
         (mod_IO.vBatt_gesProz <= battEmergencyStart) && 
-        isDay()
+        isDay() && (mod_Timer.runTime.h > 12)
      ) {
     return true;
   }
@@ -208,8 +208,8 @@ bool Prg_Controller::triggerStopChargeEmergency() {
 
 bool Prg_Controller::triggerStatDischarge() {
   // Starttrigger für das Entladen
-  // Wenn der Bezug > der zu erwartenden Entladeleisung liegt und die Batterie genügend Ladung hat
-  // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht)
+  // Wenn die Batterie genügend Ladung hat und der Bezug/Verbrauch (einspeisung grad nicht aktiv) > der zu erwartenden Entladeleisung liegt
+  // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
 
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
@@ -219,8 +219,8 @@ bool Prg_Controller::triggerStatDischarge() {
   delay(1); // Yield()
 
   if ( 
-        (emeterPower > emeterDischargePower) && 
         (mod_IO.vBatt_gesProz >= battApplicable) && 
+        (emeterPower > emeterDischargePower) && 
         isNight() 
      ) {
     return true;
@@ -232,12 +232,19 @@ bool Prg_Controller::triggerStatDischarge() {
 
 bool Prg_Controller::triggerStopDischarge() {
   // Stoptrigger für das Entladen
-  // gestoppt wenn entweder die EntladeSpannung (höher als vom BMS um den Akku zu schonen) erreicht ist oder die Nacht zu Ende ist
+  // gestoppt wenn entweder die EntladeSpannung unter das eingestellte limit geht (höher als vom BMS um den Akku zu schonen) oder der Energiebedarf in die Lieferung geht (einspeisung grad aktiv)
+  // Zusätzlich kann die Zeit geprüft werden, also wenn die Nacht zu Ende ist. Achtung: Start/Stop Bedingung gemeinsam anpassen
+  
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
+  delay(1); // Yield()
+
   if ( 
         (mod_IO.vBatt_gesProz <= battStopDischarge) || 
+        (emeterPower < 0) || 
         isDay() 
     ) {
     return true;
