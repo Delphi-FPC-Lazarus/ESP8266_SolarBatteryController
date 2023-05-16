@@ -54,8 +54,8 @@ const int dout_VBattmode = D5;   // ADC für VBatt Messung umschalten
 const int dout_ACea = D1;        // AC ein/aus
 const int dout_ACmode = D2;      // AC Modus laden/entladen (UM damit niemals gleichzeit)
 
-const float CALVOLT = 30.0;      // Kalibierung der Spannungsmessung über den analog in 
-const int CALVALUE = 1023;       // Kalibierung der Spannungsmessung über den analog in
+const float CALVOLT = 26.66;     // Kalibierung der Spannungsmessung über den analog in 
+const int CALVALUE =  765;       // Kalibierung der Spannungsmessung über den analog in
 
 const uint8_t R_ON = LOW;        // R_OFF aktiv
 const uint8_t R_OFF = HIGH;      // Initialzustand R_ON 
@@ -82,6 +82,7 @@ float Mod_IO::vBattToProz(float spgvalue) {
 
 float Mod_IO::VBattMeasurement() {
   int value = analogRead(ain_VBatt);
+  Serial.print("VBattMeasurement() Value: "); Serial.println(value);
   float volt = CALVOLT/(float)CALVALUE * (float)value;
   return volt;
 }
@@ -182,8 +183,8 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   }  
 
   // Messe erstmal die gesamtspannung, dann Batt1, Batt2 ist dann die Differenz
-  digitalWrite(dout_VBattmode, R_OFF);
-  delay(1000);
+  //digitalWrite(dout_VBattmode, R_OFF);
+  //delay(1000);
 
   if (manBattSimu > 0) {
     vBatt_ges = manBattSimu;
@@ -192,7 +193,7 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   }
 
   digitalWrite(dout_VBattmode, R_ON);
-  delay(1000);
+  delay(3000);
 
   if (manBattSimu > 0) {
     vBatt_Batt1 = manBattSimu / 2;

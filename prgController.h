@@ -296,7 +296,6 @@ void Prg_Controller::Init() {
 
   mod_IO.Off();
   mod_IO.MeasureBattGes(true);
-  mod_IO.MeasureBatt12(true);
 
   Serial.println(isDay());
   Serial.println(isNight());
@@ -317,7 +316,6 @@ void Prg_Controller::Handle() {
 
       mod_IO.Off();
       mod_IO.MeasureBattGes(true);
-      mod_IO.MeasureBatt12(true);
 
       state = State_Failure;
     }
@@ -336,7 +334,6 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
 
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
           mod_IO.Charge();
 
           state = State_Charge;
@@ -346,7 +343,6 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
           mod_IO.Charge();
           state = State_ChargeEmergency;
         }
@@ -355,7 +351,6 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
           mod_IO.Discharge();
 
           state = State_Discharge;
@@ -371,7 +366,6 @@ void Prg_Controller::Handle() {
 
           mod_IO.Off();
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
 
           state = State_Standby;
         }
@@ -383,7 +377,6 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStopChargeEmergency");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
 
           mod_IO.Off();
           state = State_Standby;
@@ -396,7 +389,6 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStopDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
           mod_IO.MeasureBattGes(true);
-          mod_IO.MeasureBatt12(true);
 
           mod_IO.Off();
           state = State_Standby;
