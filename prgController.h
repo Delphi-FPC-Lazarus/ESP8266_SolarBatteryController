@@ -78,8 +78,8 @@ boolean Prg_Controller::isDay() {
 
 boolean Prg_Controller::isNight() {
   if ( 
-        ( (mod_Timer.runTime.h > 18) && (mod_Timer.runTime.h <= 23) ) || 
-        (mod_Timer.runTime.h < 9) 
+        ( (mod_Timer.runTime.h >= 18) && (mod_Timer.runTime.h <= 23) ) || 
+        (mod_Timer.runTime.h <= 9) 
      ) {
      return true;
   } else {
