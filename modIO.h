@@ -55,7 +55,8 @@ const int dout_ACea = D1;        // AC ein/aus
 const int dout_ACmode = D2;      // AC Modus laden/entladen (UM damit niemals gleichzeit)
 
 const float CALVOLT = 26.66;     // Kalibierung der Spannungsmessung über den analog in 
-const int CALVALUE =  765;       // Kalibierung der Spannungsmessung über den analog in
+const int CALVALUE =  752;       // Kalibierung der Spannungsmessung über den analog in
+const int CALOFFSET =  13;       // Kalibierung der Spannungsmessung über den analog in
 
 const uint8_t R_ON = LOW;        // R_OFF aktiv
 const uint8_t R_OFF = HIGH;      // Initialzustand R_ON 
@@ -81,9 +82,26 @@ float Mod_IO::vBattToProz(float spgvalue) {
 }
 
 float Mod_IO::VBattMeasurement() {
-  int value = analogRead(ain_VBatt);
-  Serial.print("VBattMeasurement() Value: "); Serial.println(value);
-  float volt = CALVOLT/(float)CALVALUE * (float)value;
+
+  // adc springt nachdem sich die Versorgungspannung z.B. durch Relais minimal verschoben hat, erste Values wegwerfen
+  for (int i = 0; i < 500; i++) 
+  {  
+    int valuetrash = analogRead(ain_VBatt);
+    //Serial.print("VBattMeasurement() Value(trash): "); Serial.println(valuetrash);
+  }
+  
+  // Messen und Mitteln
+  int value = 0;
+  int valuesum = 0;
+  for (int i = 0; i < 100; i++) 
+  {  
+    value = analogRead(ain_VBatt);
+    Serial.print("VBattMeasurement() Value: "); Serial.println(value);
+    valuesum += value;
+    delay(1); // messen mit festenm intervall
+  }
+  float valuekorr = ( valuesum / 100 ) - CALOFFSET;
+  float volt = CALVOLT/(float)CALVALUE * (float)valuekorr;
   return volt;
 }
 
@@ -121,7 +139,7 @@ void Mod_IO::Off() {
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_OFF);
-  delay(1000);
+  delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACmode, R_OFF); 
 }
 
@@ -131,9 +149,9 @@ void Mod_IO::Charge() {
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_OFF);
-  delay(1000);
+  delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACmode, R_OFF); 
-  delay(1000);
+  delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACea, R_ON);
 }
 
@@ -143,9 +161,9 @@ void Mod_IO::Discharge() {
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_OFF);
-  delay(1000);
+  delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACmode, R_ON); 
-  delay(1000);
+  delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACea, R_ON);
 }
 
@@ -163,10 +181,11 @@ void Mod_IO::MeasureBattGes(bool dolog) {
     } else {
       vBatt_ges = VBattMeasurement();
     }
-    Serial.println(vBatt_ges);
+    Serial.print("V Gemessen: "); Serial.println(vBatt_ges);
     vBatt_gesProz = vBattToProz(vBatt_ges);
-    Serial.println(vBatt_gesProz);
+    Serial.print("% Gemessen: "); Serial.println(vBatt_gesProz);
   }
+
 
   if (dolog == true) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, vBatt_ges);
@@ -183,32 +202,30 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   }  
 
   // Messe erstmal die gesamtspannung, dann Batt1, Batt2 ist dann die Differenz
-  //digitalWrite(dout_VBattmode, R_OFF);
-  //delay(1000);
-
+  Serial.println("Messe Gesamtspannung");
   if (manBattSimu > 0) {
     vBatt_ges = manBattSimu;
   } else {
     vBatt_ges = VBattMeasurement();
   }
-
   digitalWrite(dout_VBattmode, R_ON);
-  delay(3000);
-
+  delay(1000); // Hardware Zeit geben
+  Serial.println("Messe Einzelspannung");
   if (manBattSimu > 0) {
     vBatt_Batt1 = manBattSimu / 2;
   } else {
     vBatt_Batt1 = VBattMeasurement();
   }
+  digitalWrite(dout_VBattmode, R_OFF);
+  delay(1000); // Hardware Zeit geben
 
   vBatt_Batt2 = vBatt_ges - vBatt_Batt1;
 
   Serial.println(vBatt_Batt1);
   Serial.println(vBatt_Batt2);
 
-  digitalWrite(dout_VBattmode, R_OFF);
-
   if (dolog == true) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1,vBatt_Batt1);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2,vBatt_Batt2);
   }  
