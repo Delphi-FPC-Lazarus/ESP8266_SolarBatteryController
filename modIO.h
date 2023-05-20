@@ -96,7 +96,7 @@ float Mod_IO::VBattMeasurement() {
   for (int i = 0; i < 100; i++) 
   {  
     value = analogRead(ain_VBatt);
-    Serial.print("VBattMeasurement() Value: "); Serial.println(value);
+    //Serial.print("VBattMeasurement() Value: "); Serial.println(value);
     valuesum += value;
     delay(1); // messen mit festenm intervall
   }
@@ -171,9 +171,9 @@ void Mod_IO::MeasureBattGes(bool dolog) {
   Serial.println("IO MeasureBattGes");
   // MeasureBattGes und MeasureBatt12 müssten gegeneinander verriegelt werden, wir sind hier aber nicht multithreaded 
   // MeasureBattGes darf immer aufgerufen werden
-  if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Measure,0);
-  }
+  //if (dolog == true) {
+  //  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Measure,0);
+  //}
 
   if (digitalRead(dout_VBattmode) == R_OFF) {
     if (manBattSimu > 0) {
@@ -197,9 +197,9 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   Serial.println("IO MeasureBatt12");
   // MeasureBattGes und MeasureBatt12 müssten gegeneinander verriegelt werden, wir sind hier aber nicht multithreaded 
   // MeasureBatt12 darf nicht immer aufgerufen werden da es Relaissteurung benötigt
-  if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Measure,0);
-  }  
+  //if (dolog == true) {
+  //  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Measure,0);
+  //}  
 
   // Messe erstmal die gesamtspannung, dann Batt1, Batt2 ist dann die Differenz
   Serial.println("Messe Gesamtspannung");

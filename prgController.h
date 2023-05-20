@@ -19,8 +19,7 @@ class Prg_Controller {
     bool CheckFailure();
 
     bool isDay();
-    bool isNight(); 
-
+    
     bool triggerStatCharge();
     bool triggerStopCharge();
 
@@ -43,30 +42,37 @@ Prg_Controller prg_Controller;
 const float pvDayNight=5;               // Tag Nacht Erkennung über die PV Anlage
 */
 
-const float emeterChargePower=-500;     // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
-const float emeterDischargePower=100;   // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
+const float emeterChargePower=-500;         // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
+const float emeterDischargePower=100;       // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
+const float emeterDischargeStopPower=-25;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren) (negativ weil Trigger auf Einspeisung)
 
-const float battEmergencyStart=25;      // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
-const float battEmergencyStop=50;       // %Akku Ladug bei der der Akkuschutz aufhört zu laden (unterhalb der Mindestladung zur Verwendung aber genug um Akkuschäden vorzubeugen)
-const float battFull=95;                // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
-const float battApplicable=70;          // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten
-const float battStopDischarge=30;       // Entladevoragnag stoppen
+const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
+const float battEmergencyStop=70;           // %Akku Ladug bei der der Akkuschutz aufhört zu laden
+const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
+const float battApplicable=70;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten
+const float battStopDischarge=20;           // Entladevoragnag stoppen (zu prüfen ob die Spannungsmessung während dem Enladen richtig fuktioniert)
 
 // --------------------------------------------
 
+// Sicherheitsabschaltung
+
 bool Prg_Controller::CheckFailure() {
+  // Abschaltung weil Akkufehler, Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  // Sicherung geflogen oder Akkufehler, hier können später noch weiter Bedingungen aufgenommen werden
   if (mod_IO.vBatt_gesProz < 0) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
     return true;
   } else {
     return false;
   }
 }
 
+// Hilfsfunktionen 
 boolean Prg_Controller::isDay() {
+  // Result True = Tag , Result False = Nacht
   if ( 
         (mod_Timer.runTime.h >= 9) && (mod_Timer.runTime.h <= 18) 
      ) {
@@ -76,20 +82,10 @@ boolean Prg_Controller::isDay() {
   } 
 }
 
-boolean Prg_Controller::isNight() {
-  if ( 
-        ( (mod_Timer.runTime.h >= 18) && (mod_Timer.runTime.h <= 23) ) || 
-        (mod_Timer.runTime.h <= 9) 
-     ) {
-     return true;
-  } else {
-    return false;
-  }
-}
-
 /*
 boolean Prg_Controller::isDay() {
   // Ist es Tag? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert am Tag immer über 0 (sogar bei Schnee)
+  // Result True = Tag , Result False = Nacht
   delay(1); // Yield()
   float pvPower = mod_PVClient.GetCurrentPower(false);
   if ( pvPower < 0 ) { return false; } // Fehler
@@ -100,20 +96,6 @@ boolean Prg_Controller::isDay() {
   } else {
     return false;
   }
-}
-
-boolean Prg_Controller::isNight() {
-  // Ist es Nacht? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert nur in der Nacht wirklich 0
-  delay(1); // Yield()
-  float pvPower = mod_PVClient.GetCurrentPower(false);
-  if ( pvPower < 0 ) { return false; } // Fehler
-  delay(1); // Yield()
-  //Serial.println(pvPower); // Debug
-  if (pvPower < pvDayNight) {
-    return true;
-  } else {
-    return false;
-  }  
 }
 */
 
@@ -133,9 +115,13 @@ bool Prg_Controller::triggerStatCharge() {
   delay(1); // Yield()
 
   if (  
-        (mod_IO.vBatt_gesProz <= battFull) && (emeterPower < emeterChargePower)  &&
-        ( isDay() ) 
+        (mod_IO.vBatt_gesProz <= battFull) && 
+        (emeterPower < emeterChargePower)  &&
+        (isDay() == true) 
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
   else {
@@ -146,6 +132,7 @@ bool Prg_Controller::triggerStatCharge() {
 bool Prg_Controller::triggerStopCharge() {
   // Stoptrigger für das reguläre Laden des Akkus
   // Wenn in den Bezug gegangen wird (in dem zustand wird geladen, also sobald Ladeleistung+Sonstiger Verbrauch > Produktion)
+  // ggf. noch eine Zeitbegrenzung, technisch aber nicht nötig
   // Hier nicht auf auf Spannung triggern (ggf. wird hier später noch eine Erkennung eingebaut wenn das Ladegerät abgeschaltet hat)
 
   delay(1); // Yield()
@@ -155,8 +142,9 @@ bool Prg_Controller::triggerStopCharge() {
 
   if ( 
         (emeterPower > 0) || 
-        isNight() 
+        (isDay() == false)
      ) { 
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
   else {
@@ -174,8 +162,10 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 
   if ( 
         (mod_IO.vBatt_gesProz <= battEmergencyStart) && 
-        isDay() && (mod_Timer.runTime.h > 12)
+        (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
     return true;
   }
   else {
@@ -194,8 +184,10 @@ bool Prg_Controller::triggerStopChargeEmergency() {
   // über Batteriespannung ( zu prüfen ob das während der Ladung so klappt )
   if ( 
         (mod_IO.vBatt_gesProz >= battEmergencyStop) || 
-        isNight() 
+        (isDay() == false) 
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
     return true;
   }
   else {
@@ -220,9 +212,12 @@ bool Prg_Controller::triggerStatDischarge() {
 
   if ( 
         (mod_IO.vBatt_gesProz >= battApplicable) && 
-        (emeterPower > emeterDischargePower) && 
-        isNight() 
+        (emeterPower > emeterDischargePower) // &&
+        //(isDay() == false)
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
   else {
@@ -244,9 +239,12 @@ bool Prg_Controller::triggerStopDischarge() {
 
   if ( 
         (mod_IO.vBatt_gesProz <= battStopDischarge) || 
-        (emeterPower < 0) || 
-        isDay() 
+        (emeterPower < emeterDischargeStopPower) // || 
+        //(isDay() == true)
     ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
   else {
@@ -297,9 +295,6 @@ void Prg_Controller::Init() {
   mod_IO.Off();
   mod_IO.MeasureBattGes(true);
 
-  Serial.println(isDay());
-  Serial.println(isNight());
-
   Serial.println("prgController_Init() Done");
 }
 
@@ -315,7 +310,6 @@ void Prg_Controller::Handle() {
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
 
       mod_IO.Off();
-      mod_IO.MeasureBattGes(true);
 
       state = State_Failure;
     }
@@ -333,7 +327,6 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStatCharge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
 
-          mod_IO.MeasureBattGes(true);
           mod_IO.Charge();
 
           state = State_Charge;
@@ -342,7 +335,6 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStatChargeEmergency");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
-          mod_IO.MeasureBattGes(true);
           mod_IO.Charge();
           state = State_ChargeEmergency;
         }
@@ -350,7 +342,6 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStatDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
-          mod_IO.MeasureBattGes(true);
           mod_IO.Discharge();
 
           state = State_Discharge;
@@ -365,7 +356,6 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
 
           mod_IO.Off();
-          mod_IO.MeasureBattGes(true);
 
           state = State_Standby;
         }
@@ -376,7 +366,6 @@ void Prg_Controller::Handle() {
         if (triggerStopChargeEmergency()) {
           Serial.println("triggerStopChargeEmergency");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
-          mod_IO.MeasureBattGes(true);
 
           mod_IO.Off();
           state = State_Standby;
@@ -388,7 +377,6 @@ void Prg_Controller::Handle() {
         if (triggerStopDischarge()) {
           Serial.println("triggerStopDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
-          mod_IO.MeasureBattGes(true);
 
           mod_IO.Off();
           state = State_Standby;
