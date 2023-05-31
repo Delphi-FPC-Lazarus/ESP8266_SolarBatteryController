@@ -49,19 +49,18 @@ const float emeterDischargeStopPower=-25;   // Trigger das Entladen abzubrechen 
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battEmergencyStop=70;           // %Akku Ladug bei der der Akkuschutz aufhört zu laden
 const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
-const float battApplicable=70;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten
+const float battApplicable=50;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten
 const float battStopDischarge=20;           // Entladevoragnag stoppen (zu prüfen ob die Spannungsmessung während dem Enladen richtig fuktioniert)
 
 // --------------------------------------------
-
 // Sicherheitsabschaltung
 
 bool Prg_Controller::CheckFailure() {
-  // Abschaltung weil Akkufehler, Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden
+  // Abschaltung weil Akkufehler, BMS hat abgeschaltet, Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  if (mod_IO.vBatt_gesProz < 0) {
+  if (mod_IO.vBatt_gesProz < 1) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
     return true;
@@ -70,7 +69,9 @@ bool Prg_Controller::CheckFailure() {
   }
 }
 
+// --------------------------------------------
 // Hilfsfunktionen 
+
 boolean Prg_Controller::isDay() {
   // Result True = Tag , Result False = Nacht
   if ( 
@@ -99,8 +100,9 @@ boolean Prg_Controller::isDay() {
 }
 */
 
+// --------------------------------------------
 // Ladetrigger
-// Es muss unbedingt ein Autmatik Lader sowie ein Akku mit BMS verwendet werden der den Ladevorgang für den Akku automatisch regelt und bei der entsprechenden Ladeschlussspannung abschaltet. 
+// Es muss unbedingt ein Autmatik Lader sowie ein Akku mit BMS verwendet werden der den Ladevorgang für den Akku automatisch regelt und bei der entsprechenden Ladeschlussspannung abschaltet
 
 bool Prg_Controller::triggerStatCharge() {
   // Starttrigger für das reguläre Laden des Akkus
@@ -174,16 +176,9 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 }
 
 bool Prg_Controller::triggerStopChargeEmergency() {
-  // Stoptrigger für das Notfall Laden des Akkus
-  // Wenn die Batterie die Mindestladung erreicht hat oder es Abends ist
+  // Stoptrigger für das Notfall Laden des Akkus, egal ob die Sonne scheint oder nicht
   
-  delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
-  delay(1); // Yield()
-
-  // über Batteriespannung ( zu prüfen ob das während der Ladung so klappt )
   if ( 
-        (mod_IO.vBatt_gesProz >= battEmergencyStop) || 
         (isDay() == false) 
      ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
@@ -195,6 +190,7 @@ bool Prg_Controller::triggerStopChargeEmergency() {
   }
 }
 
+// --------------------------------------------
 // Entladetrigger
 // Es muss unbedingt ein Akku mit BMS verwendet werden, welches den Entladevorgang überwacht und abschaltet bevor die Spannung zu weit sinkt
 
@@ -212,8 +208,7 @@ bool Prg_Controller::triggerStatDischarge() {
 
   if ( 
         (mod_IO.vBatt_gesProz >= battApplicable) && 
-        (emeterPower > emeterDischargePower) // &&
-        //(isDay() == false)
+        (emeterPower > emeterDischargePower)
      ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
@@ -233,26 +228,33 @@ bool Prg_Controller::triggerStopDischarge() {
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
-  if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
-  delay(1); // Yield()
-
   if ( 
-        (mod_IO.vBatt_gesProz <= battStopDischarge) || 
-        (emeterPower < emeterDischargeStopPower) // || 
-        //(isDay() == true)
+        (mod_IO.vBatt_gesProz <= battStopDischarge)
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
-  else {
-    return false;
+
+  delay(1); // Yield()
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
+  delay(1); // Yield()
+  if ( 
+        (emeterPower < emeterDischargeStopPower)
+    ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    return true;
   }
+
+  return false;
 }
 
 // --------------------------------------------
+// Servicefunktionen
+
 String Prg_Controller::GetStateString() {
   switch (state) {
       // Fehlerzustand
@@ -284,6 +286,7 @@ void Prg_Controller::SetStandbyMode() {
 }
 
 // --------------------------------------------
+// Standardfunktionen
 
 void Prg_Controller::Init() {
   Serial.println("prgController_Init()");

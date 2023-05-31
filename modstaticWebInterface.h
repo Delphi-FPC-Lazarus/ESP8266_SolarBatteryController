@@ -228,7 +228,12 @@ void handleRoot() {
   message += "<hr>";
   message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn:ss)";
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-  message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
+  if ( (mod_IO.IsmanIOMode() == true) ) {
+    message += "<b>Status:</b>&nbsp;Manueller Modus";
+  }
+  else {
+    message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
+  }
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
   mod_IO.MeasureBattGes(false);
   message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
