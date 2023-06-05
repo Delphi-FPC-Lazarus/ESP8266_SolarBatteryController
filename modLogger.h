@@ -105,7 +105,7 @@ struct localLogItem {
   byte      logCode;
   float     logValue;
 };
-const uint localLogSize   =  50;     // LogGröße, die ältesten Einträge werden nach Erreichen der Loggröße Überschrieben
+const uint localLogSize   =  100;     // LogGröße, die ältesten Einträge werden nach Erreichen der Loggröße Überschrieben
 
 // --------------------------------------------
 class Mod_Logger {

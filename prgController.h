@@ -42,21 +42,25 @@ Prg_Controller prg_Controller;
 const float pvDayNight=5;               // Tag Nacht Erkennung über die PV Anlage
 */
 
+// Ladeleistung 500W
 const float emeterChargePower=-500;         // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
-const float emeterDischargePower=100;       // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
-const float emeterDischargeStopPower=-25;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren) (negativ weil Trigger auf Einspeisung)
 
+// Entladeleistung 150W
+const float emeterDischargePower=100;       // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
+const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren bzw. differenz starttriggger entladen/tatsächlicher entladeleistung) (negativ weil Trigger auf Einspeisung)
+
+// Batterie
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
-const float battEmergencyStop=70;           // %Akku Ladug bei der der Akkuschutz aufhört zu laden
 const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
-const float battApplicable=50;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten
-const float battStopDischarge=20;           // Entladevoragnag stoppen (zu prüfen ob die Spannungsmessung während dem Enladen richtig fuktioniert)
+const float battApplicable=30;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten / neu zu starten wenn Unterbrochen 
+const float battStopDischarge=20;           // Entladevoragnag stoppen
 
 // --------------------------------------------
 // Sicherheitsabschaltung
 
 bool Prg_Controller::CheckFailure() {
-  // Abschaltung weil Akkufehler, BMS hat abgeschaltet, Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
+  // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
+  // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
   delay(1); // Yield()
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
