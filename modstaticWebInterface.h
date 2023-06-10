@@ -226,7 +226,7 @@ void handleRoot() {
   message += String(WiFi.localIP().toString()) + "<br>";
   message += "Freier Heap: "+String(ESP.getFreeHeap())+" bytes<br>";
   message += "<hr>";
-  message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn:ss)";
+  message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn)";
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
   if ( (mod_IO.IsmanIOMode() == true) ) {
     message += "<b>Status:</b>&nbsp;Manueller Modus";

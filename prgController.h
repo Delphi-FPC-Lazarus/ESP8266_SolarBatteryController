@@ -49,11 +49,12 @@ const float emeterChargePower=-500;         // Trigger das Laden begonnen werden
 const float emeterDischargePower=100;       // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
 const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren bzw. differenz starttriggger entladen/tatsächlicher entladeleistung) (negativ weil Trigger auf Einspeisung)
 
-// Batterie
+// Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
 const float battApplicable=30;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten / neu zu starten wenn Unterbrochen 
-const float battStopDischarge=20;           // Entladevoragnag stoppen
+
+const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich
 
 // --------------------------------------------
 // Sicherheitsabschaltung
@@ -78,8 +79,9 @@ bool Prg_Controller::CheckFailure() {
 
 boolean Prg_Controller::isDay() {
   // Result True = Tag , Result False = Nacht
+  // Achtung, der Controller hat immer Winterzeit
   if ( 
-        (mod_Timer.runTime.h >= 9) && (mod_Timer.runTime.h <= 18) 
+        (mod_Timer.runTime.h >= 8) && (mod_Timer.runTime.h <= 17) 
      ) {
      return true;
   } else {
