@@ -47,7 +47,7 @@ Mod_Timer mod_Timer;
 
 String Mod_Timer::runTimeAsString() {
   String resultString = "";
-  if (runTime.d < 10)    {resultString += "0"+String(runTime.d)+" ";}	else {resultString += String(runTime.d)+" ";};        //0000
+  resultString += String(runTime.d)+"t ";
 
   if (runTime.h < 10)    {resultString += "0"+String(runTime.h)+":";}   	  else {resultString += String(runTime.h)+":";};  //00
   if (runTime.m < 10)    {resultString += "0"+String(runTime.m);}   	  else {resultString += String(runTime.m);};          //00
