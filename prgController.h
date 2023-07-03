@@ -26,7 +26,7 @@ class Prg_Controller {
     bool triggerStatChargeEmergency();
     bool triggerStopChargeEmergency();
 
-    bool triggerStatDischarge();
+    bool triggerStartDischarge();
     bool triggerStopDischarge();
   public:
     String GetStateString();
@@ -52,9 +52,11 @@ const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen 
 // Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
-const float battApplicable=30;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang zu starten / neu zu starten wenn Unterbrochen 
 
-const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich
+const float battApplicableNight=30;         // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
+const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
+
+const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich, zeigt immer weniger an. (z.B. Stop bei Messung 20%, nach entladestop verbleiben tatsächlich 30%)
 
 // --------------------------------------------
 // Sicherheitsabschaltung
@@ -200,7 +202,7 @@ bool Prg_Controller::triggerStopChargeEmergency() {
 // Entladetrigger
 // Es muss unbedingt ein Akku mit BMS verwendet werden, welches den Entladevorgang überwacht und abschaltet bevor die Spannung zu weit sinkt
 
-bool Prg_Controller::triggerStatDischarge() {
+bool Prg_Controller::triggerStartDischarge() {
   // Starttrigger für das Entladen
   // Wenn die Batterie genügend Ladung hat und der Bezug/Verbrauch (einspeisung grad nicht aktiv) > der zu erwartenden Entladeleisung liegt
   // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
@@ -212,18 +214,42 @@ bool Prg_Controller::triggerStatDischarge() {
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
-  if ( 
-        (mod_IO.vBatt_gesProz >= battApplicable) && 
-        (emeterPower > emeterDischargePower)
-     ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
-    return true;
+  if (isDay() == true) {
+
+    // Am Tag den Einspeisemodus nur starten wenn 
+    if ( 
+         (mod_IO.vBatt_gesProz >= battApplicableDay) && 
+         (emeterPower > emeterDischargePower)
+      ) {
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+      return true;
+    }
+    else {
+      return false;
+    }
+
   }
   else {
-    return false;
+
+    // In der Nach den Einspeisemodus immer neu(starten) bis die Batterie die Mindestladung unterschritten hat
+    if ( 
+         (mod_IO.vBatt_gesProz >= battApplicableNight) && 
+         (emeterPower > emeterDischargePower)
+      ) {
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+      return true;
+    }
+    else {
+      return false;
+    }
+
   }
+
+
 }
 
 bool Prg_Controller::triggerStopDischarge() {
@@ -347,8 +373,8 @@ void Prg_Controller::Handle() {
           mod_IO.Charge();
           state = State_ChargeEmergency;
         }
-        if (triggerStatDischarge()) {
-          Serial.println("triggerStatDischarge");
+        if (triggerStartDischarge()) {
+          Serial.println("triggerStartDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
           mod_IO.Discharge();
