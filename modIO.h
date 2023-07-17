@@ -67,18 +67,28 @@ float Mod_IO::vBattToProz(float spgvalue) {
   float proz = -1;
 
   // Tabelle nach Herstellerangabe für LiFePo4 Akku 
-  if (spgvalue/2 >= 9.5)  { proz = 0; }
-  if (spgvalue/2 >= 10.8) { proz = 1; }
-  if (spgvalue/2 >= 12.8) { proz = 10; }
-  if (spgvalue/2 >= 12.9) { proz = 20; }
-  if (spgvalue/2 >= 13.0) { proz = 30; }
-  if (spgvalue/2 >= 13.1) { proz = 40; }
-  if (spgvalue/2 >= 13.13) { proz = 50; } // interpolierter Wert, an der Stelle ist der Akku aber sehr liniar
-  if (spgvalue/2 >= 13.17) { proz = 60; } // interpolierter Wert, an der Stelle ist der Akku aber sehr liniar
-  if (spgvalue/2 >= 13.2) { proz = 70; }
-  if (spgvalue/2 >= 13.3) { proz = 90; }
-  if (spgvalue/2 >= 13.4) { proz = 99; }
-  if (spgvalue/2 >= 13.5) { proz = 100; }
+  // Achtung, diese Tabelle ist erst nach 30 Minuten Nullstrom gültig!
+  // Während des Entladenes wird ein geringerer Wert angezeigt (erholt nach sich bei Nullstrom i.d.R. innerhalb von Minuten)
+
+  if (spgvalue/2 >= 9.5)    { proz = 0; }
+  if (spgvalue/2 >= 10.8)   { proz = 1; }
+  if (spgvalue/2 >= 12.8)   { proz = 10; }
+  if (spgvalue/2 >= 12.82)  { proz = 12; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 12.85)  { proz = 15; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 12.88)  { proz = 18; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 12.9)   { proz = 20; }
+  if (spgvalue/2 >= 12.92)  { proz = 22; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 12.95)  { proz = 25; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 12.98)  { proz = 28; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 13.0)   { proz = 30; }
+  if (spgvalue/2 >= 13.1)   { proz = 40; }
+  if (spgvalue/2 >= 13.13)  { proz = 50; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 13.17)  { proz = 60; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 13.2)   { proz = 70; }
+  if (spgvalue/2 >= 13.3)   { proz = 90; }
+  if (spgvalue/2 >= 13.35)  { proz = 80; } // interpolierter Wert, ungenau
+  if (spgvalue/2 >= 13.4)   { proz = 99; }
+  if (spgvalue/2 >= 13.5)   { proz = 100; }
 
   return proz;
 }
