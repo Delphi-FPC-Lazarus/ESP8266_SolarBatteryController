@@ -85,6 +85,7 @@ float Mod_IO::vBattToProz(float spgvalue) {
   if (spgvalue/2 >= 13.13)  { proz = 50; } // interpolierter Wert, ungenau
   if (spgvalue/2 >= 13.17)  { proz = 60; } // interpolierter Wert, ungenau
   if (spgvalue/2 >= 13.2)   { proz = 70; }
+  if (spgvalue/2 >= 13.25)  { proz = 80; } // interpolierter Wert, ungenau
   if (spgvalue/2 >= 13.3)   { proz = 90; }
   if (spgvalue/2 >= 13.35)  { proz = 95; } // interpolierter Wert, ungenau
   if (spgvalue/2 >= 13.4)   { proz = 99; }
