@@ -40,19 +40,21 @@ const byte logCode_StopCharge           = 21;
 const byte logCode_StopDischarge        = 22;
 const byte logCode_StopChargeEmergency  = 23;
 
-const byte logCode_PVSimuOn             = 24;
-const byte logCode_PVSimuOff            = 25;
-const byte logCode_PVRequestFail        = 26;
+const byte logCode_Resynch              = 24;
 
-const byte logCode_EMeterSimuOn         = 27;
-const byte logCode_EMeterSimuOff        = 28;
-const byte logCode_EMeterRequestFail    = 29;
+const byte logCode_PVSimuOn             = 25;
+const byte logCode_PVSimuOff            = 26;
+const byte logCode_PVRequestFail        = 27;
 
-const byte logCode_TimeSimuOff          = 30;
-const byte logCode_TimeSimuDay          = 31;
-const byte logCode_TimeSimuNight        = 32;
+const byte logCode_EMeterSimuOn         = 28;
+const byte logCode_EMeterSimuOff        = 29;
+const byte logCode_EMeterRequestFail    = 30;
 
-const int logMsgCount = 33;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_TimeSimuOff          = 31;
+const byte logCode_TimeSimuDay          = 32;
+const byte logCode_TimeSimuNight        = 33;
+
+const int logMsgCount = 34;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -84,6 +86,8 @@ const String logMsg[logMsgCount] = {
   "<b><font color=green>Ladevorgang beendet</font></b>",
   "<b><font color=green>Entladevorgang beendet</font></b>",
   "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>",
+
+  "<b><font color=green>Resynchronisation</font></b>",
 
   "<b>PVsimulation an</b>",
   "<b>PVsimulation aus</b>",

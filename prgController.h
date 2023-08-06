@@ -334,7 +334,10 @@ void Prg_Controller::Init() {
 }
 
 void Prg_Controller::Handle() {
-  // die Entscheidungsstruktur für den Modus triggert einmal pro Minute (nicht zu häufig)
+  
+  // die Entscheidungsstruktur für den Modus triggert einmal pro Minute
+  // d.h. alles was hier innerhalb passiert, kann niemals schneller passieren, das ist wichtig!
+  // Sicherheitsrelevante Funktionen müssen außerhalb bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
   if ( (mod_Timer.runTime.m != triggertime_bak) && (mod_IO.IsmanIOMode() == false) ) {
     triggertime_bak = mod_Timer.runTime.m;
     Serial.println("Congroller Trigger");
@@ -409,6 +412,17 @@ void Prg_Controller::Handle() {
 
       case State_Discharge:
         Serial.println("State_Discharge");
+
+        if (mod_Timer.runTime.m == 0) {
+          if ( (mod_Timer.runTime.h == 18) || (mod_Timer.runTime.h == 19) || (mod_Timer.runTime.h == 20) ) {
+            Serial.println("triggerReynch");
+            mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Resynch,0);
+            mod_IO.Off();
+            delay(10000);
+            mod_IO.Discharge();
+          }
+        }
+
         if (triggerStopDischarge()) {
           Serial.println("triggerStopDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
