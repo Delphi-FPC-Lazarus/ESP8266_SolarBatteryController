@@ -29,7 +29,9 @@ class Prg_Controller {
     bool triggerStartDischarge();
     bool triggerStopDischarge();
   public:
+    String GetState();
     String GetStateString();
+    
     void SetStandbyMode();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
@@ -286,6 +288,32 @@ bool Prg_Controller::triggerStopDischarge() {
 
 // --------------------------------------------
 // Servicefunktionen
+
+String Prg_Controller::GetState() {
+  switch (state) {
+      // Fehlerzustand
+      case State_Failure:
+        return "F";
+        break;
+      // Standby Zustand        
+      case State_Standby:
+        return "S";
+        break;
+      // Aktive Zustände
+      case State_Charge:      
+        return "C";
+        break;
+      case State_ChargeEmergency:
+        return "C";
+        break;
+      case State_Discharge:
+        return "D";
+        break;
+      default:
+        return "?";
+        break;
+  }
+}
 
 String Prg_Controller::GetStateString() {
   switch (state) {

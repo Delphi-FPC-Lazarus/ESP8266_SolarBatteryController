@@ -265,6 +265,36 @@ void handleDebug() {
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
 }
 
+void handleState() {
+  Serial.println("handleState()");
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+
+  String message = prg_Controller.GetState();
+
+  server.send(200, "text/plain", message);
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
+}
+
+void handleStateString() {
+  Serial.println("handleStateString()");
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+
+  String message = prg_Controller.GetStateString();
+
+  server.send(200, "text/plain", message);
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
+}
+
+void handleBattProz() {
+  Serial.println("handleBattProz()");
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+
+  String message = String(mod_IO.vBatt_gesProz);
+
+  server.send(200, "text/plain", message);
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
+}
+
 // --------------------------------------------
 
 void ModStatic_WebInterface::Init() {
@@ -273,6 +303,10 @@ void ModStatic_WebInterface::Init() {
   DoESPreset = false;
 
   server.on("/", handleRoot);
+  server.on("/state", handleState);
+  server.on("/statestr", handleStateString);
+  server.on("/battproz", handleBattProz);
+
   server.on("/debug", handleDebug);
 
   server.begin();
