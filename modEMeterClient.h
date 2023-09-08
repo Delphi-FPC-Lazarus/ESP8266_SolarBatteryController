@@ -15,7 +15,7 @@ class Mod_EMeterClient {
     float manEMeterSimu;
 
     WiFiClient wifi;
-    HttpClient httpclient = HttpClient(wifi, "192.168.1.252", 8080);
+    HttpClient httpclient = HttpClient(wifi, "192.168.1.252", 8081);
 
   public:
     void manEMeterSimuOn(float value);
