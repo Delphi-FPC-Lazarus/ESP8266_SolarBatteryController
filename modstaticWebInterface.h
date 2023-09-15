@@ -153,6 +153,7 @@ void handleMenue() {
 
 String generateMenue() {
 
+  // Menü mit Links
   String menu = "<a href='?'>Refresh</a><br>";
   menu += "<br>";
   menu += "<b>Messen</b><br>";
@@ -219,12 +220,15 @@ void handleRoot() {
 
   message += "<h1>esp8266 solar battery controller</h1><br>";
 
+  // WiFi und Speicher
   message += "WiFi";
   message += String(ssid);
   message += "<br>";
   message += "IP: ";
   message += String(WiFi.localIP().toString()) + "<br>";
   message += "Freier Heap: "+String(ESP.getFreeHeap())+" bytes<br>";
+  
+  // Systemstatus 
   message += "<hr>";
   message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn)";
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -234,11 +238,15 @@ void handleRoot() {
   else {
     message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
   }
-  message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-  mod_IO.MeasureBattGes(false);
-  message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
-
+  if ( prg_Controller.GetState() != "C") 
+  {
+    message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+    mod_IO.MeasureBattGes(false);
+    message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
+  }
   message += "<hr><br>";
+  
+  // Log
   message += "Log:<br>";
   String logdump = mod_Logger.Dump();
   logdump.replace("\r\n", "<br>");
