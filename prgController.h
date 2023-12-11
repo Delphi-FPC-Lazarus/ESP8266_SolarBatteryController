@@ -58,7 +58,7 @@ const float battFull=95;                    // %Akku bei der der Akku als voll b
 const float battApplicableNight=30;         // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
 const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
 
-const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich, zeigt immer weniger an. (z.B. Stop bei Messung 20%, nach entladestop verbleiben tatsächlich 30%)
+const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
 
 // --------------------------------------------
 // Sicherheitsabschaltung
@@ -263,7 +263,7 @@ bool Prg_Controller::triggerStopDischarge() {
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
   if ( 
-        (mod_IO.vBatt_gesProz <= battStopDischarge)
+        (mod_IO.vBatt_gesProz < battStopDischarge)
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);

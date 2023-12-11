@@ -238,7 +238,7 @@ void handleRoot() {
   else {
     message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
   }
-  if ( prg_Controller.GetState() != "C") 
+  if ( ( prg_Controller.GetState() != "C") && ( prg_Controller.GetState() != "D") )
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
     mod_IO.MeasureBattGes(false);
