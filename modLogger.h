@@ -54,7 +54,9 @@ const byte logCode_TimeSimuOff          = 31;
 const byte logCode_TimeSimuDay          = 32;
 const byte logCode_TimeSimuNight        = 33;
 
-const int logMsgCount = 34;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_WifiErrorDetected    = 34;
+
+const int logMsgCount = 35;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -100,6 +102,8 @@ const String logMsg[logMsgCount] = {
   "<b>Zeitsimulation aus</b>",
   "<b>Zeitsimulation Tag</b>",
   "<b>Zeitsimulation Nacht</b>",
+
+  "<b><font color=red>WiFi-Fehler erkannt</font></b>"
 
 };
 

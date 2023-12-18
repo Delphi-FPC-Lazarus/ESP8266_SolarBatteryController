@@ -6,26 +6,29 @@
 #include <WiFiClient.h>
 #include <ESP8266mDNS.h>
 
+// Include define from external header file
 #include "WLANZUGANGSDATEN.h"
+const char* ssid = STASSID;
+const char* password = STAPSK;
+const char* hostname = STAHOSTNAME;
+const uint8_t  hostip = STAHOSTIP;
 
 // --------------------------------------------
 class ModStatic_Wifi {
   private:
+  public: 
     static void startWifi();
     static void stopWifi();
+    static bool CheckConnected();
 
-  public: 
     static void Init();
     static void Handle();
 };
 
 // --------------------------------------------
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
-
 // Set your Static IP address
-IPAddress local_IP(192, 168, 1, 241);
+IPAddress local_IP(192, 168, 1, hostip);
 // Set your Gateway IP address
 IPAddress gateway(192, 168, 1, 1);
 
@@ -33,13 +36,17 @@ IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(192, 168, 1, 1);   //optional
 IPAddress secondaryDNS(192, 168, 1, 1); //optional
 
+int WiFiErrorCount = 0;
+
 // --------------------------------------------
 
 void ModStatic_Wifi::startWifi() {
   Serial.println("modWifi_startWifi()");
 
+  WiFiErrorCount = 0;
+
   // MDNS
-  if (MDNS.begin("espSBC")) {
+  if (MDNS.begin(hostname)) {
     Serial.println("MDNS responder started");
   }
 
@@ -70,6 +77,24 @@ void ModStatic_Wifi::stopWifi() {
   Serial.println("modWifi_stopWifi()");
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
+}
+
+bool ModStatic_Wifi::CheckConnected() {
+    if (WiFi.isConnected() == true) {
+      WiFiErrorCount = 0;
+      return true;
+    } 
+    else {
+      WiFiErrorCount += 1;
+      Serial.println("WifiFehler " + String(WiFiErrorCount));
+
+      if (WiFiErrorCount < 60 ) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
 }
 
 // --------------------------------------------

@@ -58,7 +58,9 @@ const float battFull=95;                    // %Akku bei der der Akku als voll b
 const float battApplicableNight=30;         // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
 const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
 
-const float battStopDischarge=20;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht wirklich, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
+const float battStopDischarge=15;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
+                                            // Der Tatsächliche Ladezustand kann erst wenige Minuten nach Entladestop über die Akkuspannung abschätzt werden
+
 
 // --------------------------------------------
 // Sicherheitsabschaltung
@@ -263,7 +265,7 @@ bool Prg_Controller::triggerStopDischarge() {
   mod_IO.MeasureBattGes(false);
   delay(1); // Yield()
   if ( 
-        (mod_IO.vBatt_gesProz < battStopDischarge)
+        (mod_IO.vBatt_gesProz <= battStopDischarge)
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
@@ -369,6 +371,13 @@ void Prg_Controller::Handle() {
   if ( (mod_Timer.runTime.m != triggertime_bak) && (mod_IO.IsmanIOMode() == false) ) {
     triggertime_bak = mod_Timer.runTime.m;
     Serial.println("Congroller Trigger");
+
+    // WifiCheck
+    if (ModStatic_Wifi::CheckConnected() != true) {
+      Serial.println("CheckConnected Fehlgeschlagen");
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
+      //
+    }
 
     // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
     if ( (state != State_Failure) && CheckFailure() ) {

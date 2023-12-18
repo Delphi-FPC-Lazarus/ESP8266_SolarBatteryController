@@ -76,7 +76,7 @@ void setup() {
 
 void loop() {
   // Achtung, nicht blockieren!
-  // Loop wird auch bei Verwendung des Schedulers (sofern ich ihn verwende) bei jedem Durdchlauf durchlaufen!
+  // Loop wird auch bei Verwendung des Schedulers (sofern ich ihn verwende) bei jedem Durchlauf durchlaufen!
 
   // Netzwerk
   ModStatic_Wifi::Handle();
