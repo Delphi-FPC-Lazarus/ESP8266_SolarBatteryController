@@ -95,25 +95,34 @@ float Mod_IO::vBattToProz(float spgvalue) {
 }
 
 float Mod_IO::VBattMeasurement() {
+  const int avgSkip = 500;
+  const int avgCount = 1000;
 
   // adc springt nachdem sich die Versorgungspannung z.B. durch Relais minimal verschoben hat, erste Values wegwerfen
-  for (int i = 0; i < 500; i++) 
+  for (int i = 0; i < avgSkip; i++) 
   {  
     int valuetrash = analogRead(ain_VBatt);
     //Serial.print("VBattMeasurement() Value(trash): "); Serial.println(valuetrash);
+    //delay(1); // messen mit festenm intervall
+    yield();    
+    ESP.wdtFeed(); 
   }
   
   // Messen und Mitteln
+  // Notiz: delay() < 1ms compiliert, tut aber nichts                                              
+  // analogRead() ist träge, 0,1ms auf dem esp8266
   int value = 0;
   int valuesum = 0;
-  for (int i = 0; i < 100; i++) 
+  for (int i = 0; i < avgCount; i++) 
   {  
     value = analogRead(ain_VBatt);
     //Serial.print("VBattMeasurement() Value: "); Serial.println(value);
     valuesum += value;
-    delay(1); // messen mit festenm intervall
+    //delay(1); // messen mit festenm intervall
+    yield();    
+    ESP.wdtFeed(); 
   }
-  float valuekorr = ( valuesum / 100 ) - CALOFFSET;
+  float valuekorr = ( valuesum / avgCount ) - CALOFFSET;
   float volt = CALVOLT/(float)CALVALUE * (float)valuekorr;
   return volt;
 }
@@ -215,6 +224,8 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   //}  
 
   // Messe erstmal die gesamtspannung, dann Batt1, Batt2 ist dann die Differenz
+  // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
+  // aufgrund der indirekten Messmethode und Spannungsabfall an den Leitungen eine nicht vorhandene Abweichung zeigen kann
   Serial.println("Messe Gesamtspannung");
   if (manBattSimu > 0) {
     vBatt_ges = manBattSimu;
