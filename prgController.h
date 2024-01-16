@@ -398,6 +398,16 @@ void Prg_Controller::Handle() {
       // Standby Zustand        
       case State_Standby:
         Serial.println("State_Standby");
+        
+        if (mod_Timer.runTime.m == 0) {
+          if (mod_Timer.runTime.h == 6) {
+            // wenn sich der Akku im Standby befindet, akkustand loggen
+            // das ist vor allem im interessant wenn der Akku meistens im Standby ist 
+            mod_IO.MeasureBattGes(true);
+            mod_IO.MeasureBatt12(true);
+          }
+        }
+
         if (triggerStatCharge()) {
           Serial.println("triggerStatCharge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
