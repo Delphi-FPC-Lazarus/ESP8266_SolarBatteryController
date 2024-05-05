@@ -5,11 +5,12 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-#include "modIO.h"
 #include "modLogger.h"
 #include "modTimer.h"
-#include "modPVClient.h"
+
+#include "modIO.h"
 #include "modEMeterClient.h"
+
 #include "prgController.h"
 
 // --------------------------------------------
@@ -51,9 +52,6 @@ void handleMenue() {
     }
     if (server.argName(i) == "measurebatt12") {
       mod_IO.MeasureBatt12(true);
-    }
-    if (server.argName(i) == "measurepv") {
-      mod_PVClient.GetCurrentPower(true);
     }
     if (server.argName(i) == "measureemeter") {
       mod_EMeterClient.GetCurrentPower(true);
@@ -98,20 +96,6 @@ void handleMenue() {
       mod_IO.SetmanBattSimuOn(25.5);
     }
 
-    // PV Simulation
-    if (server.argName(i) == "simupvoff") {
-      mod_PVClient.manPVSimuOff();
-    }
-    if (server.argName(i) == "simupva") {
-      mod_PVClient.manPVSimuOn(1);
-    }
-    if (server.argName(i) == "simupvb") {
-      mod_PVClient.manPVSimuOn(500);
-    }
-    if (server.argName(i) == "simupvc") {
-      mod_PVClient.manPVSimuOn(1000);
-    }
-
     // Emeter Simulation
     if (server.argName(i) == "simuemeteroff") {
       mod_EMeterClient.manEMeterSimuOff();
@@ -126,6 +110,7 @@ void handleMenue() {
       mod_EMeterClient.manEMeterSimuOn(1000);
     }
 
+    // Zeitsteuerung Simulation
     if (server.argName(i) == "simutimeoff") {
         mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
         mod_Timer.syncFromNTP();
@@ -154,17 +139,15 @@ void handleMenue() {
 String generateMenue() {
 
   // Menü mit Links
-  String menu = "<a href='?'>Refresh</a><br>";
-  menu += "<br>";
+  String menu = "<hr>";
+
   menu += "<b>Messen</b><br>";
   menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measurepv'>PV</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
 
-  menu += "<hr>";
-
+  menu += "<br><br>";
   menu += "<b>Manuelles Steuerungsmenue</b><br>";
 
   menu += "Modus:&nbsp;";
@@ -173,21 +156,17 @@ String generateMenue() {
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";
   if ( (mod_IO.IsmanIOMode() == true) ) {
-    menu += "&nbsp;&nbsp;&nbsp; (Manuelle Steuerung ist aktiv!)<br>";
+    menu += "&nbsp;&nbsp;&nbsp; (Manuelle Steuerung ist aktiv!)";
   }  
-  menu += "<br>";
+  menu += "<br><br>";
+  menu += "<b>Simulationsmenue</b><br>";
+
   menu += "Batterie&nbsp;";
   menu += "<a href='?simubattoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatta'>27</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattb'>26.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattc'>26</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubattd'>25.5</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<br>";
-  menu += "PV&nbsp;";
-  menu += "<a href='?simupvoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simupva'>1</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simupvb'>500</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simupvc'>1000</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Emeter&nbsp;";
   menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -200,8 +179,8 @@ String generateMenue() {
   menu += "<a href='?simutimeday'>Tag</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimenight'>Nacht</a>&nbsp;&nbsp;&nbsp;";
 
-  menu += "<br>";
-  menu += "<br>";
+  menu += "<br><br>";
+  menu += "<b>Fehlerbehebung</b><br>";
   menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
 
@@ -252,7 +231,7 @@ void handleRoot() {
   logdump.replace("\r\n", "<br>");
   message += logdump;
 
-  message += "<hr>";
+  message += "<a href='?'>Refresh</a><br>";
   
   message += generateMenue();
 

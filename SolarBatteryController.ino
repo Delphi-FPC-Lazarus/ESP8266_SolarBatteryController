@@ -18,10 +18,10 @@
 
 #include "modNTPClient.h"
 #include "modTimer.h"
-#include "modPVClient.h"
-#include "modEMeterClient.h"
-#include "modIO.h"
 #include "modLogger.h"
+
+#include "modIO.h"
+#include "modEMeterClient.h"
 
 #include "prgController.h"
 
@@ -54,9 +54,6 @@ void setup() {
   mod_Logger.Init(); // sollte immer mit Zeitstempel vom Timer aufgerufen werden
 
   mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Startup, 0); // Jetzt kommen alle anderen Module und Steuerungsmodul(e) -> 
-
-  // PV Client
-  mod_PVClient.Init();
 
   // EMeter Client
   mod_EMeterClient.Init();

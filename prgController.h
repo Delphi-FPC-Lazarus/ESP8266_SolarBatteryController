@@ -460,15 +460,15 @@ void Prg_Controller::Handle() {
       case State_Discharge:
         Serial.println("State_Discharge");
 
-        if (mod_Timer.runTime.m == 0) {
-          if ( (mod_Timer.runTime.h == 18) || (mod_Timer.runTime.h == 19) || (mod_Timer.runTime.h == 20) ) {
-            Serial.println("triggerReynch");
-            mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Resynch,0);
-            mod_IO.Off();
-            delay(10000);
-            mod_IO.Discharge();
-          }
-        }
+        //if (mod_Timer.runTime.m == 0) {
+        //  if ( (mod_Timer.runTime.h == 18) || (mod_Timer.runTime.h == 19) || (mod_Timer.runTime.h == 20) ) {
+        //    Serial.println("triggerReynch");
+        //    mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Resynch,0);
+        //    mod_IO.Off();
+        //    delay(10000);
+        //    mod_IO.Discharge();
+        //  }
+        //}
 
         if (triggerStopDischarge()) {
           Serial.println("triggerStopDischarge");
