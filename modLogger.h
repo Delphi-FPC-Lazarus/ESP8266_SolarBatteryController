@@ -56,7 +56,13 @@ const byte logCode_TimeSimuNight        = 33;
 
 const byte logCode_WifiErrorDetected    = 34;
 
-const int logMsgCount = 35;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
+const byte logCode_BatteryWRSimuOn      = 35;
+const byte logCode_BatteryWRSimuOff     = 36;
+const byte logCode_BatteryWRRequestFail = 37;
+const byte logCode_BatteryWRPowerSet    = 38;
+const byte logCode_BatteryWRPower       = 39;
+
+const int logMsgCount = 40;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)(obacht, wenn ein komma vergessen wird, wird's schräg")
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -71,7 +77,7 @@ const String logMsg[logMsgCount] = {
   "Batteriespannung (Batt 1)",
   "Batteriespannung (Batt 2)",
   "PV Leistung",
-  "Bezug(+) Einspeisung(-) Leistung",
+  "EMeter Bezug(+) Einspeisung(-) Leistung",
 
   "<b>Manueller IO Modus aktiviert</b>",
   "<b>Menueller IO Modus deaktiviert</b>",  
@@ -103,7 +109,13 @@ const String logMsg[logMsgCount] = {
   "<b>Zeitsimulation Tag</b>",
   "<b>Zeitsimulation Nacht</b>",
 
-  "<b><font color=red>WiFi-Fehler erkannt</font></b>"
+  "<b><font color=red>WiFi-Fehler erkannt</font></b>",
+
+  "<b>WRsimulation an</b>",
+  "<b>WRsimulation aus</b>",
+  "<b><font color=red>WR Abfrage/Setzen fehlgeschlagen</font></b>",
+  "WR Leistungsvorgabe",
+  "WR Leistung"
 
 };
 

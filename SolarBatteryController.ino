@@ -22,6 +22,7 @@
 
 #include "modIO.h"
 #include "modEMeterClient.h"
+#include "modBatteryWR.h"
 
 #include "prgController.h"
 
@@ -58,6 +59,9 @@ void setup() {
   // EMeter Client
   mod_EMeterClient.Init();
 
+  // Battery WR Client
+  mod_BatteryWRClient.Init();
+
   // I/O
   mod_IO.Init();
 
@@ -90,6 +94,9 @@ void loop() {
 
   // EMeter Client
   //mod_EMeterClient.Handle(); // nicht nötig, bei Bedarf
+
+  // Battery WR Client
+  //mod_BatteryWRClient.Handle(); // nicht nötig, bei Bedarf
 
   // IO 
   mod_IO.Handle();

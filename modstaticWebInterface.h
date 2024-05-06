@@ -10,6 +10,7 @@
 
 #include "modIO.h"
 #include "modEMeterClient.h"
+#include "modBatteryWR.h"
 
 #include "prgController.h"
 
@@ -56,7 +57,9 @@ void handleMenue() {
     if (server.argName(i) == "measureemeter") {
       mod_EMeterClient.GetCurrentPower(true);
     }
-
+    if (server.argName(i) == "measurewr") {
+      mod_BatteryWRClient.GetCurrentPower(true);
+    }
     // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
       prg_Controller.SetStandbyMode();
@@ -107,6 +110,12 @@ void handleMenue() {
       mod_EMeterClient.manEMeterSimuOn(-300);
     }
     if (server.argName(i) == "simuemeterc") {
+      mod_EMeterClient.manEMeterSimuOn(20);
+    }
+    if (server.argName(i) == "simuemeterd") {
+      mod_EMeterClient.manEMeterSimuOn(200);
+    }
+    if (server.argName(i) == "simuemetere") {
       mod_EMeterClient.manEMeterSimuOn(1000);
     }
 
@@ -145,7 +154,7 @@ String generateMenue() {
   menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<br>";
+  menu += "<a href='?measurewr'>Wechselrichter</a>&nbsp;&nbsp;&nbsp;";
 
   menu += "<br><br>";
   menu += "<b>Manuelles Steuerungsmenue</b><br>";
@@ -172,7 +181,9 @@ String generateMenue() {
   menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemetera'>-600</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemeterb'>-300</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simuemeterc'>1000</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemeterc'>20</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemeterd'>200</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemetere'>1000</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Zeit&nbsp;";
   menu += "<a href='?simutimeoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -182,7 +193,8 @@ String generateMenue() {
   menu += "<br><br>";
   menu += "<b>Fehlerbehebung</b><br>";
   menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<br>";
+
+  menu += "<br><br>";
 
   return menu;
 }
@@ -222,6 +234,12 @@ void handleRoot() {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
     mod_IO.MeasureBattGes(false);
     message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
+  }
+  else {
+    if ( prg_Controller.GetState() == "D") {
+      message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+      message += prg_Controller.GetDetailsMsg();
+    }
   }
   message += "<hr><br>";
   

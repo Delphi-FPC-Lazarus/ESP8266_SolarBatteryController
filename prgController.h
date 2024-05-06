@@ -15,6 +15,11 @@ class Prg_Controller {
   private:
     PrgState state;
     byte triggertime_bak;
+    
+    int pwrControlSkip;
+    float lastWRpwrset;
+
+    String detailsMsg;
 
     bool CheckFailure();
 
@@ -28,9 +33,13 @@ class Prg_Controller {
 
     bool triggerStartDischarge();
     bool triggerStopDischarge();
+
+    void doPowerControl();
+
   public:
     String GetState();
     String GetStateString();
+    String GetDetailsMsg();
     
     void SetStandbyMode();
 
@@ -47,8 +56,12 @@ const float pvDayNight=5;               // Tag Nacht Erkennung über die PV Anla
 // Ladeleistung 500W
 const float emeterChargePower=-500;         // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
 
-// Entladeleistung 150W
-const float emeterDischargePower=100;       // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
+// Entladeleistung 
+const float defaultWRpwrset=150;            // Vorgabewert beim Einschalten (wandler fährt eh erst mal rampe, regelung erst nach max 10 min möglich)
+const float maxWRpwrset=300;                // Maximalwert für den Wechselrichter
+const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
+
+const float emeterDischargePower=50;        // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
 const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren bzw. differenz starttriggger entladen/tatsächlicher entladeleistung) (negativ weil Trigger auf Einspeisung)
 
 // Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
@@ -277,7 +290,7 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
   if ( 
-        (emeterPower < emeterDischargeStopPower)
+        (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) // Endladen abbrechen wenn ich im Lieferbereich bin, aber der Akku auch schon heruntergefahren ist
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
@@ -287,6 +300,38 @@ bool Prg_Controller::triggerStopDischarge() {
 
   return false;
 }
+
+void Prg_Controller::doPowerControl() {
+  Serial.println("doPowerControl()");
+  
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
+  delay(1); // Yield()
+
+  Serial.println("LastWRpower: " + String(lastWRpwrset) + "EMeter: " + String(emeterPower));  
+  if (emeterPower > 0 ) {
+    // > 0 Bezug
+    // Wechselrichterleistung um Bezug erhöhen
+    lastWRpwrset += int(emeterPower); 
+  };
+  if (emeterPower < 0) {
+    // < 0 Lieferung
+    // Wechselrichterkesitung um Lieferung verrringern (ist negativ)
+    lastWRpwrset += int(emeterPower);
+  }
+  if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
+  if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
+  Serial.println("LastWRpower(new): " + String(lastWRpwrset));
+  detailsMsg = "Leistung: " + String(lastWRpwrset) + "W (angepasst "+String(emeterPower)+"W)";
+
+  if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
+    Serial.println("doPowerControl() ok");
+  }
+  else {
+    Serial.println("doPowerControl() nok");
+  }
+}
+
 
 // --------------------------------------------
 // Servicefunktionen
@@ -343,6 +388,12 @@ String Prg_Controller::GetStateString() {
   }
 }
 
+String Prg_Controller::GetDetailsMsg() {
+  return detailsMsg;
+}
+
+// --------------------------------------------
+
 void Prg_Controller::SetStandbyMode() {
   state = State_Standby;
 }
@@ -356,6 +407,9 @@ void Prg_Controller::Init() {
   // Initialzustand
   triggertime_bak = mod_Timer.runTime.m;
   state = State_Standby;
+  lastWRpwrset = 0; //defaultWRpwrset;
+  pwrControlSkip = 10; //wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
+  detailsMsg = "";
 
   mod_IO.Off();
   mod_IO.MeasureBattGes(true);
@@ -398,7 +452,7 @@ void Prg_Controller::Handle() {
       // Standby Zustand        
       case State_Standby:
         Serial.println("State_Standby");
-        
+
         if (mod_Timer.runTime.m == 0) {
           if (mod_Timer.runTime.h == 6) {
             // wenn sich der Akku im Standby befindet, akkustand loggen
@@ -426,6 +480,16 @@ void Prg_Controller::Handle() {
         if (triggerStartDischarge()) {
           Serial.println("triggerStartDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
+
+          //lastWRpwrset = defaultWRpwrset; // Vorgabe, Wandler fährt eh erst mal Rampe
+          // initial aktuelle Leistung einstellen, so kann ich ggf. peaks am Tag besser ausregeln
+          float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+          lastWRpwrset= emeterPower; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
+          delay(1); // Yield()        
+
+          pwrControlSkip = 10; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
+          detailsMsg = "Initialleistung "+String(lastWRpwrset)+"W";
+          mod_BatteryWRClient.SetPowerLimit(lastWRpwrset);
 
           mod_IO.Discharge();
 
@@ -460,19 +524,20 @@ void Prg_Controller::Handle() {
       case State_Discharge:
         Serial.println("State_Discharge");
 
-        //if (mod_Timer.runTime.m == 0) {
-        //  if ( (mod_Timer.runTime.h == 18) || (mod_Timer.runTime.h == 19) || (mod_Timer.runTime.h == 20) ) {
-        //    Serial.println("triggerReynch");
-        //    mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Resynch,0);
-        //    mod_IO.Off();
-        //    delay(10000);
-        //    mod_IO.Discharge();
-        //  }
-        //}
+        // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
+        pwrControlSkip -= 1;
+        if ( pwrControlSkip < 0) {
+            pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
+            doPowerControl();
+        }
 
         if (triggerStopDischarge()) {
           Serial.println("triggerStopDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
+
+          // zurück auf initialzustand
+          lastWRpwrset = 0; // defaultWRpwrset;
+          detailsMsg = "";
 
           mod_IO.Off();
           state = State_Standby;
