@@ -237,7 +237,8 @@ void handleRoot() {
   }
   else {
     if ( prg_Controller.GetState() == "D") {
-      message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+      //message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+      message += "<br>";
       message += prg_Controller.GetDetailsMsg();
     }
   }

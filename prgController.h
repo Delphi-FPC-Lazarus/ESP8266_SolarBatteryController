@@ -308,21 +308,28 @@ void Prg_Controller::doPowerControl() {
   if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
   delay(1); // Yield()
 
-  Serial.println("LastWRpower: " + String(lastWRpwrset) + "EMeter: " + String(emeterPower));  
+  float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
+  if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
+  delay(1); // Yield()
+
+  Serial.println("LastWRpower: " + String(lastWRpwrset) + " CurrentWRpower: " + String(wrPower) + " EMeter: " + String(emeterPower)); 
+
   if (emeterPower > 0 ) {
     // > 0 Bezug
-    // Wechselrichterleistung um Bezug erhöhen
-    lastWRpwrset += int(emeterPower); 
+    // Wechselrichterleistung um Bezug erhöhen (ist positiv)
+    lastWRpwrset = wrPower + (emeterPower*0.9); 
   };
   if (emeterPower < 0) {
     // < 0 Lieferung
     // Wechselrichterkesitung um Lieferung verrringern (ist negativ)
-    lastWRpwrset += int(emeterPower);
+    lastWRpwrset = wrPower + (emeterPower*0.9);
   }
   if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
   if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
-  Serial.println("LastWRpower(new): " + String(lastWRpwrset));
-  detailsMsg = "Leistung: " + String(lastWRpwrset) + "W (angepasst "+String(emeterPower)+"W)";
+  Serial.println("NewWRpower(new): " + String(lastWRpwrset));
+
+  // neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im wrPower und emeterpower hab ich noch die Werte von davon
+  detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (Vorherige Leistung " + String(wrPower)+ "W  EMeter: "+String(emeterPower)+"W)";
 
   if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
     Serial.println("doPowerControl() ok");
@@ -330,6 +337,7 @@ void Prg_Controller::doPowerControl() {
   else {
     Serial.println("doPowerControl() nok");
   }
+
 }
 
 
@@ -526,7 +534,7 @@ void Prg_Controller::Handle() {
 
         // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
         pwrControlSkip -= 1;
-        if ( pwrControlSkip < 0) {
+        if ( pwrControlSkip <= 1) {
             pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
             doPowerControl();
         }
