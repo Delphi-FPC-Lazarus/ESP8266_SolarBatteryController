@@ -317,12 +317,12 @@ void Prg_Controller::doPowerControl() {
   if (emeterPower > 0 ) {
     // > 0 Bezug
     // Wechselrichterleistung um Bezug erhöhen (ist positiv)
-    lastWRpwrset = wrPower + (emeterPower*0.9); 
+    lastWRpwrset = wrPower + (emeterPower*0.8); 
   };
   if (emeterPower < 0) {
     // < 0 Lieferung
     // Wechselrichterkesitung um Lieferung verrringern (ist negativ)
-    lastWRpwrset = wrPower + (emeterPower*0.9);
+    lastWRpwrset = wrPower + (emeterPower*0.8);
   }
   if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
   if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
@@ -534,7 +534,7 @@ void Prg_Controller::Handle() {
 
         // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
         pwrControlSkip -= 1;
-        if ( pwrControlSkip <= 1) {
+        if ( pwrControlSkip < 1) {
             pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
             doPowerControl();
         }
