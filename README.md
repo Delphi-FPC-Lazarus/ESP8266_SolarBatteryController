@@ -7,9 +7,11 @@ modNTPClient: remote ntp time client\
 modTimer: local timer and runtime\
 
 **hardware support modules**\
-modPVClient: query solar system stecagrid 2500\
-modEMeter: query electricity meter from vzlogger\
 modIO: application specivic hardware control \
+modEMeter: query electricity meter from vzlogger\
+modBatteryWR: query microinverter from ahoy dtu\
+modPVClient: query solar system stecagrid 2500\
+
 \
 **further code**
 modStatic_WebInterface: web interface\
