@@ -17,6 +17,7 @@ class Prg_Controller {
     byte triggertime_bak;
     
     int pwrControlSkip;
+    float lastEMeterpwr;
     float lastWRpwrset;
 
     String detailsMsg;
@@ -304,12 +305,24 @@ bool Prg_Controller::triggerStopDischarge() {
 void Prg_Controller::doPowerControl() {
   Serial.println("doPowerControl()");
   
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
+  // Verhalten des EMeters (mittelung) in der Regelung berücksichtigen!
+  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
   if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
   delay(1); // Yield()
 
+  // Trigger ist, ob das EMeter einen neuen Wert geliefert hat
+  //if (emeterPower == lastEMeterpwr) {
+  //  Serial.println("EMeter hat noch keinen neuen Wert geliefert, Skip!");
+  //  detailsMsg = detailsMsg + ".";
+  //  return;
+  //} else {
+  //  Serial.println("EMeter hat neuen Wert geliefert, Leistungsregelung wird ausgeführt");
+  //}
+  lastEMeterpwr = emeterPower;
+
   float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
-  if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
+  if ( wrPower == 0 ) { return; } // Fehler wenn genau 0
   delay(1); // Yield()
 
   Serial.println("LastWRpower: " + String(lastWRpwrset) + " CurrentWRpower: " + String(wrPower) + " EMeter: " + String(emeterPower)); 
@@ -416,6 +429,7 @@ void Prg_Controller::Init() {
   triggertime_bak = mod_Timer.runTime.m;
   state = State_Standby;
   lastWRpwrset = 0; //defaultWRpwrset;
+  lastEMeterpwr = 0; // 0 wäre egal
   pwrControlSkip = 10; //wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
   detailsMsg = "";
 
@@ -491,12 +505,12 @@ void Prg_Controller::Handle() {
 
           //lastWRpwrset = defaultWRpwrset; // Vorgabe, Wandler fährt eh erst mal Rampe
           // initial aktuelle Leistung einstellen, so kann ich ggf. peaks am Tag besser ausregeln
-          float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
-          lastWRpwrset= emeterPower; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
+          lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+          lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
           delay(1); // Yield()        
 
           pwrControlSkip = 10; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
-          detailsMsg = "Initialleistung "+String(lastWRpwrset)+"W";
+          detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
           mod_BatteryWRClient.SetPowerLimit(lastWRpwrset);
 
           mod_IO.Discharge();
@@ -535,8 +549,10 @@ void Prg_Controller::Handle() {
         // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
         pwrControlSkip -= 1;
         if ( pwrControlSkip < 1) {
-            pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
-            doPowerControl();
+          pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
+          doPowerControl();
+        } else {
+          detailsMsg = detailsMsg + ".";
         }
 
         if (triggerStopDischarge()) {
@@ -545,6 +561,7 @@ void Prg_Controller::Handle() {
 
           // zurück auf initialzustand
           lastWRpwrset = 0; // defaultWRpwrset;
+          lastEMeterpwr = 0; // 0 wäre egal 
           detailsMsg = "";
 
           mod_IO.Off();
