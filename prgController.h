@@ -67,7 +67,7 @@ const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen 
 
 // Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
-const float battFull=95;                    // %Akku bei der der Akku als voll betrachtet wird, also keine Ladung mehr gestartet wird
+const float battFull=100;                   // %Akku bei der keine Ladung mehr gestartet wird (automatiklader, daher unkritisch)
 
 const float battApplicableNight=30;         // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
 const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
@@ -143,7 +143,7 @@ bool Prg_Controller::triggerStatCharge() {
   delay(1); // Yield()
 
   if (  
-        (mod_IO.vBatt_gesProz <= battFull) && 
+        (mod_IO.vBatt_gesProz < battFull) && 
         (emeterPower < emeterChargePower)  &&
         (isDay() == true) 
      ) {
