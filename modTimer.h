@@ -72,6 +72,7 @@ void Mod_Timer::initRunTime() {
 void Mod_Timer::syncFromNTP() {
   Serial.println("modTimer_syncFromNTP()");
   // lokalen Laufzeittimer mit NTP Zeit initialisieren (Stunden Minuten Sekunden)
+  mod_NTPClient.CalcTimeOffset();
   mod_NTPClient.Update();
 
   runTime.lastmillis = millis();   
@@ -81,7 +82,7 @@ void Mod_Timer::syncFromNTP() {
   // runTime.s nicht setzen weil ich die Sekunden nicht zähle sonder immmer ausrechne
   // stattdessen ntp_millisoffset setzen, lastmillis muss immer < millis sein sonst greift die Überlauferkennung
   runTime.ntp_millisoffset = mod_NTPClient.NTPsecond*1000;  
-  Serial.print(runTime.h);Serial.print(':');Serial.print(runTime.m);Serial.print(" -> ntp_millisoffset ");Serial.println(runTime.ntp_millisoffset);
+  //Serial.print(runTime.h);Serial.print(':');Serial.print(runTime.m);Serial.print(" -> ntp_millisoffset ");Serial.println(runTime.ntp_millisoffset);
 }
 
 void Mod_Timer::calcRunTime() {

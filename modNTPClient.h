@@ -27,6 +27,7 @@ class Mod_NTPClient {
     time_t NTPepochTime;
     String epochTimeToString(time_t epochTime);
 
+    void CalcTimeOffset();
     void Update();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
@@ -34,6 +35,14 @@ class Mod_NTPClient {
     void Handle();
 };
 Mod_NTPClient mod_NTPClient;
+
+// Für Deutschland gilt: Winterzeit = UTC/GMT +1. Sommerzeit = UTC/GMT +2.
+// GMT +1 = 3600
+// GMT 0 = 0
+// GMT -1 = -3600
+
+long winterzeit=3600;
+long sommerzeit=3600*2;
 
 // --------------------------------------------
 
@@ -64,32 +73,47 @@ String Mod_NTPClient::epochTimeToString(time_t epochTime) {
 void Mod_NTPClient::Update() {
   Serial.println("NTP Update");
   timeClient.update();
-  Serial.println(epochTimeToString(timeClient.getEpochTime()));
-  Serial.println(timeClient.getSeconds());
+  
   NTPhour       = timeClient.getHours();
   NTPminute     = timeClient.getMinutes();
   NTPsecond     = timeClient.getSeconds();
 
   NTPepochTime  = timeClient.getEpochTime();
-  Serial.print ("NTP Update: "); Serial.println(epochTimeToString(NTPepochTime));
+  Serial.println(epochTimeToString(NTPepochTime));
+}
+
+void Mod_NTPClient::CalcTimeOffset() {
+
+  struct tm *ptm = gmtime ((time_t *)&NTPepochTime); 
+  int currentDay = ptm->tm_mday;
+  int currentMonth = ptm->tm_mon+1;
+  //int currentYear = ptm->tm_year+1900;
+  //int currenHour = ptm->tm_hour;
+  //int currentMin = ptm->tm_min;
+  //int currentSec = ptm->tm_sec;
+
+  // In Deutschland wird zweimal im Jahr die Zeit umgestellt. 
+  // Am letzten Sonntag im März erfolgt die Zeitumstellung von MEZ (bzw. Winterzeit) auf Sommerzeit
+  // und am letzten Sonntag im Oktober von Sommerzeit auf MEZ (bzw. Winterzeit).
+  // Hier vereinfacht [APRIL-OKTOBER]
+  if ( (currentMonth >= 4) && (currentMonth <= 10) ) {
+    timeClient.setTimeOffset(sommerzeit);
+    Serial.println("Sommerzeit");
+  } else {
+    timeClient.setTimeOffset(winterzeit);
+    Serial.println("Winterzeit");
+  }
+
 }
 
 // --------------------------------------------
 // Standard Init/Handler 
-
-// Für Deutschland gilt: Winterzeit = UTC/GMT +1. Sommerzeit = UTC/GMT +2.
-// GMT +1 = 3600
-// GMT 0 = 0
-// GMT -1 = -3600
-
-long winterzeit=3600;
-long sommerzeit=3600*2;
-
 void Mod_NTPClient::Init() {
   Serial.println("modHttpNTP_Init()");
   timeClient.begin();
-  // Set offset time in seconds to adjust for your timezone, for example:
-  timeClient.setTimeOffset(winterzeit);
+  Update();  // Datum holen
+  CalcTimeOffset(); // berechnen
+  Update();  // übernehmen
 }
 
 void Mod_NTPClient::Handle() {
