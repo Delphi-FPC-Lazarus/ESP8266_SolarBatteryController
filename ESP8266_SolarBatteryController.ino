@@ -2,9 +2,17 @@
   Arduino IDE Project for ESP8266 Board
 
   This is an Solar Battery Controler
-  
+
   by Peter Lorenz
   support@peter-ebe.de
+  
+  Libraries used: (can be installed from arudoiono ide librarie manager)
+  - ArduinoHttpClient
+  - NTPClient
+  - Adafruit ADS1X15
+  - Adafruit BUSIO
+  . Arduinojson
+
 */
 
 /*

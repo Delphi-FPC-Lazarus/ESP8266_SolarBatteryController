@@ -73,7 +73,7 @@ const float battApplicableNight=30;         // %Akku die mindestens vorhanden se
 const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
 
 const float battStopDischarge=15;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
-                                            // Der Tatsächliche Ladezustand kann erst wenige Minuten nach Entladestop über die Akkuspannung abschätzt werden
+                                            // Nach Abschaltung der Entladung springt der Wert sprunghaft, der tatsächliche Ladezustand kann erst wenige Minuten nach Entladestop über die Akkuspannung abschätzt werden.
 
 
 // --------------------------------------------
@@ -83,11 +83,11 @@ bool Prg_Controller::CheckFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
   delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
+  mod_IO.measureBattActive(false);
   delay(1); // Yield()
-  if (mod_IO.vBatt_gesProz < 1) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+  if (mod_IO.vBatt_activeProz < 1) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
   } else {
     return false;
@@ -136,19 +136,19 @@ bool Prg_Controller::triggerStatCharge() {
   // ggf. noch Zeitbegrenzung das er nicht zu früh anfängt wegen Geräuschentwicklung, technisch ist das nicht nötig
 
   delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
+  mod_IO.measureBattActive(false);
   delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
   if (  
-        (mod_IO.vBatt_gesProz < battFull) && 
+        (mod_IO.vBatt_activeProz < battFull) && 
         (emeterPower < emeterChargePower)  &&
         (isDay() == true) 
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
@@ -185,15 +185,15 @@ bool Prg_Controller::triggerStatChargeEmergency() {
   // Wenn die Batteriespannung zu tief abgesackt ist
 
   delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
+  mod_IO.measureBattActive(false);
   delay(1); // Yield()
 
   if ( 
-        (mod_IO.vBatt_gesProz <= battEmergencyStart) && 
+        (mod_IO.vBatt_activeProz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
   }
   else {
@@ -207,8 +207,8 @@ bool Prg_Controller::triggerStopChargeEmergency() {
   if ( 
         (isDay() == false) 
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
   }
   else {
@@ -226,7 +226,7 @@ bool Prg_Controller::triggerStartDischarge() {
   // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
 
   delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
+  mod_IO.measureBattActive(false);
   delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
@@ -236,11 +236,11 @@ bool Prg_Controller::triggerStartDischarge() {
 
     // Am Tag den Einspeisemodus nur starten wenn 
     if ( 
-         (mod_IO.vBatt_gesProz >= battApplicableDay) && 
+         (mod_IO.vBatt_activeProz >= battApplicableDay) && 
          (emeterPower > emeterDischargePower)
       ) {
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
       return true;
     }
@@ -253,11 +253,11 @@ bool Prg_Controller::triggerStartDischarge() {
 
     // In der Nach den Einspeisemodus immer neu(starten) bis die Batterie die Mindestladung unterschritten hat
     if ( 
-         (mod_IO.vBatt_gesProz >= battApplicableNight) && 
+         (mod_IO.vBatt_activeProz >= battApplicableNight) && 
          (emeterPower > emeterDischargePower)
       ) {
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
       return true;
     }
@@ -276,13 +276,13 @@ bool Prg_Controller::triggerStopDischarge() {
   // Zusätzlich kann die Zeit geprüft werden, also wenn die Nacht zu Ende ist. Achtung: Start/Stop Bedingung gemeinsam anpassen
   
   delay(1); // Yield()
-  mod_IO.MeasureBattGes(false);
+  mod_IO.measureBattActive(false);
   delay(1); // Yield()
   if ( 
-        (mod_IO.vBatt_gesProz <= battStopDischarge)
+        (mod_IO.vBatt_activeProz <= battStopDischarge)
     ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
   }
 
@@ -294,8 +294,8 @@ bool Prg_Controller::triggerStopDischarge() {
         (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) // Endladen abbrechen wenn ich im Lieferbereich bin, aber der Akku auch schon heruntergefahren ist
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGes, mod_IO.vBatt_ges);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattGesProz, mod_IO.vBatt_gesProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
   }
 
@@ -434,7 +434,7 @@ void Prg_Controller::Init() {
   detailsMsg = "";
 
   mod_IO.Off();
-  mod_IO.MeasureBattGes(true);
+  mod_IO.measureBattActive(true);
 
   Serial.println("prgController_Init() Done");
 }
@@ -478,8 +478,8 @@ void Prg_Controller::Handle() {
         if (mod_Timer.runTime.m == 0) {
           if (mod_Timer.runTime.h == 6) {
             // wenn sich der Akku im Standby befindet, akkustand loggen
-            // das ist vor allem im interessant wenn der Akku meistens im Standby ist 
-            mod_IO.MeasureBattGes(true);
+            // das ist vor allem im interessant wenn der Akku mehrere Tage im Standby ist 
+            mod_IO.measureBattActive(true);
             mod_IO.MeasureBatt12(true);
           }
         }

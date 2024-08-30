@@ -48,8 +48,8 @@ void handleMenue() {
     }
 
     // Messen
-    if (server.argName(i) == "measurebattges") {
-      mod_IO.MeasureBattGes(true);
+    if (server.argName(i) == "measurebattactive") {
+      mod_IO.measureBattActive(true);
     }
     if (server.argName(i) == "measurebatt12") {
       mod_IO.MeasureBatt12(true);
@@ -151,7 +151,7 @@ String generateMenue() {
   String menu = "<hr>";
 
   menu += "<b>Messen</b><br>";
-  menu += "<a href='?measurebattges'>Batt ges</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurebattactive'>Batt aktiv</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurewr'>Wechselrichter</a>&nbsp;&nbsp;&nbsp;";
@@ -232,8 +232,8 @@ void handleRoot() {
   if ( ( prg_Controller.GetState() != "C") && ( prg_Controller.GetState() != "D") )
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    mod_IO.MeasureBattGes(false);
-    message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_gesProz)+"% ("+String(mod_IO.vBatt_ges)+"V)";
+    mod_IO.measureBattActive(false);
+    message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_activeProz)+"% ("+String(mod_IO.vBatt_active)+"V)";
   }
   else {
     if ( prg_Controller.GetState() == "D") {
@@ -295,7 +295,7 @@ void handleBattProz() {
   Serial.println("handleBattProz()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  String message = String(mod_IO.vBatt_gesProz);
+  String message = String(mod_IO.vBatt_activeProz);
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH

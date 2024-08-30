@@ -16,8 +16,8 @@ const byte logCode_IOcharge             = 3;
 const byte logCode_IOdischarge          = 4;
 
 const byte logCode_Measure              = 5;
-const byte logCode_VBattGes             = 6;
-const byte logCode_VBattGesProz         = 7;
+const byte logCode_VBattActive          = 6;
+const byte logCode_VBattProz            = 7;
 const byte logCode_VBatt1               = 8;
 const byte logCode_VBatt2               = 9;
 const byte logCode_PVPower              = 10;
@@ -62,7 +62,9 @@ const byte logCode_BatteryWRRequestFail = 37;
 const byte logCode_BatteryWRPowerSet    = 38;
 const byte logCode_BatteryWRPower       = 39;
 
-const int logMsgCount = 40;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)(obacht, wenn ein komma vergessen wird, wird's schräg")
+const byte logCode_BatteryMeasure       = 40;
+
+const int logMsgCount = 42;   // Anzahl der hinterlegten Meldungen. Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)(obacht, wenn ein komma vergessen wird, wird's schräg")
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
@@ -72,8 +74,8 @@ const String logMsg[logMsgCount] = {
   "IO: Entladen",
 
   "Messen",
-  "Batteriespannung (ges)",
-  "Batteriespannung (ges proz)",
+  "Batteriespannung (aktive Batt)",
+  "Batteriespannung (proz)",
   "Batteriespannung (Batt 1)",
   "Batteriespannung (Batt 2)",
   "PV Leistung",
@@ -115,7 +117,11 @@ const String logMsg[logMsgCount] = {
   "<b>WRsimulation aus</b>",
   "<b><font color=red>WR Abfrage/Setzen fehlgeschlagen</font></b>",
   "WR Leistungsvorgabe",
-  "WR Leistung"
+  "WR Leistung",
+
+  "Batterypack Messung",
+
+  "DUMMYEINTRAG_DO_NOT_DELETE" // letzer eintrag ohne abschließendes komma, damit kann ich das nicht vergessen und sehe wenn ich mich beim Erweitern der Liste vertan habe
 
 };
 

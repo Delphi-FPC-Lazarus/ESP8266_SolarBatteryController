@@ -8,7 +8,7 @@ modTimer: local timer and runtime\
 
 **hardware support modules**\
 modIO: application specivic hardware control \
-modEMeter: query electricity meter from vzlogger\
+modEMeterClient: query electricity meter from vzlogger\
 modBatteryWR: query microinverter from ahoy dtu\
 modPVClient: query solar system stecagrid 2500\
 
@@ -36,7 +36,5 @@ Paypal webmaster@peter-ebe.de \
 No specific hardware building instructions are published. Everything you do is on your own risk.\
 Make sure to use safe hardware components and cabling!\
 \
-A schematic representation of the hardware responding to that software can be found here.\
-<img src="https://raw.githubusercontent.com/Delphi-FPC-Lazarus/ESP8266_SolarBatteryController/main/Hardwareschema/Hardware_Grundschema.png">
-
+A schematic representation of the hardware responding to that software is provided in hardware folder.\
 
