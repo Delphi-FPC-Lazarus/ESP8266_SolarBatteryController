@@ -57,15 +57,15 @@ const int dout_ACea = D5;        // AC aus/ein (off=aus on=ein)
 const int dout_ACmode = D6;      // AC Modus laden/entladen, UM damit niemals gleichzeit (off=laden on=entladen)
 const int dout_BATTselect = D7;  // DC Batterieumschalter
 
-const uint8_t R_OFF = HIGH;      // relaisboard inaktiv, Initialzustand 
-const uint8_t R_ON = LOW;        // relaisboard aktiv
+const uint8_t R_OFF = HIGH;     // relaisboard inaktiv, Initialzustand 
+const uint8_t R_ON = LOW;       // relaisboard aktiv
 
-//const int ain_Vxx = A0;          // ADC intern
-const uint8 ain_batt1 = 0;         // ADC extern
-const uint8 ain_batt2 = 1;         // ADC extern
+//const int ain_Vxx = A0;       // ADC intern
+const uint8 ain_batt1 = 0;      // ADC extern
+const uint8 ain_batt2 = 1;      // ADC extern
 
-const float CALVOLT = 5.00;     // Kalibierung der Spannungsmessung über den analog in (vor spannungsteiler)
-const int CALVALUE =  3324;     // Kalibierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
+const float CALVOLT = 26.60;    // Kalibierung der Spannungsmessung über den analog in (vor spannungsteiler)
+const int CALVALUE =  18996;    // Kalibierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
 const int CALOFFSET =  0;       // Kalibierung der Spannungsmessung über den analog in
 
 // --------------------------------------------
