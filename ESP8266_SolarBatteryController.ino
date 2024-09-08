@@ -6,19 +6,27 @@
   by Peter Lorenz
   support@peter-ebe.de
   
-  Libraries used: (can be installed from arudoiono ide librarie manager)
+  Libraries used: (installed from libraries manager)
   - ArduinoHttpClient
   - NTPClient
   - Adafruit ADS1X15
   - Adafruit BUSIO
-  . Arduinojson
+  - Arduinojson
 
-*/
+  Libraries used: (installed to libraries path)
+  - tinyxml2 
 
-/*
-#include <Arduino.h>
-#include <Scheduler.h>
-#include <Task.h>
+  Libraries used: (included by default)
+  - ESP8266WiFi
+  - ESP8266WebServer
+  - WiFiClient
+  - WiFiUdp
+
+  Removed
+  - Arduino
+  - Scheduler
+  - Task
+
 */
 
 #include "modstaticWifi.h"
