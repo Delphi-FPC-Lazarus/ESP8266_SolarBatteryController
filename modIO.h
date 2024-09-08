@@ -63,6 +63,7 @@ const uint8_t R_ON = LOW;       // relaisboard aktiv
 //const int ain_Vxx = A0;       // ADC intern
 const uint8 ain_batt1 = 0;      // ADC extern
 const uint8 ain_batt2 = 1;      // ADC extern
+bool extadcpresent = false;     // ADC extern vorhanden ja/nein
 
 const float CALVOLT = 26.60;    // Kalibierung der Spannungsmessung über den analog in (vor spannungsteiler)
 const int CALVALUE =  18996;    // Kalibierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
@@ -106,6 +107,12 @@ float Mod_IO::vBattToProz(float spgvalue) {
 }
 
 float Mod_IO::VBattMeasurement(uint8_t channel) {
+  if (!extadcpresent) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryMeasureFailed, channel);
+    Serial.print("Messung nicht möglich!");
+    return 0;
+  }
+  
   const int avgCount = 100;  // ca. 1 Sekunde wegen evtl. ripple auf der Spannung wenn Entladeung aktiv
 
   // Messen und Mitteln
@@ -210,7 +217,6 @@ void Mod_IO::measureBattActive(bool dolog) {
   Serial.print("% Gemessen: "); Serial.println(vBatt_activeProz);
 
   if (dolog == true) {    
-    // mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryMeasure, 0); // TODO
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_activeProz);
   }  
@@ -287,11 +293,15 @@ void Mod_IO::Init() {
   // ads.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.25mV   0.015625mV
   // ads.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
 
-  if (!ads.begin()) {
-    Serial.println("Failed to initialize ADS.");
-    while (1);
-  } 
-
+  if (ads.begin()) {
+    Serial.println("ADS1X15 initialisierung ok");
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCok, 0);
+    extadcpresent = true;
+  } else {
+    Serial.println("ADS1X15 initialisierung fehlgeschalgen");
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCfailed, 0);
+    extadcpresent = false;
+  }
   Serial.println("modIO_Init() Done");
 }
 
