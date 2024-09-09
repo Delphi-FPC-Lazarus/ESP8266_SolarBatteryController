@@ -60,7 +60,7 @@ const int dout_BATTselect = D7;  // DC Batterieumschalter
 const uint8_t R_OFF = HIGH;     // relaisboard inaktiv, Initialzustand 
 const uint8_t R_ON = LOW;       // relaisboard aktiv
 
-//const int ain_Vxx = A0;       // ADC intern
+//const int ain_internal = A0;  // ADC intern hier nicht verwenden, von anderem Modul verwendet
 const uint8 ain_batt1 = 0;      // ADC extern
 const uint8 ain_batt2 = 1;      // ADC extern
 bool extadcpresent = false;     // ADC extern vorhanden ja/nein
