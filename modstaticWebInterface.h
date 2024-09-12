@@ -11,6 +11,7 @@
 #include "modIO.h"
 #include "modEMeterClient.h"
 #include "modBatteryWR.h"
+#include "modPowerMeter.h"
 
 #include "prgController.h"
 
@@ -60,6 +61,10 @@ void handleMenue() {
     if (server.argName(i) == "measurewr") {
       mod_BatteryWRClient.GetCurrentPower(true);
     }
+    if (server.argName(i) == "measurepowermeter") {
+      mod_PowerMeter.GetCurrentPower(true);
+    }
+
     // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
       prg_Controller.SetStandbyMode();
@@ -119,6 +124,20 @@ void handleMenue() {
       mod_EMeterClient.manEMeterSimuOn(1000);
     }
 
+    // PowerMeter Simulation
+    if (server.argName(i) == "simuPowerMeteroff") {
+      mod_PowerMeter.manPowerMeterSimuOff();
+    }
+    if (server.argName(i) == "simuPowerMetera") {
+      mod_PowerMeter.manPowerMeterSimuOn(1);
+    }
+    if (server.argName(i) == "simuPowerMeterb") {
+      mod_PowerMeter.manPowerMeterSimuOn(250);
+    }
+    if (server.argName(i) == "simuPowerMeterc") {
+      mod_PowerMeter.manPowerMeterSimuOn(250);
+    }
+
     // Zeitsteuerung Simulation
     if (server.argName(i) == "simutimeoff") {
         mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
@@ -153,8 +172,9 @@ String generateMenue() {
   menu += "<b>Messen</b><br>";
   menu += "<a href='?measurebattactive'>Batt aktiv</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measureemeter'>E-Meter</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measurewr'>Wechselrichter</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measureemeter'>E-Meter (Stromz&auml;hler)</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurewr'>Wechselrichter (Einspeisung)</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measurepowermeter'>Powermeter (Laden/Einspeisen)</a>&nbsp;&nbsp;&nbsp;";
 
   menu += "<br><br>";
   menu += "<b>Manuelles Steuerungsmenue</b><br>";
@@ -184,6 +204,12 @@ String generateMenue() {
   menu += "<a href='?simuemeterc'>20</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemeterd'>200</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemetere'>1000</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "PowerMeter&nbsp;";
+  menu += "<a href='?simuPowerMeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuPowerMetera'>1</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuPowerMeterb'>250</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuPowerMeterc'>550</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Zeit&nbsp;";
   menu += "<a href='?simutimeoff'>Auto</a>&nbsp;&nbsp;&nbsp;";

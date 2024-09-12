@@ -66,10 +66,14 @@ const byte logCode_BatteryMeasureFailed = 40;
 const byte logCode_extADCok             = 41;
 const byte logCode_extADCfailed         = 42;
 
+const byte logCode_PowerMeterSimuOn     = 43;
+const byte logCode_PowerMeterSimuOff    = 44;
+const byte logCode_PowerMeterPower      = 45;
+
 // Anzahl der hinterlegten Meldungen (maxlogcode+2) wegen 0 basierend und dummyeintrag 
 // Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 // obacht, wenn ein komma vergessen wird, wird's schräg", deshalb der Dummyeintrag hinten dran
-const int logMsgCount = 44;   
+const int logMsgCount = 47;   
 
 const String logMsg[logMsgCount] = {
   "<b><font color=green>Controller Init...</font></b>",
@@ -129,6 +133,10 @@ const String logMsg[logMsgCount] = {
 
   "Initialisieren des externen ADC(Akkumessung) erfolgreich",
   "<b><font color=red>Fehler beim Initialisieren des externen ADC(Akkumessung)</font></b>",
+
+  "<b>PowerMetersimulation an</b>",
+  "<b>PowerMetersimulation aus</b>",
+  "PowerMeter Leistung",
 
   "DUMMYEINTRAG_DO_NOT_DELETE" // letzer eintrag ohne abschließendes komma, damit kann ich das nicht vergessen und sehe wenn ich mich beim Erweitern der Liste vertan habe
 
