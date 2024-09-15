@@ -317,11 +317,21 @@ void handleStateString() {
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
 }
 
-void handleBattProz() {
-  Serial.println("handleBattProz()");
+void handleStateBattProz() {
+  Serial.println("handleStateBattProz()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
   String message = String(mod_IO.vBatt_activeProz);
+
+  server.send(200, "text/plain", message);
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
+}
+
+void handleStatePower() {
+  Serial.println("handleStatePower()");
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+
+  String message =  String(mod_PowerMeter.lastPower);
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
@@ -337,7 +347,8 @@ void ModStatic_WebInterface::Init() {
   server.on("/", handleRoot);
   server.on("/state", handleState);
   server.on("/statestr", handleStateString);
-  server.on("/battproz", handleBattProz);
+  server.on("/battproz", handleStateBattProz);
+  server.on("/power", handleStatePower);
 
   server.on("/debug", handleDebug);
 

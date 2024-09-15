@@ -14,6 +14,7 @@ struct powermetercalibrationvalue {
 class Mod_PowerMeter {
   private:
     float manPowerMeterSimu;
+    byte triggertime_bak;
 
     // Notiz: delay() < 1ms compiliert, tut aber nichts                                              
     // analogRead() ist träge, 0,1ms auf dem esp8266
@@ -60,6 +61,7 @@ class Mod_PowerMeter {
 
     // Abfragefunktion für den externen Zugriff
     float GetCurrentPower(bool dolog); 
+    float lastPower;
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
@@ -128,6 +130,8 @@ void Mod_PowerMeter::doAvgMeasurement() {
   //  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH 
   //  delay(100);
   //} 
+  yield();    
+  ESP.wdtFeed(); 
 
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
@@ -214,6 +218,7 @@ float Mod_PowerMeter::GetCurrentPower(bool dolog) {
     mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_PowerMeterPower,pwr);
   }
   
+  lastPower = pwr;
   return pwr;
 }
 
@@ -225,12 +230,22 @@ void Mod_PowerMeter::Init()
   Serial.println("modPowerMeter_Init()");
   //Serial.println(GetCurrentPower(true));
   manPowerMeterSimu = -1;
+  triggertime_bak = mod_Timer.runTime.m;
+  lastPower = 0;
+
 }
 
 void Mod_PowerMeter::Handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt
+  
+  // zyklische Messung für Bereitstellung
+  if ( (mod_Timer.runTime.m != triggertime_bak) ) {
+    triggertime_bak = mod_Timer.runTime.m;
+    GetCurrentPower(false);
+  }
+
 }
 
 // ------------------------------------------

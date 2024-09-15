@@ -105,7 +105,7 @@ void loop() {
   // WebInterface für Benutzerabfrage und Eingriffe
   ModStatic_WebInterface::Handle();
 
-  // Lokaler Timer (verwendet NTP Client, der muss nicht separat aufgerufen werden)
+  // Lokaler Timer, dieser muss immer zu Beginn der Loop aufgerufen werden
   //modNTPClient_Handle(); // nicht nötig, von mod_Timer verwendet
   mod_Timer.Handle();
 
@@ -116,7 +116,7 @@ void loop() {
   //mod_BatteryWRClient.Handle(); // nicht nötig, bei Bedarf
 
   // Powermeter
-  //mod_PowerMeter.Handle(); // nicht nötig, bei Bedarf
+  mod_PowerMeter.Handle();
 
   // IO 
   mod_IO.Handle();
@@ -124,7 +124,7 @@ void loop() {
   // Logger
   //mod_Logger.Handle(); // nicht nötig, bei Bedarf
 
-  // Controller für die automatische Steuerung
+  // Controller für die automatische Steuerung, dieser muss immer als leztes in der Loop aufgerufen werden
   prg_Controller.Handle();
 
 }
