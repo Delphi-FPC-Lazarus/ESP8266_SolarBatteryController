@@ -34,24 +34,17 @@ class Mod_PowerMeter {
     int avgValue = 0;
     void doAvgMeasurement();
 
-    // Skalierung zum eingeseetzten getMeasurement() und Modul TA12-100
-    // für Akkusystemcontroller
-    static const int calibrationoffset = 0; // für die Kalibrierung auf 0 setzen
-    static const int calibrationvaluecount = 13;  // tabelle nach offsetkorrektur
+    // Skalierung zum eingeseetzten getMeasurement() und Modul TA12-100 für Akkusystemcontroller
+    // Die ADCs schwanken leider im Offset sehr Stark und eigenen sich nicht wirklich.
+    // Bei einigen Controllern ist der ADC dermaßen im Eimer dass er sich nicht wirklich für die Leistungsmessung eignet (Akkucontroller Controller)
+    static const int calibrationoffset = 13; // für die Kalibrierung auf 0 setzen
+    static const int calibrationvaluecount = 5;  // tabelle nach offsetkorrektur
     powermetercalibrationvalue calibrationvalues[calibrationvaluecount] = {
       {0,0},
-      {5,5},
-      {6,23},
-      {8,52},
-      {11,75},
-      {15,102},
-      {18,128},
-      {21,153},
-      {25,178},
-      {29,205},
-      {37,229},
-      {43,238},
-      {77,580}
+      {16-calibrationoffset, 75},
+      {23-calibrationoffset, 150},
+      {46-calibrationoffset, 233},
+      {78-calibrationoffset, 580}
     };
     int getPowerFromValue(int value);
 
