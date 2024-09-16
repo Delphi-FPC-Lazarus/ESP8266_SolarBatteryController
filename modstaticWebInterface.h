@@ -50,7 +50,7 @@ void handleMenue() {
 
     // Messen
     if (server.argName(i) == "measurebattactive") {
-      mod_IO.measureBattActive(true);
+      mod_IO.MeasureBattActive(true);
     }
     if (server.argName(i) == "measurebatt12") {
       mod_IO.MeasureBatt12(true);
@@ -258,7 +258,7 @@ void handleRoot() {
   if ( ( prg_Controller.GetState() != "C") && ( prg_Controller.GetState() != "D") )
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    mod_IO.measureBattActive(false);
+    mod_IO.MeasureBattActive(false);
     message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_activeProz)+"% ("+String(mod_IO.vBatt_active)+"V)";
   }
   else {
@@ -321,6 +321,7 @@ void handleStateBattProz() {
   Serial.println("handleStateBattProz()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
+  mod_IO.MeasureBattActive(false);
   String message = String(mod_IO.vBatt_activeProz);
 
   server.send(200, "text/plain", message);

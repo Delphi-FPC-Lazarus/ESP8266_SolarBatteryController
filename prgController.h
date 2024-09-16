@@ -83,7 +83,7 @@ bool Prg_Controller::CheckFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
   delay(1); // Yield()
-  mod_IO.measureBattActive(false);
+  mod_IO.MeasureBattActive(false);
   delay(1); // Yield()
   if (mod_IO.vBatt_activeProz < 1) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
@@ -136,7 +136,7 @@ bool Prg_Controller::triggerStatCharge() {
   // ggf. noch Zeitbegrenzung das er nicht zu früh anfängt wegen Geräuschentwicklung, technisch ist das nicht nötig
 
   delay(1); // Yield()
-  mod_IO.measureBattActive(false);
+  mod_IO.MeasureBattActive(false);
   delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
@@ -185,7 +185,7 @@ bool Prg_Controller::triggerStatChargeEmergency() {
   // Wenn die Batteriespannung zu tief abgesackt ist
 
   delay(1); // Yield()
-  mod_IO.measureBattActive(false);
+  mod_IO.MeasureBattActive(false);
   delay(1); // Yield()
 
   if ( 
@@ -226,7 +226,7 @@ bool Prg_Controller::triggerStartDischarge() {
   // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
 
   delay(1); // Yield()
-  mod_IO.measureBattActive(false);
+  mod_IO.MeasureBattActive(false);
   delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
@@ -276,7 +276,7 @@ bool Prg_Controller::triggerStopDischarge() {
   // Zusätzlich kann die Zeit geprüft werden, also wenn die Nacht zu Ende ist. Achtung: Start/Stop Bedingung gemeinsam anpassen
   
   delay(1); // Yield()
-  mod_IO.measureBattActive(false);
+  mod_IO.MeasureBattActive(false);
   delay(1); // Yield()
   if ( 
         (mod_IO.vBatt_activeProz <= battStopDischarge)
@@ -434,7 +434,7 @@ void Prg_Controller::Init() {
   detailsMsg = "";
 
   mod_IO.Off();
-  mod_IO.measureBattActive(true);
+  mod_IO.MeasureBattActive(true);
 
   Serial.println("prgController_Init() Done");
 }
@@ -479,7 +479,7 @@ void Prg_Controller::Handle() {
           if (mod_Timer.runTime.h == 6) {
             // wenn sich der Akku im Standby befindet, akkustand loggen
             // das ist vor allem im interessant wenn der Akku mehrere Tage im Standby ist 
-            mod_IO.measureBattActive(true);
+            mod_IO.MeasureBattActive(true);
             mod_IO.MeasureBatt12(true);
           }
         }

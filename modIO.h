@@ -30,7 +30,7 @@ class Mod_IO {
     void Charge();
     void Discharge();
 
-    void measureBattActive(bool dolog);
+    void MeasureBattActive(bool dolog);
     void MeasureBatt12(bool dolog);
 
     float vBatt_activeProz;
@@ -65,9 +65,9 @@ const uint8 ain_batt1 = 0;      // ADC extern
 const uint8 ain_batt2 = 1;      // ADC extern
 bool extadcpresent = false;     // ADC extern vorhanden ja/nein
 
-const float CALVOLT = 26.60;    // Kalibierung der Spannungsmessung über den analog in (vor spannungsteiler)
-const int CALVALUE =  18996;    // Kalibierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
-const int CALOFFSET =  0;       // Kalibierung der Spannungsmessung über den analog in
+const float CALVOLT = 26.60;        // Kalibrierung der Spannungsmessung über den analog in (vor spannungsteiler)
+const int CALVOLTVALUE =  18996;    // Kalibrierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
+const int CALVOLTOFFSET =  0;       // Kalibrierung der Spannungsmessung über den analog in
 
 // --------------------------------------------
 
@@ -129,8 +129,8 @@ float Mod_IO::VBattMeasurement(uint8_t channel) {
     yield();    
     ESP.wdtFeed(); 
   }
-  float valuekorr = ( valuesum / avgCount ) - CALOFFSET;
-  float volt = CALVOLT/(float)CALVALUE * (float)valuekorr;
+  float valuekorr = ( valuesum / avgCount ) - CALVOLTOFFSET;
+  float volt = CALVOLT/(float)CALVOLTVALUE * (float)valuekorr;
   
   Serial.print("VBattMeasurement() Value: "); Serial.println(value);
   Serial.print("VBattMeasurement() volt: "); Serial.println(volt);
@@ -200,8 +200,8 @@ void Mod_IO::Discharge() {
   digitalWrite(dout_ACea, R_ON);
 }
 
-void Mod_IO::measureBattActive(bool dolog) {
-  Serial.println("IO measureBattActive");
+void Mod_IO::MeasureBattActive(bool dolog) {
+  Serial.println("IO MeasureBattActive");
 
   // Messe die aktuell aktive Batterie (Batteriepack)
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
