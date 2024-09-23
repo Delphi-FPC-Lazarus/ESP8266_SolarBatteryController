@@ -62,7 +62,7 @@ const byte logCode_BatteryWRRequestFail = 37;
 const byte logCode_BatteryWRPowerSet    = 38;
 const byte logCode_BatteryWRPower       = 39;
 
-const byte logCode_BatteryMeasureFailed = 40;
+const byte logCode_extADCMeasureFailed  = 40;
 const byte logCode_extADCok             = 41;
 const byte logCode_extADCfailed         = 42;
 
@@ -129,7 +129,7 @@ const String logMsg[logMsgCount] = {
   "WR Leistungsvorgabe",
   "WR Leistung",
 
-  "<b><font color=red>Akkumessung fehlgeschlagen</font></b>",
+  "<b><font color=red>Messung von externen ADC fehlgeschlagen</font></b>",
 
   "Initialisieren des externen ADC(Akkumessung) erfolgreich",
   "<b><font color=red>Fehler beim Initialisieren des externen ADC(Akkumessung)</font></b>",

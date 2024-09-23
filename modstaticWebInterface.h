@@ -11,7 +11,6 @@
 #include "modIO.h"
 #include "modEMeterClient.h"
 #include "modBatteryWR.h"
-#include "modPowerMeter.h"
 
 #include "prgController.h"
 
@@ -62,7 +61,7 @@ void handleMenue() {
       mod_BatteryWRClient.GetCurrentPower(true);
     }
     if (server.argName(i) == "measurepowermeter") {
-      mod_PowerMeter.GetCurrentPower(true);
+      mod_IO.MeasurePower(true);
     }
 
     // Manuelle Steuerung zum Laden und Entladen
@@ -126,16 +125,16 @@ void handleMenue() {
 
     // PowerMeter Simulation
     if (server.argName(i) == "simuPowerMeteroff") {
-      mod_PowerMeter.manPowerMeterSimuOff();
+      mod_IO.SetmanPowerMeterSimuOff();
     }
     if (server.argName(i) == "simuPowerMetera") {
-      mod_PowerMeter.manPowerMeterSimuOn(1);
+      mod_IO.SetmanPowerMeterSimuOn(1);
     }
     if (server.argName(i) == "simuPowerMeterb") {
-      mod_PowerMeter.manPowerMeterSimuOn(250);
+      mod_IO.SetmanPowerMeterSimuOn(250);
     }
     if (server.argName(i) == "simuPowerMeterc") {
-      mod_PowerMeter.manPowerMeterSimuOn(250);
+      mod_IO.SetmanPowerMeterSimuOn(550);
     }
 
     // Zeitsteuerung Simulation
@@ -332,7 +331,8 @@ void handleStatePower() {
   Serial.println("handleStatePower()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  String message =  String(mod_PowerMeter.lastPower);
+  mod_IO.MeasurePower(false);
+  String message =  String(mod_IO.power_active);
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH

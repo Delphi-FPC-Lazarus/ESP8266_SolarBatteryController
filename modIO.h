@@ -15,9 +15,12 @@ class Mod_IO {
   private:
     bool manIOMode;
     float manBattSimu;
+    float manPowerSimu;
 
     float VBattMeasurement(uint8_t channel);
     float vBattToProz(float spgvalue);
+    
+    float PowerMeasurement(uint8_t channel);
   public:
     void SetmanIOModeOn();
     void SetmanIOModeOff();
@@ -25,16 +28,21 @@ class Mod_IO {
 
     void SetmanBattSimuOn(float value);
     void SetmanBattSimuOff();
-    
+
+    void SetmanPowerMeterSimuOn(float value);
+    void SetmanPowerMeterSimuOff();
+
     void Off();
     void Charge();
     void Discharge();
 
     void MeasureBattActive(bool dolog);
     void MeasureBatt12(bool dolog);
-
     float vBatt_activeProz;
     float vBatt_active;
+
+    void MeasurePower(bool dolog);
+    float power_active;
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
@@ -63,11 +71,17 @@ const uint8_t R_ON = LOW;       // relaisboard aktiv
 //const int ain_internal = A0;  // ADC intern hier nicht verwenden, von anderem Modul verwendet
 const uint8 ain_batt1 = 0;      // ADC extern
 const uint8 ain_batt2 = 1;      // ADC extern
+const uint8 ain_pwr   = 2;      // ADC extern
 bool extadcpresent = false;     // ADC extern vorhanden ja/nein
 
 const float CALVOLT = 26.60;        // Kalibrierung der Spannungsmessung über den analog in (vor spannungsteiler)
 const int CALVOLTVALUE =  18996;    // Kalibrierung der Spannungsmessung über den analog in (adc board nach spannungsteiler)
 const int CALVOLTOFFSET =  0;       // Kalibrierung der Spannungsmessung über den analog in
+
+const float CALPOWER = 580.00;      // Kalibrierung des Stromsensors über den analog in
+const int CALPOWERVALUE = 4000;     // Kalibrierung des Stromsensors über den analog in
+const int CALPOWEROFFSET = 0;       // Kalibrierung des Stromsensors über den analog in
+ 
 
 // --------------------------------------------
 
@@ -108,16 +122,15 @@ float Mod_IO::vBattToProz(float spgvalue) {
 
 float Mod_IO::VBattMeasurement(uint8_t channel) {
   if (!extadcpresent) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryMeasureFailed, channel);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
     Serial.print("Messung nicht möglich!");
     return 0;
   }
   
-  const int avgCount = 100;  // ca. 1 Sekunde wegen evtl. ripple auf der Spannung wenn Entladeung aktiv
+  const int avgCount = 100;  // 100 ca. 1 Sekunde wegen evtl. ripple auf der Spannung wenn Entladeung aktiv
 
   // Messen und Mitteln
   // Notiz: delay() < 1ms compiliert, tut aber nichts                                              
-  // analogRead() ist träge, 0,1ms auf dem esp8266
   int value = 0;
   int valuesum = 0;
   for (int i = 0; i < avgCount; i++) 
@@ -136,6 +149,37 @@ float Mod_IO::VBattMeasurement(uint8_t channel) {
   Serial.print("VBattMeasurement() volt: "); Serial.println(volt);
  
   return volt;
+}
+
+float Mod_IO::PowerMeasurement(uint8_t channel) {
+  if (!extadcpresent) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
+    Serial.print("Messung nicht möglich!");
+    return 0;
+  }
+  
+  const int avgCount = 200;  // 100 ca. 1 Sekunde wegen evtl. ripple auf der Spannung wenn Entladeung aktiv
+
+  // Messen und Mitteln
+  // Notiz: delay() < 1ms compiliert, tut aber nichts                                               
+  int value = 0;
+  int valuesum = 0;
+  for (int i = 0; i < avgCount; i++) 
+  {  
+    value = ads.readADC_SingleEnded(channel);
+    //Serial.print("PowerMeasurement() Value: "); Serial.println(value);
+    valuesum += value;
+    //delay(1); // messen mit festenm intervall
+    yield();    
+    ESP.wdtFeed(); 
+  }
+  float valuekorr = ( valuesum / avgCount ) - CALPOWEROFFSET;
+  float POWER = CALPOWER/(float)CALPOWERVALUE * (float)valuekorr;
+  
+  Serial.print("PowerMeasurement() Value: "); Serial.println(value);
+  Serial.print("PowerMeasurement() POWER: "); Serial.println(POWER);
+ 
+  return POWER;
 }
 
 void Mod_IO::SetmanIOModeOn() {
@@ -163,6 +207,17 @@ void Mod_IO::SetmanBattSimuOff() {
   if (manBattSimu > 0) {
     manBattSimu = -1;
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 0);
+  }
+}
+
+void Mod_IO::SetmanPowerMeterSimuOn(float value) {
+  manPowerSimu = value;
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOn, value);
+}
+void Mod_IO::SetmanPowerMeterSimuOff() {
+  if (manPowerSimu > 0) {
+    manPowerSimu = -1;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOff, 0);
   }
 }
 
@@ -255,6 +310,23 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   }  
 }
 
+void Mod_IO::MeasurePower(bool dolog) {
+  Serial.println("IO MeasurePower()");
+
+  if (manPowerSimu > 0) {
+    power_active = manPowerSimu;
+  } else {
+    power_active = PowerMeasurement(ain_pwr);
+  }
+
+  Serial.print("Powermeter Leistung: "); Serial.println(power_active); 
+
+  if (dolog == true) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_PowerMeterPower,power_active);
+  }
+  
+}
+
 // --------------------------------------------
 // Standard Init/Handler 
 
@@ -263,7 +335,12 @@ void Mod_IO::Init() {
 
   manIOMode = false;
   manBattSimu = -1;
+  manPowerSimu = -1;
 
+  vBatt_active = 0;
+  vBatt_activeProz = 0;
+  power_active = 0;
+  
   // Digitale Ausgänge initialisieren
   pinMode(dout_BATTselect, OUTPUT); 
   digitalWrite(dout_BATTselect, R_OFF); 
