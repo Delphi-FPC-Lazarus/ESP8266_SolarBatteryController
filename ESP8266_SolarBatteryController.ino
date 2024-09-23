@@ -39,6 +39,7 @@
 #include "modIO.h"
 #include "modEMeterClient.h"
 #include "modBatteryWR.h"
+#include "modPowermeter.h"
 
 #include "prgController.h"
 
@@ -78,6 +79,9 @@ void setup() {
   // Battery WR Client
   mod_BatteryWRClient.Init();
 
+  // Powermeter
+  mod_PowerMeter.Init();
+
   // I/O
   mod_IO.Init();
 
@@ -110,6 +114,9 @@ void loop() {
 
   // Battery WR Client
   //mod_BatteryWRClient.Handle(); // nicht nötig, bei Bedarf
+
+  // Powermeter
+  mod_PowerMeter.Handle();
 
   // IO 
   mod_IO.Handle();
