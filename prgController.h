@@ -22,6 +22,8 @@ class Prg_Controller {
 
     String detailsMsg;
 
+    int chargeEndCounter;
+
     bool CheckFailure();
 
     bool isDay();
@@ -56,6 +58,7 @@ const float pvDayNight=5;               // Tag Nacht Erkennung über die PV Anla
 
 // Ladeleistung 500W
 const float emeterChargePower=-500;         // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
+const float chargeDetectPower=300;          // Erkennung des Lademodus bzw. Erkennung des Ladeenedes
 
 // Entladeleistung 
 const float defaultWRpwrset=150;            // Vorgabewert beim Einschalten (wandler fährt eh erst mal rampe, regelung erst nach max 10 min möglich)
@@ -168,10 +171,22 @@ bool Prg_Controller::triggerStopCharge() {
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
+  mod_PowerMeter.GetCurrentPower(false);  
+  if (mod_PowerMeter.lastPower < chargeDetectPower) {
+    chargeEndCounter += 1;
+    Serial.print("chargeEndCounter "); Serial.println(chargeEndCounter);
+  }
+  else {
+    Serial.print("chargeEndCounter reset");
+    chargeEndCounter = 0;
+  }
+
   if ( 
+        (chargeEndCounter > 10) ||
         (emeterPower > 0) || 
         (isDay() == false)
      ) { 
+    mod_PowerMeter.GetCurrentPower(true);  
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
@@ -204,11 +219,21 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 bool Prg_Controller::triggerStopChargeEmergency() {
   // Stoptrigger für das Notfall Laden des Akkus, egal ob die Sonne scheint oder nicht
   
+  mod_PowerMeter.GetCurrentPower(false);  
+  if (mod_PowerMeter.lastPower < chargeDetectPower) {
+    chargeEndCounter += 1;
+    Serial.print("chargeEndCounter "); Serial.println(chargeEndCounter);
+  }
+  else {
+    Serial.print("chargeEndCounter reset");
+    chargeEndCounter = 0;
+  }
+
   if ( 
+        (chargeEndCounter > 10) ||
         (isDay() == false) 
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
+    mod_PowerMeter.GetCurrentPower(true);  
     return true;
   }
   else {
@@ -430,8 +455,9 @@ void Prg_Controller::Init() {
   state = State_Standby;
   lastWRpwrset = 0; //defaultWRpwrset;
   lastEMeterpwr = 0; // 0 wäre egal
-  pwrControlSkip = 10; //wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
-  detailsMsg = "";
+  pwrControlSkip = 10; //wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln 
+  detailsMsg = "";  // Meldung aus der Regelung
+  chargeEndCounter = 0; // Ladeende erst nach mehreren Durchläufen ohne Ladestrom erkennen
 
   mod_IO.Off();
   mod_IO.MeasureBattActive(true);
@@ -490,6 +516,8 @@ void Prg_Controller::Handle() {
 
           mod_IO.Charge();
 
+          chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
           state = State_Charge;
         }
         if (triggerStatChargeEmergency()) {
@@ -497,6 +525,9 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
           mod_IO.Charge();
+
+          chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
           state = State_ChargeEmergency;
         }
         if (triggerStartDischarge()) {
@@ -553,6 +584,7 @@ void Prg_Controller::Handle() {
           pwrControlSkip = 0; // ab jetzt jedes mal regeln. Voraussetzung ist dass die messung mind. drei mal so schnell ist, also immer ein aktueller Messwert vorliegt
           doPowerControl();
         } else {
+          Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
           detailsMsg = detailsMsg + ".";
         }
 
