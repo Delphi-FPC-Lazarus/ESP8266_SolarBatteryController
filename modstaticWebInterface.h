@@ -290,8 +290,10 @@ void handleRoot() {
   if ( ( prg_Controller.GetState() != "C") && ( prg_Controller.GetState() != "D") )
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    mod_IO.MeasureBattActive(false);
-    message += "<b>Akku(aktiv):</b>&nbsp;"+String(mod_IO.vBatt_activeProz)+"% / "+String(mod_IO.vBatt_active)+"V";
+    mod_IO.MeasureBatt12(false);
+    message += "<b>Akku1:</b>&nbsp;"+String(mod_IO.vBatt1proz)+"% ("+String(mod_IO.vBatt1)+"V)";
+    message += " / ";
+    message += "<b>Akku2:</b>&nbsp;"+String(mod_IO.vBatt2proz)+"% ("+String(mod_IO.vBatt2)+"V)";
   }
   else {
     if ( prg_Controller.GetState() == "D") {

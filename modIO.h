@@ -31,16 +31,18 @@ class Mod_IO {
     void Charge();
     void Discharge();
 
+    // Batterie für den aktuellen Lade-/Entladevorgang
     void SelecBattActive(byte battselect);
-
     void MeasureBattActive(bool dolog);
-    void MeasureBatt12(bool dolog);
-
     float vBatt_active;
     float vBatt_activeProz;
 
+    // Batterie 1/2 für den vorgeschalteten Auswahlprozess
+    void MeasureBatt12(bool dolog);
     float vBatt1;
+    float vBatt1proz;
     float vBatt2;
+    float vBatt2proz;
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
@@ -254,9 +256,9 @@ void Mod_IO::MeasureBattActive(bool dolog) {
     }
   }
   
-  Serial.print("V Gemessen: "); Serial.println(vBatt_active);
+  Serial.print("V Gemessen Battaktiv: "); Serial.println(vBatt_active);
   vBatt_activeProz = vBattToProz(vBatt_active);
-  Serial.print("% Gemessen: "); Serial.println(vBatt_activeProz);
+  Serial.print("% Gemessen Battaktiv:"); Serial.println(vBatt_activeProz);
 
   if (dolog == true) {    
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, vBatt_active);
@@ -282,14 +284,19 @@ void Mod_IO::MeasureBatt12(bool dolog) {
     vBatt2 = VBattMeasurement(ain_batt2);
   }
 
-  Serial.println(vBatt1);
-  Serial.println(vBatt2);
+  vBatt1proz = vBattToProz(vBatt1);
+  vBatt2proz = vBattToProz(vBatt2);
+
+  Serial.print("V Gemessen Batt1: "); Serial.println(vBatt1);
+  Serial.print("% Gemessen Batt1: "); Serial.println(vBatt1proz);
+  Serial.print("V Gemessen Batt2: "); Serial.println(vBatt2);
+  Serial.print("% Gemessen Batt2: "); Serial.println(vBatt2proz);
 
   if (dolog == true) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1,vBatt1);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBattToProz(vBatt1));
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt1proz);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2,vBatt2);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBattToProz(vBatt2));
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt2proz);
   }  
 }
 
@@ -306,7 +313,9 @@ void Mod_IO::Init() {
   vBatt_active = 0;
   vBatt_activeProz = 0;
   vBatt1 = 0;
+  vBatt1proz = 0;
   vBatt2 = 0;
+  vBatt2proz = 0;
 
   // Digitale Ausgänge initialisieren
   pinMode(dout_BATTselect, OUTPUT); 
