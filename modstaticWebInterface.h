@@ -88,20 +88,42 @@ void handleMenue() {
     }
 
     // Batterie Simulation
-    if (server.argName(i) == "simubattoff") {
-      mod_IO.SetmanBattSimuOff();
+    if (server.argName(i) == "simubatt1select") {
+      mod_IO.SelecBattActive(1);
+    } 
+    if (server.argName(i) == "simubatt2select") {
+      mod_IO.SelecBattActive(2);
+    } 
+    if (server.argName(i) == "simubatt1off") {
+      mod_IO.SetmanBattSimuOff(1);
     }
-    if (server.argName(i) == "simubatta") {
-      mod_IO.SetmanBattSimuOn(27.0);
+    if (server.argName(i) == "simubatt1a") {
+      mod_IO.SetmanBattSimuOn(1, 27.0);
     }
-    if (server.argName(i) == "simubattb") {
-      mod_IO.SetmanBattSimuOn(26.5);
+    if (server.argName(i) == "simubatt1b") {
+      mod_IO.SetmanBattSimuOn(1, 26.5);
     }
-    if (server.argName(i) == "simubattc") {
-      mod_IO.SetmanBattSimuOn(26);
+    if (server.argName(i) == "simubatt1c") {
+      mod_IO.SetmanBattSimuOn(1, 26);
     }
-    if (server.argName(i) == "simubattd") {
-      mod_IO.SetmanBattSimuOn(25.5);
+    if (server.argName(i) == "simubatt1d") {
+      mod_IO.SetmanBattSimuOn(1, 25.5);
+    }
+  
+    if (server.argName(i) == "simubatt2off") {
+      mod_IO.SetmanBattSimuOff(2);
+    }
+    if (server.argName(i) == "simubatt2a") {
+      mod_IO.SetmanBattSimuOn(2, 27.0);
+    }
+    if (server.argName(i) == "simubatt2b") {
+      mod_IO.SetmanBattSimuOn(2, 26.5);
+    }
+    if (server.argName(i) == "simubatt2c") {
+      mod_IO.SetmanBattSimuOn(2, 26);
+    }
+    if (server.argName(i) == "simubatt2d") {
+      mod_IO.SetmanBattSimuOn(2, 25.5);
     }
 
     // Emeter Simulation
@@ -189,13 +211,23 @@ String generateMenue() {
   }  
   menu += "<br><br>";
   menu += "<b>Simulationsmenue</b><br>";
-
-  menu += "Batterie&nbsp;";
-  menu += "<a href='?simubattoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubatta'>27</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubattb'>26.5</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubattc'>26</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubattd'>25.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "Batterieauswahl&nbsp;";
+  menu += "<a href='?simubatt1select'>Batterie 1</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2select'>Batterie 2</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "Batterie1&nbsp;";
+  menu += "<a href='?simubatt1off'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1a'>27</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1b'>26.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1c'>26</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1d'>25.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "Batterie2&nbsp;";
+  menu += "<a href='?simubatt2off'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2a'>27</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2b'>26.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2c'>26</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2d'>25.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Emeter&nbsp;";
   menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -259,7 +291,7 @@ void handleRoot() {
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
     mod_IO.MeasureBattActive(false);
-    message += "<b>Akku:</b>&nbsp;"+String(mod_IO.vBatt_activeProz)+"% ("+String(mod_IO.vBatt_active)+"V)";
+    message += "<b>Akku(aktiv):</b>&nbsp;"+String(mod_IO.vBatt_activeProz)+"% / "+String(mod_IO.vBatt_active)+"V";
   }
   else {
     if ( prg_Controller.GetState() == "D") {
@@ -317,17 +349,6 @@ void handleStateString() {
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
 }
 
-void handleStateBattProz() {
-  Serial.println("handleStateBattProz()");
-  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-
-  mod_IO.MeasureBattActive(false);
-  String message = String(mod_IO.vBatt_activeProz);
-
-  server.send(200, "text/plain", message);
-  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-}
-
 void handleStatePower() {
   Serial.println("handleStatePower()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
@@ -349,7 +370,6 @@ void ModStatic_WebInterface::Init() {
   server.on("/", handleRoot);
   server.on("/state", handleState);
   server.on("/statestr", handleStateString);
-  server.on("/battproz", handleStateBattProz);
   server.on("/power", handleStatePower);
 
   server.on("/debug", handleDebug);

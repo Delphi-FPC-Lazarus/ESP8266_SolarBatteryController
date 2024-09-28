@@ -14,7 +14,8 @@ Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 class Mod_IO {
   private:
     bool manIOMode;
-    float manBattSimu;
+    float manBatt1Simu;
+    float manBatt2Simu;
 
     float VBattMeasurement(uint8_t channel);
     float vBattToProz(float spgvalue);
@@ -23,18 +24,23 @@ class Mod_IO {
     void SetmanIOModeOff();
     bool IsmanIOMode();
 
-    void SetmanBattSimuOn(float value);
-    void SetmanBattSimuOff();
+    void SetmanBattSimuOn(byte battselect, float value);
+    void SetmanBattSimuOff(byte battselect);
     
     void Off();
     void Charge();
     void Discharge();
 
+    void SelecBattActive(byte battselect);
+
     void MeasureBattActive(bool dolog);
     void MeasureBatt12(bool dolog);
 
-    float vBatt_activeProz;
     float vBatt_active;
+    float vBatt_activeProz;
+
+    float vBatt1;
+    float vBatt2;
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void Init();
@@ -154,15 +160,29 @@ bool Mod_IO::IsmanIOMode() {
   return manIOMode;
 }
 
-void Mod_IO::SetmanBattSimuOn(float value) {
-  manBattSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+void Mod_IO::SetmanBattSimuOn(byte battselect, float value) {
+  if (battselect == 1) {
+    manBatt1Simu = value;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+  }
+  if (battselect == 2) {
+    manBatt2Simu = value;
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+  }
 }
 
-void Mod_IO::SetmanBattSimuOff() {
-  if (manBattSimu > 0) {
-    manBattSimu = -1;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 0);
+void Mod_IO::SetmanBattSimuOff(byte battselect) {
+  if (battselect == 1) {
+    if (manBatt1Simu > 0) {
+      manBatt1Simu = -1;
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 1);
+    }
+  }
+  if (battselect == 2) {
+    if (manBatt2Simu > 0) {
+      manBatt2Simu = -1;
+      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 2);
+    }
   }
 }
 
@@ -200,16 +220,38 @@ void Mod_IO::Discharge() {
   digitalWrite(dout_ACea, R_ON);
 }
 
+void Mod_IO::SelecBattActive(byte battselect) {
+  Serial.print("IO battselect:"); Serial.println(battselect);
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BattSelect,battselect);
+
+  if (battselect == 1) {
+    digitalWrite(dout_BATTselect, R_OFF);
+  } else {
+    digitalWrite(dout_BATTselect, R_ON);
+  }
+  delay(1000); // Hardware Zeit geben    
+
+}
+
 void Mod_IO::MeasureBattActive(bool dolog) {
   Serial.println("IO MeasureBattActive");
 
   // Messe die aktuell aktive Batterie (Batteriepack)
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
   // (diese Funktion wird ständig aufgerufen, daher hier keine Relais schalten)
-  if (manBattSimu > 0) {
-    vBatt_active = manBattSimu;
+
+  if (digitalRead(dout_BATTselect) == R_OFF) {
+    if (manBatt1Simu > 0) {
+      vBatt_active = manBatt1Simu;
+    } else {
+      vBatt_active = VBattMeasurement(ain_batt1);
+    }
   } else {
-    vBatt_active = VBattMeasurement(ain_batt1); // Todo
+    if (manBatt2Simu > 0) {
+      vBatt_active = manBatt2Simu;
+    } else {
+      vBatt_active = VBattMeasurement(ain_batt2);
+    }
   }
   
   Serial.print("V Gemessen: "); Serial.println(vBatt_active);
@@ -228,18 +270,14 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   // Messe nacheinander die Batterien (Batteriepacks)
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
 
-  // Variablen für die einzelnen Akkus
-  float vBatt1 = 0;
-  float vBatt2 = 0;
-
-  if (manBattSimu > 0) {
-    vBatt1 = manBattSimu * 1.01; // im Simulationsmodus leich variieren
+  if (manBatt1Simu > 0) {
+    vBatt1 = manBatt1Simu;
   } else {
     vBatt1 = VBattMeasurement(ain_batt1);
   }
 
-  if (manBattSimu > 0) {
-    vBatt2 = manBattSimu * 0.99; // im Simulationsmodus leich variieren
+  if (manBatt2Simu > 0) {
+    vBatt2 = manBatt2Simu;
   } else {
     vBatt2 = VBattMeasurement(ain_batt2);
   }
@@ -262,7 +300,13 @@ void Mod_IO::Init() {
   Serial.println("modIO_Init()");
 
   manIOMode = false;
-  manBattSimu = -1;
+  manBatt1Simu = -1;
+  manBatt2Simu = -1;
+
+  vBatt_active = 0;
+  vBatt_activeProz = 0;
+  vBatt1 = 0;
+  vBatt2 = 0;
 
   // Digitale Ausgänge initialisieren
   pinMode(dout_BATTselect, OUTPUT); 
