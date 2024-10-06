@@ -85,9 +85,7 @@ const float battStopDischarge=15;           // Entladevoragnag stoppen, während
 bool Prg_Controller::CheckFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
-  delay(1); // Yield()
-  mod_IO.MeasureBattActive(false);
-  delay(1); // Yield()
+
   if (mod_IO.vBatt_activeProz < 1) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
@@ -138,9 +136,6 @@ bool Prg_Controller::triggerStatCharge() {
   // Wenn die Batterie nicht voll ist und genügend Überschusseinspeisung zur Verfügung steht (in dem Zustand wird nicht geladen, also Einspeisung/Überschuss muss mindestens Ladeleistung sein)
   // ggf. noch Zeitbegrenzung das er nicht zu früh anfängt wegen Geräuschentwicklung, technisch ist das nicht nötig
 
-  delay(1); // Yield()
-  mod_IO.MeasureBattActive(false);
-  delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
@@ -199,10 +194,6 @@ bool Prg_Controller::triggerStatChargeEmergency() {
   // Starttrigger für Notfall Laden wenn der Akku zu weit runter ist, egal ob die Sonne scheint oder nicht
   // Wenn die Batteriespannung zu tief abgesackt ist
 
-  delay(1); // Yield()
-  mod_IO.MeasureBattActive(false);
-  delay(1); // Yield()
-
   if ( 
         (mod_IO.vBatt_activeProz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
@@ -250,9 +241,6 @@ bool Prg_Controller::triggerStartDischarge() {
   // Wenn die Batterie genügend Ladung hat und der Bezug/Verbrauch (einspeisung grad nicht aktiv) > der zu erwartenden Entladeleisung liegt
   // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
 
-  delay(1); // Yield()
-  mod_IO.MeasureBattActive(false);
-  delay(1); // Yield()
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
@@ -300,9 +288,6 @@ bool Prg_Controller::triggerStopDischarge() {
   // gestoppt wenn entweder die EntladeSpannung unter das eingestellte limit geht (höher als vom BMS um den Akku zu schonen) oder der Energiebedarf in die Lieferung geht (einspeisung grad aktiv)
   // Zusätzlich kann die Zeit geprüft werden, also wenn die Nacht zu Ende ist. Achtung: Start/Stop Bedingung gemeinsam anpassen
   
-  delay(1); // Yield()
-  mod_IO.MeasureBattActive(false);
-  delay(1); // Yield()
   if ( 
         (mod_IO.vBatt_activeProz <= battStopDischarge)
     ) {
@@ -333,7 +318,12 @@ void Prg_Controller::doPowerControl() {
   // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
   // Verhalten des EMeters (mittelung) in der Regelung berücksichtigen!
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
-  if ( emeterPower == 0 ) { return; } // Fehler wenn genau 0
+  if ( emeterPower == 0 ) 
+  { 
+    // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (unwahrscheinlich), in beiden Fällen nichts tun
+    Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug genau 0!");
+    return; 
+  } 
   delay(1); // Yield()
 
   // Trigger ist, ob das EMeter einen neuen Wert geliefert hat
@@ -347,7 +337,13 @@ void Prg_Controller::doPowerControl() {
   lastEMeterpwr = emeterPower;
 
   float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
-  if ( wrPower == 0 ) { return; } // Fehler wenn genau 0
+  if ( wrPower == 0 ) { 
+    // Fehler wenn genau 0 bzw. speist nicht ein und damit kann ich nicht regeln
+    // In Realität wird die Regelung nach dem Setzen der Initialleistung eh für n Minuten ausgesetzt bis der Wandler einspeist
+    // Sollte dann wirklich noch keine Leistung eingespeist werden, ist eh was faul
+    Serial.println("doPowerControl() wird nicht ausgeführt da WR Leistung unbekannt");
+    return;  
+  } 
   delay(1); // Yield()
 
   Serial.println("LastWRpower: " + String(lastWRpwrset) + " CurrentWRpower: " + String(wrPower) + " EMeter: " + String(emeterPower)); 
@@ -459,8 +455,13 @@ void Prg_Controller::Init() {
   detailsMsg = "";  // Meldung aus der Regelung
   chargeEndCounter = 0; // Ladeende erst nach mehreren Durchläufen ohne Ladestrom erkennen
 
+  // Akkuzustände ins Protokoll schreiben
   mod_IO.Off();
+  delay(1); // Yield()
+  mod_IO.MeasureBatt12(true);
+  delay(1); // Yield()
   mod_IO.MeasureBattActive(true);
+  delay(1); // Yield()
 
   Serial.println("prgController_Init() Done");
 }
@@ -480,6 +481,13 @@ void Prg_Controller::Handle() {
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
       //
     }
+
+    // Akkumessung (wird für die Fehlerprüfung und in den verschiedenen Stages für die jeweiligen Triggerfunktionen benötigt)
+    delay(1); // Yield()
+    mod_IO.MeasureBatt12(false);
+    delay(1); // Yield()
+    mod_IO.MeasureBattActive(false);
+    delay(1); // Yield()
 
     // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
     if ( (state != State_Failure) && CheckFailure() ) {
@@ -505,8 +513,10 @@ void Prg_Controller::Handle() {
           if (mod_Timer.runTime.h == 6) {
             // wenn sich der Akku im Standby befindet, akkustand loggen
             // das ist vor allem im interessant wenn der Akku mehrere Tage im Standby ist 
-            mod_IO.MeasureBattActive(true);
+            delay(1); // Yield()
             mod_IO.MeasureBatt12(true);
+            delay(1); // Yield()
+            mod_IO.MeasureBattActive(true);
           }
         }
 

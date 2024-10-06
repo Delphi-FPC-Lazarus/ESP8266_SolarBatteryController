@@ -291,9 +291,13 @@ void handleRoot() {
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
     mod_IO.MeasureBatt12(false);
-    message += "<b>Akku1:</b>&nbsp;"+String(mod_IO.vBatt1proz)+"% ("+String(mod_IO.vBatt1)+"V)";
+    message += "<b>Akku1:";
+    if (mod_IO.GetBattActive() == 1) { message += "(aktiv)"; }
+    message += "</b>&nbsp;"+String(mod_IO.vBatt1proz)+"% ("+String(mod_IO.vBatt1)+"V)";
     message += " / ";
-    message += "<b>Akku2:</b>&nbsp;"+String(mod_IO.vBatt2proz)+"% ("+String(mod_IO.vBatt2)+"V)";
+    message += "<b>Akku2:";
+    if (mod_IO.GetBattActive() == 2) { message += "(aktiv)"; }
+    message += "</b>&nbsp;"+String(mod_IO.vBatt2proz)+"% ("+String(mod_IO.vBatt2)+"V)";
   }
   else {
     if ( prg_Controller.GetState() == "D") {

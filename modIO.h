@@ -32,6 +32,7 @@ class Mod_IO {
     void Discharge();
 
     // Batterie für den aktuellen Lade-/Entladevorgang
+    byte GetBattActive();
     void SelecBattActive(byte battselect);
     void MeasureBattActive(bool dolog);
     float vBatt_active;
@@ -220,6 +221,13 @@ void Mod_IO::Discharge() {
   digitalWrite(dout_ACmode, R_ON); 
   delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACea, R_ON);
+}
+byte Mod_IO::GetBattActive() {
+  if (digitalRead(dout_BATTselect) == R_OFF) {
+    return 1;
+  } else { 
+    return 2;
+  }
 }
 
 void Mod_IO::SelecBattActive(byte battselect) {
