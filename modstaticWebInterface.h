@@ -137,13 +137,21 @@ void handleMenue() {
       mod_EMeterClient.manEMeterSimuOn(-300);
     }
     if (server.argName(i) == "simuemeterc") {
-      mod_EMeterClient.manEMeterSimuOn(20);
+      mod_EMeterClient.manEMeterSimuOn(1);
     }
     if (server.argName(i) == "simuemeterd") {
       mod_EMeterClient.manEMeterSimuOn(200);
     }
     if (server.argName(i) == "simuemetere") {
       mod_EMeterClient.manEMeterSimuOn(1000);
+    }
+
+    // Wechselrichter Simulation
+    if (server.argName(i) == "simuwroff") {
+      mod_BatteryWRClient.manBatteryWRSimuOff();
+    }
+    if (server.argName(i) == "simuwra") {
+      mod_BatteryWRClient.manBatteryWRSimuOn();
     }
 
     // PowerMeter Simulation
@@ -189,17 +197,19 @@ void handleMenue() {
 String generateMenue() {
 
   // Menü mit Links
-  String menu = "<hr>";
-
+  String menu = "<br>";
   menu += "<b>Messen</b><br>";
   menu += "<a href='?measurebattactive'>Batt aktiv</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter (Stromz&auml;hler)</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurewr'>Wechselrichter (Einspeisung)</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurepowermeter'>Powermeter (Laden/Einspeisen)</a>&nbsp;&nbsp;&nbsp;";
-
   menu += "<br><br>";
-  menu += "<b>Manuelles Steuerungsmenue</b><br>";
+  menu += "<b>Fehlerbehebung</b><br>";
+  menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
+
+  menu += "<br><br><hr><b>Nur f&uuml;r Entwicklung/Tests:</b><hr>";
+  menu += "<br><b>Manuelles Steuerungsmenue</b><br>";
 
   menu += "Modus:&nbsp;";
   menu += "<a href='?auto'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -233,9 +243,13 @@ String generateMenue() {
   menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemetera'>-600</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemeterb'>-300</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simuemeterc'>20</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuemeterc'>1</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemeterd'>200</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuemetere'>1000</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+  menu += "WR&nbsp;";
+  menu += "<a href='?simuwroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuwra'>Simulation</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "PowerMeter&nbsp;";
   menu += "<a href='?simuPowerMeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -248,11 +262,7 @@ String generateMenue() {
   menu += "<a href='?simutimeday'>Tag</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimenight'>Nacht</a>&nbsp;&nbsp;&nbsp;";
 
-  menu += "<br><br>";
-  menu += "<b>Fehlerbehebung</b><br>";
-  menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
-
-  menu += "<br><br>";
+  menu += "<br><br><br>";
 
   return menu;
 }

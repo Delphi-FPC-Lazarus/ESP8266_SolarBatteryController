@@ -12,14 +12,15 @@
 // --------------------------------------------
 class Mod_BatteryWRClient {
   private:
-    /*float manBatteryWRSimu;*/
+    bool manBatteryWRSimu;
+    float manBatteryWRSimuValue;
 
     WiFiClient wifi;
     HttpClient httpclient = HttpClient(wifi, "192.168.1.243", 80);
 
   public:
-    /*void manBatteryWRSimuOn(float value);
-    void manBatteryWRSimuOff();*/
+    void manBatteryWRSimuOn();
+    void manBatteryWRSimuOff();
 
     // Abfragefunktion für den externen Zugriff
     float GetCurrentPower(bool dolog); 
@@ -31,16 +32,18 @@ class Mod_BatteryWRClient {
 };
 Mod_BatteryWRClient mod_BatteryWRClient;
 
-/*void Mod_BatteryWRClient::manBatteryWRSimuOn(float value) {
-  manBatteryWRSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOn, value);
+void Mod_BatteryWRClient::manBatteryWRSimuOn() {
+  manBatteryWRSimu = true;
+  manBatteryWRSimuValue = 0;
+  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOn, manBatteryWRSimuValue);
 }
 void Mod_BatteryWRClient::manBatteryWRSimuOff() {
-  if (manBatteryWRSimu != 0) {
-    manBatteryWRSimu = 0;
+  if (manBatteryWRSimu != true) {
+    manBatteryWRSimu = false;
+    manBatteryWRSimuValue = 0;
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOff, 0);
   }
-}*/
+}
 
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
@@ -79,9 +82,9 @@ float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
 
   float value = doc["ch"][0][2];
 
-  /*if (manBatteryWRSimu != 0) {
-    value = manBatteryWRSimu;
-  }*/
+  if (manBatteryWRSimu == true) {
+    value = manBatteryWRSimuValue;
+  }
 
   //Serial.print("value "); Serial.println(value);
   if (dolog == true) {
@@ -93,6 +96,12 @@ float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
 
 bool Mod_BatteryWRClient::SetPowerLimit(float pwr) {
   Serial.println("modBatteryWRClient_SetLimit("+String(pwr)+")");
+
+  if (manBatteryWRSimu == true) {
+    Serial.println("Mod_BatteryWRClient::SetPowerLimit skip");
+    manBatteryWRSimuValue = pwr; 
+    return true;
+  }
 
   // mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
 
@@ -137,7 +146,8 @@ void Mod_BatteryWRClient::Init()
 {
   Serial.println("modBatteryWRClient_Init()");
   Serial.println(GetCurrentPower(true));
-  /*manBatteryWRSimu = 0;*/
+  manBatteryWRSimu = false;
+  manBatteryWRSimuValue = 0;
 }
 
 void Mod_BatteryWRClient::Handle()

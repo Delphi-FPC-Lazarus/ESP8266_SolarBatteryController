@@ -117,7 +117,7 @@ float Mod_IO::vBattToProz(float spgvalue) {
 
 float Mod_IO::VBattMeasurement(uint8_t channel) {
   if (!extadcpresent) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
+    //mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
     Serial.print("Messung nicht möglich!");
     return 0;
   }
