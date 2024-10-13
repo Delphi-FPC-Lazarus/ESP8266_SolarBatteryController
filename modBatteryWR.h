@@ -38,7 +38,7 @@ void Mod_BatteryWRClient::manBatteryWRSimuOn() {
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOn, manBatteryWRSimuValue);
 }
 void Mod_BatteryWRClient::manBatteryWRSimuOff() {
-  if (manBatteryWRSimu != true) {
+  if (manBatteryWRSimu == true) {
     manBatteryWRSimu = false;
     manBatteryWRSimuValue = 0;
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOff, 0);
