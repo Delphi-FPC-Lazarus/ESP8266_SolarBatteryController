@@ -85,8 +85,9 @@ const float battStopDischarge=15;           // Entladevoragnag stoppen, während
 bool Prg_Controller::CheckFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
+  // Diese Prüfung wird auf der aktuell aktiven Batteie auf der aktuell aktiven Batterie ausgeführt, nicht generell auf beiden
 
-  if (mod_IO.vBatt_activeProz < 1) {
+  if (!mod_IO.BattActiveValid()) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeProz);
     return true;
@@ -462,6 +463,16 @@ void Prg_Controller::Init() {
   delay(1); // Yield()
   mod_IO.MeasureBattActive(true);
   delay(1); // Yield()
+
+  // Fehlerzustand gleich prüfen
+  if ( (state != State_Failure) && CheckFailure() ) {
+    Serial.println("CheckFailure");
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
+
+    mod_IO.Off();
+    
+    state = State_Failure;
+  } 
 
   Serial.println("prgController_Init() Done");
 }

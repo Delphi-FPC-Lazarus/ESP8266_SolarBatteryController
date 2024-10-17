@@ -168,22 +168,27 @@ void handleMenue() {
       mod_PowerMeter.manPowerMeterSimuOn(500);
     }
 
-    // Zeitsteuerung Simulation
+    // Zeitsteuerung Simulation (log in dem fall erst nach dem setzen)
     if (server.argName(i) == "simutimeoff") {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
         mod_Timer.syncFromNTP();
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
     }
     if (server.argName(i) == "simutimeday") {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
         mod_Timer.runTime.h = 13;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
     }
     if (server.argName(i) == "simutimenight") {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
         mod_Timer.runTime.h = 3;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
+    }
+    if (server.argName(i) == "simutimeinc") {
+        mod_Timer.syncFromNTP();
+        mod_Timer.runTime.d += 1;
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
     }
 
     //if (server.argName(i) == "") {
@@ -259,6 +264,7 @@ String generateMenue() {
   menu += "<br>";
   menu += "Zeit&nbsp;";
   menu += "<a href='?simutimeoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simutimeinc'>N&auml;chster</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimeday'>Tag</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimenight'>Nacht</a>&nbsp;&nbsp;&nbsp;";
 
@@ -303,11 +309,11 @@ void handleRoot() {
     mod_IO.MeasureBatt12(false);
     message += "<b>Akku1:";
     if (mod_IO.GetBattActive() == 1) { message += "(aktiv)"; }
-    message += "</b>&nbsp;"+String(mod_IO.vBatt1proz)+"% ("+String(mod_IO.vBatt1)+"V)";
+    message += "</b>&nbsp;"+String(mod_IO.vBatt_1proz)+"% ("+String(mod_IO.vBatt_1)+"V)";
     message += " / ";
     message += "<b>Akku2:";
     if (mod_IO.GetBattActive() == 2) { message += "(aktiv)"; }
-    message += "</b>&nbsp;"+String(mod_IO.vBatt2proz)+"% ("+String(mod_IO.vBatt2)+"V)";
+    message += "</b>&nbsp;"+String(mod_IO.vBatt_2proz)+"% ("+String(mod_IO.vBatt_2)+"V)";
   }
   else {
     if ( prg_Controller.GetState() == "D") {
