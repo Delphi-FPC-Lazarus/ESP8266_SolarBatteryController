@@ -36,7 +36,7 @@ class Mod_IO {
     void SelecBattActive(byte battselect);
     void MeasureBattActive(bool dolog);
     float vBatt_active;
-    float vBatt_activeProz;
+    float vBatt_activeproz;
 
     // Batterie 1/2 für den vorgeschalteten Auswahlprozess
     void MeasureBatt12(bool dolog);
@@ -269,12 +269,12 @@ void Mod_IO::MeasureBattActive(bool dolog) {
   }
   
   Serial.print("V Gemessen Battaktiv: "); Serial.println(vBatt_active);
-  vBatt_activeProz = vBattToProz(vBatt_active);
-  Serial.print("% Gemessen Battaktiv:"); Serial.println(vBatt_activeProz);
+  vBatt_activeproz = vBattToProz(vBatt_active);
+  Serial.print("% Gemessen Battaktiv:"); Serial.println(vBatt_activeproz);
 
   if (dolog == true) {    
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_activeProz);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_activeproz);
   }  
 }
 
@@ -335,7 +335,7 @@ void Mod_IO::Init() {
   manBatt2Simu = -1;
 
   vBatt_active = 0;
-  vBatt_activeProz = 0;
+  vBatt_activeproz = 0;
   vBatt_1 = 0;
   vBatt_1proz = 0;
   vBatt_2 = 0;
