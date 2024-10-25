@@ -321,6 +321,10 @@ void handleRoot() {
     message += "</b>&nbsp;"+String(mod_IO.vBatt_2proz)+"% ("+String(mod_IO.vBatt_2)+"V)";
   }
   else {
+    message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+    if (mod_IO.GetBattActive() == 1) { message += "Akku1:(aktiv)"; }
+    if (mod_IO.GetBattActive() == 2) { message += "Akku2:(aktiv)"; }
+
     if ( prg_Controller.GetState() == "D") {
       //message += "&nbsp;&nbsp;&nbsp;&nbsp;";
       message += "<br>";
