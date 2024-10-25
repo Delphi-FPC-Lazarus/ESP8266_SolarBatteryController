@@ -25,9 +25,10 @@ class Prg_Controller {
     int chargeEndCounter;
 
     bool CheckFailure();
-
     bool isDay();
-    
+    bool SelectBatteryNotFull();
+    bool SelectBatteryNotEmpty();
+
     bool triggerStatCharge();
     bool triggerStopCharge();
 
@@ -72,8 +73,7 @@ const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen 
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battFull=100;                   // %Akku bei der keine Ladung mehr gestartet wird (automatiklader, daher unkritisch)
 
-const float battApplicableNight=30;         // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
-const float battApplicableDay=50;           // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen)
+const float battApplicable=30;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
 
 const float battStopDischarge=15;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
                                             // Nach Abschaltung der Entladung springt der Wert sprunghaft, der tatsächliche Ladezustand kann erst wenige Minuten nach Entladestop über die Akkuspannung abschätzt werden.
@@ -84,8 +84,8 @@ const float battStopDischarge=15;           // Entladevoragnag stoppen, während
 
 bool Prg_Controller::CheckFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
-  // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
   // Diese Prüfung wird auf der aktuell aktiven Batteie auf der aktuell aktiven Batterie ausgeführt, nicht generell auf beiden
+  // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
 
   if (!mod_IO.BattActiveValid()) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
@@ -128,6 +128,110 @@ boolean Prg_Controller::isDay() {
 }
 */
 
+bool Prg_Controller::SelectBatteryNotFull() {
+
+  if (mod_IO.Batt1Valid() && mod_IO.Batt2Valid()) {
+
+    Serial.println("SelectBatteryNotFull() 2 Akku Betrieb");
+    // 2 AKku Betrieb ->
+    // Toggle je nach dem ob ein gerader oder ungerader Tag ist um die Akkunutzung besser zu verteilen. Die Funktion wird vom Ladetrigger aufgerufen, im Idealfall sowieso zweimal dann wäre es egal
+    if (mod_Timer.runTime.d % 2 == 0) {
+      Serial.println("Prüfung 1 dann 2");
+      // erst Batt 1 dann Batt 2
+      if (mod_IO.vBatt_1proz < battFull) {
+        mod_IO.SelectBattActive(1);
+        return true;
+      } else {
+        if (mod_IO.vBatt_2proz < battFull) {
+          mod_IO.SelectBattActive(2);
+          return true;
+        }
+      }
+    } else {
+      Serial.println("Prüfung 2 dann 1");
+      // erst Batt 2 dann Batt 1
+      if (mod_IO.vBatt_2proz < battFull) {
+        mod_IO.SelectBattActive(2);
+        return true;
+      } else {
+        if (mod_IO.vBatt_1proz < battFull) {
+          mod_IO.SelectBattActive(1);
+          return true;
+        }
+      }
+    }
+    // <-    
+
+  } else {
+
+    Serial.println("SelectBatteryNotFull() 1 Akku Betrieb");    
+    // 1 Akku Betrieb ->
+    if (mod_IO.Batt1Valid()) {
+      // nur Batt 1
+      if (mod_IO.vBatt_1proz < battFull) {
+        mod_IO.SelectBattActive(1);
+        return true;
+      }
+    }
+    // <-
+
+  }
+  return false;
+
+}
+
+
+bool Prg_Controller::SelectBatteryNotEmpty() {
+  
+  if (mod_IO.Batt1Valid() && mod_IO.Batt2Valid()) {
+
+    Serial.println("SelectBatteryNotEmpty() 2 Akku Betrieb");
+    // 2 AKku Betrieb ->
+    // Toggle je nach dem ob ein gerader oder ungerader Tag ist um die Akkunutzung besser zu verteilen. Die Funktion wird vom Ladetrigger aufgerufen, im Idealfall sowieso zweimal dann wäre es egal
+    if (mod_Timer.runTime.d % 2 == 0) {
+      Serial.println("Prüfung 1 dann 2");
+      // erst Batt 1 dann Batt 2
+      if (mod_IO.vBatt_1proz >= battApplicable) {
+        mod_IO.SelectBattActive(1);
+        return true;
+      } else {
+        if (mod_IO.vBatt_2proz >= battApplicable) {
+          mod_IO.SelectBattActive(2);
+          return true;
+        }
+      }
+    } else {
+      Serial.println("Prüfung 2 dann 1");
+      // erst Batt 2 dann Batt 1
+      if (mod_IO.vBatt_2proz >= battApplicable) {
+        mod_IO.SelectBattActive(2);
+        return true;
+      } else {
+        if (mod_IO.vBatt_1proz >= battApplicable) {
+          mod_IO.SelectBattActive(1);
+          return true;
+        }
+      }
+    }
+    // <-
+
+  } else {
+
+    Serial.println("SelectBatteryNotEmpty() 1 Akku Betrieb");    
+    // 1 AKku Betrieb ->
+    if (mod_IO.Batt1Valid()) {
+      // nur Batt 1
+      if (mod_IO.vBatt_1proz >= battApplicable) {
+        mod_IO.SelectBattActive(1);
+        return true;
+      }
+    }
+    // <-
+
+  }
+  return false;
+}
+
 // --------------------------------------------
 // Ladetrigger
 // Es muss unbedingt ein Autmatik Lader sowie ein Akku mit BMS verwendet werden der den Ladevorgang für den Akku automatisch regelt und bei der entsprechenden Ladeschlussspannung abschaltet
@@ -142,14 +246,24 @@ bool Prg_Controller::triggerStatCharge() {
   delay(1); // Yield()
 
   if (  
-        (mod_IO.vBatt_activeproz < battFull) && 
         (emeterPower < emeterChargePower)  &&
         (isDay() == true) 
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
-    return true;
+  
+      if (SelectBatteryNotFull()) {
+        // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
+        delay(1); // Yield()
+        mod_IO.MeasureBattActive(false);
+        delay(1); // Yield()
+
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+        return true;
+      } else {
+        return false;
+      }
+  
   }
   else {
     return false;
@@ -157,7 +271,7 @@ bool Prg_Controller::triggerStatCharge() {
 }
 
 bool Prg_Controller::triggerStopCharge() {
-  // Stoptrigger für das reguläre Laden des Akkus
+  // Stoptrigger für das reguläre Laden des Akkus (activebattery)
   // Wenn in den Bezug gegangen wird (in dem zustand wird geladen, also sobald Ladeleistung+Sonstiger Verbrauch > Produktion)
   // ggf. noch eine Zeitbegrenzung, technisch aber nicht nötig
   // Hier nicht auf auf Spannung triggern (ggf. wird hier später noch eine Erkennung eingebaut wenn das Ladegerät abgeschaltet hat)
@@ -192,24 +306,37 @@ bool Prg_Controller::triggerStopCharge() {
 }
 
 bool Prg_Controller::triggerStatChargeEmergency() {
-  // Starttrigger für Notfall Laden wenn der Akku zu weit runter ist, egal ob die Sonne scheint oder nicht
-  // Wenn die Batteriespannung zu tief abgesackt ist
+  // Starttrigger für Notfall Laden wenn der Akku zu weit runter ist, 
+  // egal ob die Sonne scheint oder nicht wenn die Batteriespannung zu tief abgesackt ist
+  // Dies wird einfach für beide Akkus nacheinander getan
 
   if ( 
-        (mod_IO.vBatt_activeproz <= battEmergencyStart) && 
+        (mod_IO.Batt1Valid()) &&
+        (mod_IO.vBatt_1proz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+    mod_IO.SelectBattActive(1);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1, mod_IO.vBatt_1);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_1proz);
     return true;
   }
-  else {
-    return false;
+
+  if ( 
+        (mod_IO.Batt2Valid()) &&
+        (mod_IO.vBatt_2proz <= battEmergencyStart) && 
+        (isDay() == true) && (mod_Timer.runTime.h > 12)
+     ) {
+    mod_IO.SelectBattActive(2);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2, mod_IO.vBatt_2);
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_2proz);
+    return true;
   }
+
+  return false;
 }
 
 bool Prg_Controller::triggerStopChargeEmergency() {
-  // Stoptrigger für das Notfall Laden des Akkus, egal ob die Sonne scheint oder nicht
+  // Stoptrigger für das Notfall Laden des Akkus (activebattery)
   
   mod_PowerMeter.GetCurrentPower(false);  
   if (mod_PowerMeter.lastPower < chargeDetectPower) {
@@ -246,13 +373,9 @@ bool Prg_Controller::triggerStartDischarge() {
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
-  if (isDay() == true) {
+  if (emeterPower > emeterDischargePower) {
 
-    // Am Tag den Einspeisemodus nur starten wenn 
-    if ( 
-         (mod_IO.vBatt_activeproz >= battApplicableDay) && 
-         (emeterPower > emeterDischargePower)
-      ) {
+    if (SelectBatteryNotEmpty()) { 
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
@@ -264,28 +387,13 @@ bool Prg_Controller::triggerStartDischarge() {
 
   }
   else {
-
-    // In der Nach den Einspeisemodus immer neu(starten) bis die Batterie die Mindestladung unterschritten hat
-    if ( 
-         (mod_IO.vBatt_activeproz >= battApplicableNight) && 
-         (emeterPower > emeterDischargePower)
-      ) {
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
-      return true;
-    }
-    else {
-      return false;
-    }
-
+    return false;
   }
-
 
 }
 
 bool Prg_Controller::triggerStopDischarge() {
-  // Stoptrigger für das Entladen
+  // Stoptrigger für das Entladen (activebattery)
   // gestoppt wenn entweder die EntladeSpannung unter das eingestellte limit geht (höher als vom BMS um den Akku zu schonen) oder der Energiebedarf in die Lieferung geht (einspeisung grad aktiv)
   // Zusätzlich kann die Zeit geprüft werden, also wenn die Nacht zu Ende ist. Achtung: Start/Stop Bedingung gemeinsam anpassen
   
