@@ -71,7 +71,7 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
 	
   DynamicJsonDocument doc(1024);
   DeserializationError err = deserializeJson(doc, responsejsonchar);
-  if (err != DeserializationError::Ok) { Serial.print("DeserializationError "); Serial.println(err.f_str()); return 0; }
+  if (err != DeserializationError::Ok) { Serial.println("DeserializationError "); Serial.println(err.f_str()); return 0; }
   if (doc == NULL) { Serial.println("doc Null"); return 0; }
 
   delay(1); // Yield()

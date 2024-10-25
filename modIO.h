@@ -31,9 +31,11 @@ class Mod_IO {
     void Charge();
     void Discharge();
 
+    bool IsOff();
+
     // Batterie für den aktuellen Lade-/Entladevorgang
     byte GetBattActive();
-    void SelecBattActive(byte battselect);
+    void SelectBattActive(byte battselect);
     void MeasureBattActive(bool dolog);
     float vBatt_active;
     float vBatt_activeproz;
@@ -122,7 +124,7 @@ float Mod_IO::vBattToProz(float spgvalue) {
 float Mod_IO::VBattMeasurement(uint8_t channel) {
   if (!extadcpresent) {
     //mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
-    Serial.print("Messung nicht möglich!");
+    Serial.println("Messung nicht möglich!");
     return 0;
   }
   
@@ -226,6 +228,11 @@ void Mod_IO::Discharge() {
   delay(1000); // Hardware Zeit geben
   digitalWrite(dout_ACea, R_ON);
 }
+
+bool Mod_IO::IsOff() {
+  return digitalRead(dout_ACea);
+}
+
 byte Mod_IO::GetBattActive() {
   if (digitalRead(dout_BATTselect) == R_OFF) {
     return 1;
@@ -234,7 +241,7 @@ byte Mod_IO::GetBattActive() {
   }
 }
 
-void Mod_IO::SelecBattActive(byte battselect) {
+void Mod_IO::SelectBattActive(byte battselect) {
   Serial.print("IO battselect:"); Serial.println(battselect);
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BattSelect,battselect);
 

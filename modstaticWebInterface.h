@@ -89,10 +89,15 @@ void handleMenue() {
 
     // Batterie Simulation
     if (server.argName(i) == "simubatt1select") {
-      mod_IO.SelecBattActive(1);
+      if (mod_IO.IsOff()) {
+        mod_IO.SelectBattActive(1);
+      }
     } 
     if (server.argName(i) == "simubatt2select") {
-      mod_IO.SelecBattActive(2);
+      if (mod_IO.IsOff()) {
+        mod_IO.SelectBattActive(2);
+      }
+
     } 
     if (server.argName(i) == "simubatt1off") {
       mod_IO.SetmanBattSimuOff(1);
