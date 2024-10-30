@@ -288,7 +288,10 @@ void handleRoot() {
 
   String message = "<html><head><meta http-equiv=\"refresh\" content=\"60; URL=?\"></head><body>";
 
-  message += "<h1>esp8266 solar battery controller</h1><br>";
+  message += "<h1>esp8266 solar battery controller</h1>";
+  message += "Softwareversion: ";
+  message += SOFTWARE_VERSION;
+  message += "<br>";
 
   // WiFi und Speicher
   message += "WiFi";

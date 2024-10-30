@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define SOFTWARE_VERSION "2.03"
+
 enum PrgState {
   State_Failure,
   State_Standby,
