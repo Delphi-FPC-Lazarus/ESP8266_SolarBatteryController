@@ -72,8 +72,11 @@ const int dout_ACea = D5;        // AC aus/ein (off=aus on=ein)
 const int dout_ACmode = D6;      // AC Modus laden/entladen, UM damit niemals gleichzeit (off=laden on=entladen)
 const int dout_BATTselect = D7;  // DC Batterieumschalter
 
-const uint8_t R_OFF = HIGH;     // relaisboard inaktiv, Initialzustand 
-const uint8_t R_ON = LOW;       // relaisboard aktiv
+const uint8_t R_AC_OFF = HIGH;   // AC relaisboard inaktiv, Initialzustand 
+const uint8_t R_AC_ON = LOW;     // AC relaisboard aktiv
+
+const uint8_t R_BATT_OFF = LOW;   // AC relaisboard inaktiv, Initialzustand 
+const uint8_t R_BATT_ON = HIGH;     // AC relaisboard aktiv
 
 //const int ain_internal = A0;  // ADC intern hier nicht verwenden, von anderem Modul verwendet
 const uint8 ain_batt1 = 0;      // ADC extern
@@ -200,9 +203,9 @@ void Mod_IO::Off() {
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOoff,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
-  digitalWrite(dout_ACea, R_OFF);
+  digitalWrite(dout_ACea, R_AC_OFF);
   delay(1000); // Hardware Zeit geben
-  digitalWrite(dout_ACmode, R_OFF); 
+  digitalWrite(dout_ACmode, R_AC_OFF); 
 }
 
 void Mod_IO::Charge() {
@@ -210,11 +213,11 @@ void Mod_IO::Charge() {
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOcharge,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
-  digitalWrite(dout_ACea, R_OFF);
+  digitalWrite(dout_ACea, R_AC_OFF);
   delay(1000); // Hardware Zeit geben
-  digitalWrite(dout_ACmode, R_OFF); 
+  digitalWrite(dout_ACmode, R_AC_OFF); 
   delay(1000); // Hardware Zeit geben
-  digitalWrite(dout_ACea, R_ON);
+  digitalWrite(dout_ACea, R_AC_ON);
 }
 
 void Mod_IO::Discharge() {
@@ -222,11 +225,11 @@ void Mod_IO::Discharge() {
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOdischarge,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
-  digitalWrite(dout_ACea, R_OFF);
+  digitalWrite(dout_ACea, R_AC_OFF);
   delay(1000); // Hardware Zeit geben
-  digitalWrite(dout_ACmode, R_ON); 
+  digitalWrite(dout_ACmode, R_AC_ON); 
   delay(1000); // Hardware Zeit geben
-  digitalWrite(dout_ACea, R_ON);
+  digitalWrite(dout_ACea, R_AC_ON);
 }
 
 bool Mod_IO::IsOff() {
@@ -234,7 +237,7 @@ bool Mod_IO::IsOff() {
 }
 
 byte Mod_IO::GetBattActive() {
-  if (digitalRead(dout_BATTselect) == R_OFF) {
+  if (digitalRead(dout_BATTselect) == R_BATT_OFF) {
     return 1;
   } else { 
     return 2;
@@ -246,9 +249,9 @@ void Mod_IO::SelectBattActive(byte battselect) {
   mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BattSelect,battselect);
 
   if (battselect == 1) {
-    digitalWrite(dout_BATTselect, R_OFF);
+    digitalWrite(dout_BATTselect, R_BATT_OFF);
   } else {
-    digitalWrite(dout_BATTselect, R_ON);
+    digitalWrite(dout_BATTselect, R_BATT_ON);
   }
   delay(1000); // Hardware Zeit geben    
 
@@ -261,7 +264,7 @@ void Mod_IO::MeasureBattActive(bool dolog) {
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
   // (diese Funktion wird ständig aufgerufen, daher hier keine Relais schalten)
 
-  if (digitalRead(dout_BATTselect) == R_OFF) {
+  if (digitalRead(dout_BATTselect) == R_BATT_OFF) {
     if (manBatt1Simu > 0) {
       vBatt_active = manBatt1Simu;
     } else {
@@ -350,13 +353,13 @@ void Mod_IO::Init() {
 
   // Digitale Ausgänge initialisieren
   pinMode(dout_BATTselect, OUTPUT); 
-  digitalWrite(dout_BATTselect, R_OFF); 
+  digitalWrite(dout_BATTselect, R_BATT_OFF); 
 
   pinMode(dout_ACea, OUTPUT); 
-  digitalWrite(dout_ACea, R_OFF);
+  digitalWrite(dout_ACea, R_AC_OFF);
 
   pinMode(dout_ACmode, OUTPUT); 
-  digitalWrite(dout_ACmode, R_OFF);  
+  digitalWrite(dout_ACmode, R_AC_OFF);  
  
   // Digitale Eingänge initialisieren
   pinMode(0, INPUT_PULLUP);
