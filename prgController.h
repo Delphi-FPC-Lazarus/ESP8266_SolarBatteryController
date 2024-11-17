@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.04"
+#define SOFTWARE_VERSION "2.05"
 
 enum PrgState {
   State_Failure,
@@ -469,6 +469,7 @@ void Prg_Controller::doPowerControl() {
     // Wechselrichterkesitung um Lieferung verrringern (ist negativ)
     lastWRpwrset = wrPower + (emeterPower*0.7);
   }
+
   if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
   if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
   Serial.println("NewWRpower(new): " + String(lastWRpwrset));
@@ -669,6 +670,11 @@ void Prg_Controller::Handle() {
           // initial aktuelle Leistung einstellen, so kann ich ggf. peaks am Tag besser ausregeln
           lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
           lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
+          
+          if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
+          if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
+          Serial.println("NewWRpower(new): " + String(lastWRpwrset));
+
           delay(1); // Yield()        
 
           pwrControlSkip = 10; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
