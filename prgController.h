@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.06"
+#define SOFTWARE_VERSION "2.07"
 
 enum PrgState {
   State_Failure,
@@ -639,6 +639,8 @@ void Prg_Controller::Handle() {
             mod_IO.MeasureBatt12(true);
             delay(1); // Yield()
             mod_IO.MeasureBattActive(true);
+            // Zusätzlich auf Akku 1 zurückschalten (Umschaltrelais abschalten, strom sparen)
+            mod_IO.SelectBattActive(1);
           }
         }
 
