@@ -11,7 +11,6 @@
 const char* ssid = STASSID;
 const char* password = STAPSK;
 const char* hostname = STAHOSTNAME;
-const uint8_t  hostip = STAHOSTIP;
 
 // --------------------------------------------
 class ModStatic_Wifi {
@@ -26,15 +25,6 @@ class ModStatic_Wifi {
 };
 
 // --------------------------------------------
-
-// Set your Static IP address
-IPAddress local_IP(192, 168, 1, hostip);
-// Set your Gateway IP address
-IPAddress gateway(192, 168, 1, 1);
-
-IPAddress subnet(255, 255, 255, 0);
-IPAddress primaryDNS(192, 168, 1, 1);   //optional
-IPAddress secondaryDNS(192, 168, 1, 1); //optional
 
 int WiFiErrorCount = 0;
 

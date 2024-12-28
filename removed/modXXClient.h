@@ -16,7 +16,7 @@ class Mod_XXClient {
     float manXXSimu;
 
     //WiFiClient wifi;
-    //HttpClient httpclient = HttpClient(wifi, "192.168.1.xxx", 80);
+    //HttpClient httpclient = HttpClient(wifi, XX, XX);
 
   public:
     void manXXSimuOn(float value);

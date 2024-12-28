@@ -17,7 +17,7 @@ class Mod_PVClient {
     float manPVSimu;
 
     WiFiClient wifi;
-    HttpClient httpclient = HttpClient(wifi, "192.168.1.251", 80);
+    HttpClient httpclient = HttpClient(wifi, PVIP, PVIP);
 
     XMLDocument doc;
   public:

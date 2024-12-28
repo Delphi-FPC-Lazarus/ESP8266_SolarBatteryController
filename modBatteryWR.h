@@ -16,7 +16,7 @@ class Mod_BatteryWRClient {
     float manBatteryWRSimuValue;
 
     WiFiClient wifi;
-    HttpClient httpclient = HttpClient(wifi, "192.168.1.243", 80);
+    HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
 
   public:
     void manBatteryWRSimuOn();
