@@ -1,8 +1,6 @@
 /*
   Arduino IDE Project for ESP8266 Board
-
   This is an Solar Battery Controler
-
   by Peter Lorenz
   support@peter-ebe.de
   
@@ -27,6 +25,18 @@
   - Scheduler
   - Task
 
+  --------------------------------------------------------------------
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY
+
+  Last maintainer: Peter Lorenz
+  You find the code useful? Donate!
+  Paypal webmaster@peter-ebe.de
+  --------------------------------------------------------------------
+  
 */
 
 #include "modstaticWifi.h"

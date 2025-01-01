@@ -92,14 +92,16 @@ void Mod_Timer::calcRunTime() {
     // Minuten hochzählen, immer wenn eine Minute um ist 
     // damit als Überlauf Stunden und Tage bedienen
     if ((millis()-runTime.lastmillis+runTime.ntp_millisoffset) > (60*1000)) {
+      Serial.println("--------------");
       Serial.println("Minutenwechsel");
       runTime.m += 1;
       if (runTime.m >= 60) {
+        Serial.println("Stundenwechsel");
         runTime.h += 1;
         runTime.m = 0;
       }
       if (runTime.h >= 24) {
-        Serial.println("Stundenwechsel");
+        Serial.println("Tagwechsel");
         runTime.d += 1;
         runTime.h = 0;
       }
@@ -119,12 +121,14 @@ void Mod_Timer::calcRunTime() {
   } 
   // Überlauf erkennen
   if (runTime.lastmillis > millis()) {
+    Serial.println("--------------");
     Serial.println("millis() Überlauf erkannt");
     runTime.lastmillis = millis();
   }
 
   // Resynchronisation
   if ( (runTime.d > runTime.ntp_lastdaysyn) && (runTime.h == 3) && (runTime.m == 00) ) { // zu einem definierten Zeitpunkt mitten in der Nacht, keinesfalls direkt zum Tageswechsel
+    Serial.println("--------------");
     Serial.println("modTimer Resynchronisation");
     runTime.ntp_lastdaysyn = runTime.d;
     syncFromNTP();

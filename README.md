@@ -33,8 +33,8 @@ Paypal webmaster@peter-ebe.de \
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DZUZXE2WCJU4U) 
 
 # Hardware
-No specific hardware building instructions are published. Everything you do is on your own risk.\
-Make sure to use safe hardware components and cabling!\
+Everything you do is on your own risk. \
+Make sure to use safe hardware components and cabling! \
 \
-A schematic representation of the hardware responding to that software is provided in hardware folder.\
+A schematic representation of the hardware responding to that software is provided in hardware folder. \
 

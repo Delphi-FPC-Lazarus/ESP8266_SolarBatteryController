@@ -595,7 +595,7 @@ void Prg_Controller::Handle() {
   // Sicherheitsrelevante Funktionen müssen außerhalb bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
   if ( (mod_Timer.runTime.m != triggertime_bak) && (mod_IO.IsmanIOMode() == false) ) {
     triggertime_bak = mod_Timer.runTime.m;
-    Serial.println("Congroller Trigger");
+    Serial.println("Controller Trigger");
 
     // WifiCheck
     if (ModStatic_Wifi::CheckConnected() != true) {
