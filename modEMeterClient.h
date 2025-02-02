@@ -49,6 +49,10 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
 
   delay(100); // Yield()
 
+  if (!httpclient.connected()) {
+    Serial.println("http not connected"); 
+  }
+
   Serial.println("http get");
   httpclient.get("/");
   Serial.println("http get done");
