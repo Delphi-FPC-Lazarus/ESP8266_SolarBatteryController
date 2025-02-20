@@ -437,16 +437,7 @@ void Prg_Controller::doPowerControl() {
   } 
   delay(1); // Yield()
 
-  // Trigger ist, ob das EMeter einen neuen Wert geliefert hat
-  //if (emeterPower == lastEMeterpwr) {
-  //  Serial.println("EMeter hat noch keinen neuen Wert geliefert, Skip!");
-  //  detailsMsg = detailsMsg + ".";
-  //  return;
-  //} else {
-  //  Serial.println("EMeter hat neuen Wert geliefert, Leistungsregelung wird ausgeführt");
-  //}
-  lastEMeterpwr = emeterPower;
-
+  // Aktuelle Einspeiseleistung des Wechselrichters abfragen
   float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
   if ( wrPower == 0 ) { 
     // Fehler wenn genau 0 bzw. speist nicht ein und damit kann ich nicht regeln
@@ -457,32 +448,33 @@ void Prg_Controller::doPowerControl() {
   } 
   delay(1); // Yield()
 
-  Serial.println("LastWRpower: " + String(lastWRpwrset) + " CurrentWRpower: " + String(wrPower) + " EMeter: " + String(emeterPower)); 
+  // Regler 
+  // emeterPower ist der Fehlwert
+  // > 0 Bezug: Wechselrichterleistung um Bezug erhöhen (ist positiv)
+  // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
+  // wrPower ist die aktuelle Wechselrichter Leistung
+  float P = 0.7 * emeterPower;  // P-Anteil (langsame Annähreung)
+  //float D = 0.3 * (emeterPower - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
+  lastWRpwrset = wrPower + P; // + D; // Regelung
 
-  if (emeterPower > 0 ) {
-    // > 0 Bezug
-    // Wechselrichterleistung um Bezug erhöhen (ist positiv)
-    lastWRpwrset = wrPower + (emeterPower*0.7); 
-  };
-  if (emeterPower < 0) {
-    // < 0 Lieferung
-    // Wechselrichterkesitung um Lieferung verrringern (ist negativ)
-    lastWRpwrset = wrPower + (emeterPower*0.7);
-  }
-
+  // Begrenzen
   if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
   if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
   Serial.println("NewWRpower(new): " + String(lastWRpwrset));
 
-  // neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im wrPower und emeterpower hab ich noch die Werte von davon
+  // WR Leistung Einstellen+Meldung
+  // Wert einstellen, neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im wrPower und emeterpower hab ich noch die Werte von davor
   detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (Vorherige Leistung " + String(wrPower)+ "W  EMeter: "+String(emeterPower)+"W)";
-
+  Serial.println(detailsMsg);
   if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
     Serial.println("doPowerControl() ok");
   }
   else {
     Serial.println("doPowerControl() nok");
   }
+
+  // Vorherigen Fehlwert für nächsten Zyklus speichern
+  lastEMeterpwr = emeterPower;
 
 }
 
@@ -668,21 +660,28 @@ void Prg_Controller::Handle() {
           Serial.println("triggerStartDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
-          //lastWRpwrset = defaultWRpwrset; // Vorgabe, Wandler fährt eh erst mal Rampe
-          // initial aktuelle Leistung einstellen, so kann ich ggf. peaks am Tag besser ausregeln
+          // Hier sind wir im Bezug, sonst hätte er nicht getriggert
+          // Initial wird die aktuelle Bezugsleistung Bezugsleistung sowie Korrekturwert verwendet, so kann ich ggf. peaks am Tag besser ausregeln
+          // Der Wandler fährt eh erst mal Rampe
           lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
           lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
-          
+          pwrControlSkip = 10; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln 
+
+          // Begrenzen          
           if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
           if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
           Serial.println("NewWRpower(new): " + String(lastWRpwrset));
 
+          // WR Leistung Einstellen+Meldung
           delay(1); // Yield()        
-
-          pwrControlSkip = 10; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln, 
           detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
-          mod_BatteryWRClient.SetPowerLimit(lastWRpwrset);
-
+          Serial.println(detailsMsg);
+          if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
+            Serial.println("doPowerControl() ok");
+          }
+          else {
+            Serial.println("doPowerControl() nok");
+          }
           mod_IO.Discharge();
 
           state = State_Discharge;
@@ -719,8 +718,7 @@ void Prg_Controller::Handle() {
         // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
         pwrControlSkip -= 1;
         if ( pwrControlSkip < 1) {
-          //pwrControlSkip = 3; // ab jetzt in einem festen intervall regeln  
-          pwrControlSkip = 0; // ab jetzt jedes mal regeln. Voraussetzung ist dass die messung mind. drei mal so schnell ist, also immer ein aktueller Messwert vorliegt
+          pwrControlSkip = 0; // ab jetzt ab jetzt in einem festen intervall (jedes mal) regeln. Voraussetzung ist dass die messung mind. drei mal so schnell ist, also immer ein aktueller Messwert vorliegt
           doPowerControl();
         } else {
           Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
@@ -732,7 +730,7 @@ void Prg_Controller::Handle() {
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
 
           // zurück auf initialzustand
-          lastWRpwrset = 0; // defaultWRpwrset;
+          lastWRpwrset = 0;  // defaultWRpwrset;
           lastEMeterpwr = 0; // 0 wäre egal 
           detailsMsg = "";
 
