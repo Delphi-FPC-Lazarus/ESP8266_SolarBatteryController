@@ -53,6 +53,11 @@ float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
 
   delay(100); // Yield()
 
+  if (!httpclient.connected()) {
+    Serial.println("http not connected"); 
+    // client macht einen reconnect beim request
+  }
+
   Serial.println("http get");
   httpclient.get("/api/inverter/id/0");
   Serial.println("http get done");

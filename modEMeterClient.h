@@ -51,6 +51,7 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
 
   if (!httpclient.connected()) {
     Serial.println("http not connected"); 
+    // client macht einen reconnect beim request
   }
 
   Serial.println("http get");
