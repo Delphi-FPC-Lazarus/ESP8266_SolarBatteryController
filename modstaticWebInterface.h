@@ -112,6 +112,9 @@ void handleMenue() {
       mod_IO.SetmanBattSimuOn(1, 26);
     }
     if (server.argName(i) == "simubatt1d") {
+      mod_IO.SetmanBattSimuOn(1, 25.7);
+    }
+    if (server.argName(i) == "simubatt1e") {
       mod_IO.SetmanBattSimuOn(1, 25.5);
     }
   
@@ -128,6 +131,9 @@ void handleMenue() {
       mod_IO.SetmanBattSimuOn(2, 26);
     }
     if (server.argName(i) == "simubatt2d") {
+      mod_IO.SetmanBattSimuOn(2, 25.7);
+    }
+    if (server.argName(i) == "simubatt2e") {
       mod_IO.SetmanBattSimuOn(2, 25.5);
     }
 
@@ -240,14 +246,16 @@ String generateMenue() {
   menu += "<a href='?simubatt1a'>27</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt1b'>26.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt1c'>26</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubatt1d'>25.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1d'>25.7</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt1e'>25.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Batterie2&nbsp;";
   menu += "<a href='?simubatt2off'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt2a'>27</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt2b'>26.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt2c'>26</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubatt2d'>25.5</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2d'>25.7</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simubatt2e'>25.5</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "Emeter&nbsp;";
   menu += "<a href='?simuemeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
