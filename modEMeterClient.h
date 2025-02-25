@@ -14,9 +14,6 @@ class Mod_EMeterClient {
   private:
     float manEMeterSimu;
 
-    WiFiClient wifi;
-    HttpClient httpclient = HttpClient(wifi, EMETERIP, EMETERPORT);
-
   public:
     void manEMeterSimuOn(float value);
     void manEMeterSimuOff();
@@ -46,6 +43,9 @@ void Mod_EMeterClient::manEMeterSimuOff() {
 
 float Mod_EMeterClient::GetCurrentPower(bool dolog) {
   Serial.println("modEMeterClient_GetCurrentPower()");
+
+  WiFiClient wifi;
+  HttpClient httpclient = HttpClient(wifi, EMETERIP, EMETERPORT);
 
   delay(100); // Yield()
 

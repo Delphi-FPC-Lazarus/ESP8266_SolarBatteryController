@@ -15,9 +15,6 @@ class Mod_BatteryWRClient {
     bool manBatteryWRSimu;
     float manBatteryWRSimuValue;
 
-    WiFiClient wifi;
-    HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
-
   public:
     void manBatteryWRSimuOn();
     void manBatteryWRSimuOff();
@@ -50,6 +47,9 @@ void Mod_BatteryWRClient::manBatteryWRSimuOff() {
 
 float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
   Serial.println("modBatteryWRClient_GetCurrentPower()");
+
+  WiFiClient wifi;
+  HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
 
   delay(100); // Yield()
 
@@ -109,6 +109,9 @@ bool Mod_BatteryWRClient::SetPowerLimit(float pwr) {
   }
 
   // mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
+
+  WiFiClient wifi;
+  HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
 
   delay(100); // Yield()
 

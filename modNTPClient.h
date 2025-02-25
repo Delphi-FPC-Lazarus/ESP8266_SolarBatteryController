@@ -8,7 +8,6 @@
 // benötigt NTPClient
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#include <HttpClient.h>
 
 // --------------------------------------------
 class Mod_NTPClient {
