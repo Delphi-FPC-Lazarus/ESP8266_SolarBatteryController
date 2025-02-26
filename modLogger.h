@@ -8,76 +8,81 @@ const String logMsg_InternalLogInit = "Log gestartet";
 // ------------------------------------------
 // Benutzerdefinierte Codes, Meldung muss hinterlegt im darauf folgenden Array werden
 // (da diese Codes nur zur Laufzeit gültig sind und nicht permanent gespeichert werden, können sie nachträglich geändert werden solange das Array mit angepasst wird)
-const byte logCode_Startup              = 0;
-const byte logCode_StartupDone          = 1;
+const byte logCode_None                 = 0;
+const byte logCode_Separator            = 1;
 
-const byte logCode_IOoff                = 2;
-const byte logCode_IOcharge             = 3;
-const byte logCode_IOdischarge          = 4;
+const byte logCode_Startup              = 2;
+const byte logCode_StartupDone          = 3;
 
-const byte logCode_Measure              = 5;
-const byte logCode_VBattActive          = 6;
-const byte logCode_VBattProz            = 7;
-const byte logCode_VBatt1               = 8;
-const byte logCode_VBatt2               = 9;
-const byte logCode_PVPower              = 10;
-const byte logCode_EMeterPower          = 11;
+const byte logCode_IOoff                = 4;
+const byte logCode_IOcharge             = 5;
+const byte logCode_IOdischarge          = 6;
 
-const byte logCode_IOmanIOModeOn        = 12;
-const byte logCode_IOmanIOModeOff       = 13;
+const byte logCode_Measure              = 7;
+const byte logCode_VBattActive          = 8;
+const byte logCode_VBattProz            = 9;
+const byte logCode_VBatt1               = 10;
+const byte logCode_VBatt2               = 11;
+const byte logCode_PVPower              = 12;
+const byte logCode_EMeterPower          = 13;
 
-const byte logCode_IOmanBattSimuOn      = 14;
-const byte logCode_IOmanBattSimuOff     = 15;
-const byte logCode_Free1                = 16;
+const byte logCode_IOmanIOModeOn        = 14;
+const byte logCode_IOmanIOModeOff       = 15;
 
-const byte logCode_SystemFailure        = 17;
+const byte logCode_IOmanBattSimuOn      = 16;
+const byte logCode_IOmanBattSimuOff     = 17;
+const byte logCode_Free1                = 18;
 
-const byte logCode_StartCharge          = 18;
-const byte logCode_StartDischarge       = 19;
-const byte logCode_StartChargeEmergency = 20;
+const byte logCode_SystemFailure        = 19;
 
-const byte logCode_StopCharge           = 21;
-const byte logCode_StopDischarge        = 22;
-const byte logCode_StopChargeEmergency  = 23;
+const byte logCode_StartCharge          = 20;
+const byte logCode_StartDischarge       = 21;
+const byte logCode_StartChargeEmergency = 22;
 
-const byte logCode_Resynch              = 24;
+const byte logCode_StopCharge           = 23;
+const byte logCode_StopDischarge        = 24;
+const byte logCode_StopChargeEmergency  = 25;
 
-const byte logCode_PVSimuOn             = 25;
-const byte logCode_PVSimuOff            = 26;
-const byte logCode_PVRequestFail        = 27;
+const byte logCode_Resynch              = 26;
 
-const byte logCode_EMeterSimuOn         = 28;
-const byte logCode_EMeterSimuOff        = 29;
-const byte logCode_EMeterRequestFail    = 30;
+const byte logCode_PVSimuOn             = 27;
+const byte logCode_PVSimuOff            = 28;
+const byte logCode_PVRequestFail        = 29;
 
-const byte logCode_TimeSimuOff          = 31;
-const byte logCode_TimeSimuDay          = 32;
-const byte logCode_TimeSimuNight        = 33;
+const byte logCode_EMeterSimuOn         = 30;
+const byte logCode_EMeterSimuOff        = 31;
+const byte logCode_EMeterRequestFail    = 32;
 
-const byte logCode_WifiErrorDetected    = 34;
+const byte logCode_TimeSimuOff          = 33;
+const byte logCode_TimeSimuDay          = 34;
+const byte logCode_TimeSimuNight        = 35;
 
-const byte logCode_BatteryWRSimuOn      = 35;
-const byte logCode_BatteryWRSimuOff     = 36;
-const byte logCode_BatteryWRRequestFail = 37;
-const byte logCode_BatteryWRPowerSet    = 38;
-const byte logCode_BatteryWRPower       = 39;
+const byte logCode_WifiErrorDetected    = 36;
 
-const byte logCode_extADCMeasureFailed  = 40;
-const byte logCode_extADCok             = 41;
-const byte logCode_extADCfailed         = 42;
+const byte logCode_BatteryWRSimuOn      = 37;
+const byte logCode_BatteryWRSimuOff     = 38;
+const byte logCode_BatteryWRRequestFail = 39;
+const byte logCode_BatteryWRPowerSet    = 40;
+const byte logCode_BatteryWRPower       = 41;
 
-const byte logCode_PowerMeterSimuOn     = 43;
-const byte logCode_PowerMeterSimuOff    = 44;
-const byte logCode_PowerMeterPower      = 45;
+const byte logCode_extADCMeasureFailed  = 42;
+const byte logCode_extADCok             = 43;
+const byte logCode_extADCfailed         = 44;
 
-const byte logCode_BattSelect           = 46;
+const byte logCode_PowerMeterSimuOn     = 45;
+const byte logCode_PowerMeterSimuOff    = 46;
+const byte logCode_PowerMeterPower      = 47;
+
+const byte logCode_BattSelect           = 48;
 
 // Anzahl der hinterlegten Meldungen (maxlogcode+2) wegen 0 basierend und dummyeintrag 
 // Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 // obacht, wenn ein komma vergessen wird, wird's schräg", deshalb der Dummyeintrag hinten dran
-const int logMsgCount = 48;   
+const int logMsgCount = 50;   
 
 const String logMsg[logMsgCount] = {
+  "",
+  "-",
   "<b><font color=green>Controller Init...</font></b>",
   "<b><font color=green>Controller Init abgeschlossen</font></b>",
 
@@ -99,7 +104,7 @@ const String logMsg[logMsgCount] = {
   "<b>Batteriesimulation aus</b>",
   "(free)",
 
-  "<b><font color=red>Steurung auf Fehlerzustand</font></b>",
+  "<b><font color=red>Steurung auf Fehlerzustand</font></b><!--ERROR-->",
 
   "<b><font color=green>Ladevorgang gestartet</font></b>",
   "<b><font color=green>Entladevorgang gestartet</font></b>",
@@ -113,17 +118,17 @@ const String logMsg[logMsgCount] = {
 
   "<b>PVsimulation an</b>",
   "<b>PVsimulation aus</b>",
-  "<b><font color=red>PV Abfrage fehlgeschlagen</font></b>",
+  "<b><font color=red>PV Abfrage fehlgeschlagen</font></b><!--ERROR-->",
 
   "<b>EMetersimulation an</b>",
   "<b>EMetersimulation aus</b>",
-  "<b><font color=red>EMeter Abfrage fehlgeschlagen</font></b>",
+  "<b><font color=red>EMeter Abfrage fehlgeschlagen</font></b><!--ERROR-->",
 
   "<b>Zeitsimulation aus</b>",
   "<b>Zeitsimulation Tag</b>",
   "<b>Zeitsimulation Nacht</b>",
 
-  "<b><font color=red>WiFi-Fehler erkannt</font></b>",
+  "<b><font color=red>WiFi-Fehler erkannt</font></b><!--ERROR-->",
 
   "<b>WRsimulation an</b>",
   "<b>WRsimulation aus</b>",
@@ -131,10 +136,10 @@ const String logMsg[logMsgCount] = {
   "WR Leistungsvorgabe",
   "WR Leistung",
 
-  "<b><font color=red>Messung von externen ADC fehlgeschlagen</font></b>",
+  "<b><font color=red>Messung von externen ADC fehlgeschlagen</font></b><!--ERROR-->",
 
   "Initialisieren des externen ADC erfolgreich",
-  "<b><font color=red>Fehler beim Initialisieren des externen ADC</font></b>",
+  "<b><font color=red>Fehler beim Initialisieren des externen ADC</font></b><!--ERROR-->",
 
   "<b>PowerMetersimulation an</b>",
   "<b>PowerMetersimulation aus</b>",
@@ -161,7 +166,7 @@ class Mod_Logger {
     uint       localLogIndex  = -1;       // zuletzt geschriebener Eintrag
 
     localLogItem localLog[localLogSize];  // Log
-    
+  
     void Prepare();
     String DumpItem(uint iLog);
   public:
@@ -193,6 +198,7 @@ void Mod_Logger::Add(String timestamp, byte code, float value) {
   if (localLogIndex > localLogSize-1) {
     localLogIndex = 0;
   }
+  Serial.println(timestamp + ":" + String(code) + ":" + String(value));
   localLog[localLogIndex].timeStamp = timestamp;
   localLog[localLogIndex].logCode = code;
   localLog[localLogIndex].logValue = value;
@@ -252,7 +258,7 @@ void Mod_Logger::Init() {
   Serial.println("modLogger_Init()");
 
   Prepare();
-  Add("00", logCode_InternalLogInit, 0); 
+  Add("00", logCode_InternalLogInit, 0);  // damit beginnt das log mit einem separator. Unscheinbar aber damit weiß ich das log is initialisiert
 
 }
 

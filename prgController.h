@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.11"
+#define SOFTWARE_VERSION "2.12"
 
 enum PrgState {
   State_Failure,
@@ -94,6 +94,8 @@ bool Prg_Controller::CheckFailure() {
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
 
   if (!mod_IO.BattActiveValid()) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
     return true;
@@ -145,10 +147,12 @@ bool Prg_Controller::SelectBatteryNotFull() {
       Serial.println("Prüfung 1 dann 2");
       // erst Batt 1 dann Batt 2
       if (mod_IO.vBatt_1proz < battFull) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(1);
         return true;
       } else {
         if (mod_IO.vBatt_2proz < battFull) {
+          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
           mod_IO.SelectBattActive(2);
           return true;
         }
@@ -157,10 +161,12 @@ bool Prg_Controller::SelectBatteryNotFull() {
       Serial.println("Prüfung 2 dann 1");
       // erst Batt 2 dann Batt 1
       if (mod_IO.vBatt_2proz < battFull) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(2);
         return true;
       } else {
         if (mod_IO.vBatt_1proz < battFull) {
+          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
           mod_IO.SelectBattActive(1);
           return true;
         }
@@ -175,6 +181,7 @@ bool Prg_Controller::SelectBatteryNotFull() {
     if (mod_IO.Batt1Valid()) {
       // nur Batt 1
       if (mod_IO.vBatt_1proz < battFull) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(1);
         return true;
       }
@@ -185,7 +192,6 @@ bool Prg_Controller::SelectBatteryNotFull() {
   return false;
 
 }
-
 
 bool Prg_Controller::SelectBatteryNotEmpty() {
   
@@ -198,10 +204,12 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
       Serial.println("Prüfung 1 dann 2");
       // erst Batt 1 dann Batt 2
       if (mod_IO.vBatt_1proz >= battApplicable) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(1);
         return true;
       } else {
         if (mod_IO.vBatt_2proz >= battApplicable) {
+          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
           mod_IO.SelectBattActive(2);
           return true;
         }
@@ -210,10 +218,12 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
       Serial.println("Prüfung 2 dann 1");
       // erst Batt 2 dann Batt 1
       if (mod_IO.vBatt_2proz >= battApplicable) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(2);
         return true;
       } else {
         if (mod_IO.vBatt_1proz >= battApplicable) {
+          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
           mod_IO.SelectBattActive(1);
           return true;
         }
@@ -228,6 +238,7 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
     if (mod_IO.Batt1Valid()) {
       // nur Batt 1
       if (mod_IO.vBatt_1proz >= battApplicable) {
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
         mod_IO.SelectBattActive(1);
         return true;
       }
@@ -255,7 +266,7 @@ bool Prg_Controller::triggerStatCharge() {
         (emeterPower < emeterChargePower)  &&
         (isDay() == true) 
      ) {
-  
+      
       if (SelectBatteryNotFull()) {
         // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
         delay(1); // Yield()
@@ -302,6 +313,8 @@ bool Prg_Controller::triggerStopCharge() {
         (emeterPower > 0) || 
         (isDay() == false)
      ) { 
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    
     mod_PowerMeter.GetCurrentPower(true);  
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
@@ -321,6 +334,8 @@ bool Prg_Controller::triggerStatChargeEmergency() {
         (mod_IO.vBatt_1proz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_IO.SelectBattActive(1);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1, mod_IO.vBatt_1);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_1proz);
@@ -332,6 +347,8 @@ bool Prg_Controller::triggerStatChargeEmergency() {
         (mod_IO.vBatt_2proz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_IO.SelectBattActive(2);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2, mod_IO.vBatt_2);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_2proz);
@@ -358,6 +375,8 @@ bool Prg_Controller::triggerStopChargeEmergency() {
         (chargeEndCounter > chargeDetectDelay) ||
         (isDay() == false) 
      ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_PowerMeter.GetCurrentPower(true);  
     return true;
   }
@@ -406,6 +425,8 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( 
         (mod_IO.vBatt_activeproz <= battStopDischarge)
     ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
     return true;
@@ -418,6 +439,8 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( 
         (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) // Endladen abbrechen wenn ich im Lieferbereich bin, aber der Akku auch schon heruntergefahren ist
     ) {
+    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
