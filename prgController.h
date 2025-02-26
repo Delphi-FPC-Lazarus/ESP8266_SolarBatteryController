@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.10"
+#define SOFTWARE_VERSION "2.11"
 
 enum PrgState {
   State_Failure,
@@ -653,6 +653,7 @@ void Prg_Controller::Handle() {
           chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
 
           state = State_Charge;
+          break;
         }
         if (triggerStatChargeEmergency()) {
           Serial.println("triggerStatChargeEmergency");
@@ -663,6 +664,7 @@ void Prg_Controller::Handle() {
           chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
 
           state = State_ChargeEmergency;
+          break;
         }
         if (triggerStartDischarge()) {
           Serial.println("triggerStartDischarge");
@@ -693,6 +695,7 @@ void Prg_Controller::Handle() {
           mod_IO.Discharge();
 
           state = State_Discharge;
+          break;
         }
         break;
 
