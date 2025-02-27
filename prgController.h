@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.12"
+#define SOFTWARE_VERSION "2.13"
 
 enum PrgState {
   State_Failure,
@@ -401,6 +401,11 @@ bool Prg_Controller::triggerStartDischarge() {
   if (emeterPower > emeterDischargePower) {
 
     if (SelectBatteryNotEmpty()) { 
+      // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
+      delay(1); // Yield()
+      mod_IO.MeasureBattActive(false);
+      delay(1); // Yield()
+
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
       mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
