@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.13"
+#define SOFTWARE_VERSION "2.14"
 
 enum PrgState {
   State_Failure,
@@ -663,6 +663,8 @@ void Prg_Controller::Handle() {
           if (mod_Timer.runTime.h == 6) {
             // wenn sich der Akku im Standby befindet, akkustand loggen
             // das ist vor allem im interessant wenn der Akku mehrere Tage im Standby ist 
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+
             delay(1); // Yield()
             mod_IO.MeasureBatt12(true);
             delay(1); // Yield()
