@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.14"
+#define SOFTWARE_VERSION "2.15"
 
 enum PrgState {
   State_Failure,
@@ -55,9 +55,11 @@ class Prg_Controller {
 };
 Prg_Controller prg_Controller;
 
-/*
-const float pvDayNight=5;               // Tag Nacht Erkennung über die PV Anlage
-*/
+// Allgemeines
+const int startOfDay=8;                     // Tag Anfang, wird als zusätzliche Begrenzung für Ladezeiten verwendet
+const int endOfDay=18;                      // Tag Ende, wird als zusätzliche Begrenzung für Ladezeiten verwendet
+const int akkuLogMorning=8;                 // Loggen unmittekbar bevor das Ladezeitfenster beginnt, hier ist der Akku mit hoher Wahrscheinlichkeit im Standy
+const int akkuLogEvening=17;                // Loggen am Abend, hier ist der Akku mit hoher Wahrscheinlichkeit im Standy
 
 // Ladeleistung 500W
 const float emeterChargePower=-500;         // Trigger das Laden begonnen werden kann (entspricht mind. Ladeleistung des Batterieladers) (negativ weil Trigger auf Einspeisung)
@@ -111,30 +113,13 @@ boolean Prg_Controller::isDay() {
   // Result True = Tag , Result False = Nacht
   // Achtung, der Controller hat immer Winterzeit
   if ( 
-        (mod_Timer.runTime.h >= 8) && (mod_Timer.runTime.h <= 17) 
+        (mod_Timer.runTime.h >= startOfDay) && (mod_Timer.runTime.h <= endOfDay)
      ) {
      return true;
   } else {
     return false;
   } 
 }
-
-/*
-boolean Prg_Controller::isDay() {
-  // Ist es Tag? Unabhängig von der Uhrzeit einfach über die PV Anlage, die liefert am Tag immer über 0 (sogar bei Schnee)
-  // Result True = Tag , Result False = Nacht
-  delay(1); // Yield()
-  float pvPower = mod_PVClient.GetCurrentPower(false);
-  if ( pvPower < 0 ) { return false; } // Fehler
-  delay(1); // Yield()
-  //Serial.println(pvPower); // Debug
-  if (pvPower > pvDayNight) {
-    return true;
-  } else {
-    return false;
-  }
-}
-*/
 
 bool Prg_Controller::SelectBatteryNotFull() {
 
@@ -441,8 +426,11 @@ bool Prg_Controller::triggerStopDischarge() {
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
+
+  // Endladen abbrechen wenn ich im Lieferbereich bin, aber der WR auch schon heruntergefahren ist
+  // Damit greift das jedoch nicht in der Initalisierungsphase des WR
   if ( 
-        (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) // Endladen abbrechen wenn ich im Lieferbereich bin, aber der Akku auch schon heruntergefahren ist
+        (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) 
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
@@ -659,10 +647,11 @@ void Prg_Controller::Handle() {
       case State_Standby:
         Serial.println("State_Standby");
 
+        // wenn sich der Akku im Standby befindet, akkustand loggen
+        // es ist nicht sichergestellt, dass dies immer passiert
+        // ggf. interessant zum Feststellen der Akkustände oder auch wenn der Akku mehrere Tage im Standby ist 
         if (mod_Timer.runTime.m == 0) {
-          if (mod_Timer.runTime.h == 6) {
-            // wenn sich der Akku im Standby befindet, akkustand loggen
-            // das ist vor allem im interessant wenn der Akku mehrere Tage im Standby ist 
+          if ( (mod_Timer.runTime.h == akkuLogMorning) || (mod_Timer.runTime.h == akkuLogEvening) ) {
             mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
             delay(1); // Yield()
@@ -766,6 +755,7 @@ void Prg_Controller::Handle() {
           detailsMsg = detailsMsg + ".";
         }
 
+        // auch während der initialisierungsphase, siehe Bedingung innerhalb der Funktion deshalb greift es nicht
         if (triggerStopDischarge()) {
           Serial.println("triggerStopDischarge");
           mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
