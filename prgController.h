@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.15"
+#define SOFTWARE_VERSION "2.16"
 
 enum PrgState {
   State_Failure,
@@ -583,10 +583,15 @@ void Prg_Controller::Init() {
   detailsMsg = "";  // Meldung aus der Regelung
   chargeEndCounter = 0; // Ladeende erst nach mehreren Durchläufen ohne Ladestrom erkennen
 
-  // Akkuzustände ins Protokoll schreiben
   mod_IO.Off();
   delay(1); // Yield()
+  mod_IO.SelectBattActive(1);
+
+  // Akkuzustände ins Protokoll schreiben
+  delay(1); // Yield()
   mod_IO.MeasureBatt12(true);
+
+  // Aktuive Batterie ermittel, dies ist für den Betrieb wichtig 
   delay(1); // Yield()
   mod_IO.MeasureBattActive(true);
   delay(1); // Yield()
@@ -647,19 +652,24 @@ void Prg_Controller::Handle() {
       case State_Standby:
         Serial.println("State_Standby");
 
+        // wenn sich der Akku im Standby befindet, Auf Akku 1 zurückschalten 
+        // (Umschaltrelais abschalten, strom sparen wenn der Akku länger im Standby ist)
+        // Dies mache ich absichtlich zu einem Zeitpunkt in dem der Akku im normalen Betrieb nicht im Standby um unnötige Schaltzyklen zu vermeiden
+        // damit greift dies i.d.R. 
+        if (mod_Timer.runTime.m == 0) {
+          if (mod_Timer.runTime.h == 0) {
+            mod_IO.SelectBattActive(1);
+          }
+        }
+
         // wenn sich der Akku im Standby befindet, akkustand loggen
         // es ist nicht sichergestellt, dass dies immer passiert
         // ggf. interessant zum Feststellen der Akkustände oder auch wenn der Akku mehrere Tage im Standby ist 
         if (mod_Timer.runTime.m == 0) {
           if ( (mod_Timer.runTime.h == akkuLogMorning) || (mod_Timer.runTime.h == akkuLogEvening) ) {
             mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-
             delay(1); // Yield()
             mod_IO.MeasureBatt12(true);
-            delay(1); // Yield()
-            mod_IO.MeasureBattActive(true);
-            // Zusätzlich auf Akku 1 zurückschalten (Umschaltrelais abschalten, strom sparen)
-            mod_IO.SelectBattActive(1);
           }
         }
 
