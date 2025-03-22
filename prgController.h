@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.16"
+#define SOFTWARE_VERSION "2.20"
 
 enum PrgState {
   State_Failure,
@@ -16,7 +16,8 @@ enum PrgState {
 class Prg_Controller {
   private:
     PrgState state;
-    byte triggertime_bak;
+    _runTime triggertime_control_bak;
+    _runTime triggertime_regulation_bak;
     
     int pwrControlSkip;
     float lastEMeterpwr;
@@ -473,6 +474,8 @@ void Prg_Controller::doPowerControl() {
   // > 0 Bezug: Wechselrichterleistung um Bezug erhöhen (ist positiv)
   // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
   // wrPower ist die aktuelle Wechselrichter Leistung
+  // Bei den Regelungsfaktoren ist das Verhalten von WR/DTU beim Setzen neuer Werte zu berücksichtigen
+  // (manuelle Leistungsregelung "auf null" über die DTU vorher ausprobieren, 50% bis max 70% Messwertabweichung zustellen, manchmal übersteuert der WR)
   float P = 0.7 * emeterPower;  // P-Anteil (langsame Annähreung)
   //float D = 0.3 * (emeterPower - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
   lastWRpwrset = wrPower + P; // + D; // Regelung
@@ -491,10 +494,10 @@ void Prg_Controller::doPowerControl() {
   detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (Vorherige Leistung " + String(wrPower)+ "W  EMeter: "+String(emeterPower)+"W)";
   Serial.println(detailsMsg);
   if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-    Serial.println("doPowerControl() ok");
+    Serial.println("SetPowerLimit() ok");
   }
   else {
-    Serial.println("doPowerControl() nok");
+    Serial.println("SetPowerLimit() nok");
   }
 
   // Vorherigen Fehlwert für nächsten Zyklus speichern
@@ -575,7 +578,8 @@ void Prg_Controller::Init() {
   Serial.println("prgController_Init()");
   
   // Initialzustand
-  triggertime_bak = mod_Timer.runTime.m;
+  triggertime_control_bak = mod_Timer.runTime;
+  triggertime_regulation_bak = mod_Timer.runTime;
   state = State_Standby;
   lastWRpwrset = 0; //defaultWRpwrset;
   lastEMeterpwr = 0; // 0 wäre egal
@@ -610,180 +614,212 @@ void Prg_Controller::Init() {
 }
 
 void Prg_Controller::Handle() {
-  
-  // die Entscheidungsstruktur für den Modus triggert einmal pro Minute
-  // d.h. alles was hier innerhalb passiert, kann niemals schneller passieren, das ist wichtig!
-  // Sicherheitsrelevante Funktionen müssen außerhalb bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
-  if ( (mod_Timer.runTime.m != triggertime_bak) && (mod_IO.IsmanIOMode() == false) ) {
-    triggertime_bak = mod_Timer.runTime.m;
-    Serial.println("Controller Trigger");
 
-    // WifiCheck
-    if (ModStatic_Wifi::CheckConnected() != true) {
-      Serial.println("CheckConnected Fehlgeschlagen");
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
-      //
-    }
+  if (mod_IO.IsmanIOMode() == false) {
 
-    // Akkumessung (wird für die Fehlerprüfung und in den verschiedenen Stages für die jeweiligen Triggerfunktionen benötigt deshalb hier abfragen)
-    delay(1); // Yield()
-    mod_IO.MeasureBatt12(false);
-    delay(1); // Yield()
-    mod_IO.MeasureBattActive(false);
-    delay(1); // Yield()
+    // ZeitTrigger Steuerung
+    // die Entscheidungsstruktur für den Modus triggert einmal pro Minute
+    // d.h. alles was hier innerhalb passiert, kann niemals schneller passieren, das ist wichtig!
+    // Sicherheitsrelevante Funktionen müssen außerhalb bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
+    if ( mod_Timer.runTime.m != triggertime_control_bak.m ) {
+      triggertime_control_bak = mod_Timer.runTime;
+      Serial.println("Trigger Controller");
 
-    // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
-    if ( (state != State_Failure) && CheckFailure() ) {
-      Serial.println("CheckFailure");
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
+      // WifiCheck
+      if (ModStatic_Wifi::CheckConnected() != true) {
+        Serial.println("CheckConnected Fehlgeschlagen");
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
+        //
+      }
 
-      mod_IO.Off();
+      // Akkumessung (wird für die Fehlerprüfung und in den verschiedenen Stages für die jeweiligen Triggerfunktionen benötigt deshalb hier abfragen)
+      delay(1); // Yield()
+      mod_IO.MeasureBatt12(false);
+      delay(1); // Yield()
+      mod_IO.MeasureBattActive(false);
+      delay(1); // Yield()
 
-      state = State_Failure;
-    }
+      // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
+      if ( (state != State_Failure) && CheckFailure() ) {
+        Serial.println("CheckFailure");
+        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
 
-    switch (state) {
-      // Fehlerzustand
-      case State_Failure:
-        // nichts mehr
-        break;
+        mod_IO.Off();
 
-      // Standby Zustand        
-      case State_Standby:
-        Serial.println("State_Standby");
+        state = State_Failure;
+      }
 
-        // wenn sich der Akku im Standby befindet, Auf Akku 1 zurückschalten 
-        // (Umschaltrelais abschalten, strom sparen wenn der Akku länger im Standby ist)
-        // Dies mache ich absichtlich zu einem Zeitpunkt in dem der Akku im normalen Betrieb nicht im Standby um unnötige Schaltzyklen zu vermeiden
-        // damit greift dies i.d.R. 
-        if (mod_Timer.runTime.m == 0) {
-          if (mod_Timer.runTime.h == 0) {
-            mod_IO.SelectBattActive(1);
+      switch (state) {
+        // Fehlerzustand
+        case State_Failure:
+          // nichts mehr
+          break;
+
+        // Standby
+        case State_Standby:
+          Serial.println("State_Standby");
+
+          // wenn sich der Akku im Standby befindet, Auf Akku 1 zurückschalten
+          // (Umschaltrelais abschalten, strom sparen wenn der Akku länger im Standby ist)
+          // Dies mache ich absichtlich zu einem Zeitpunkt in dem der Akku im normalen Betrieb nicht im Standby um unnötige Schaltzyklen zu vermeiden
+          // damit greift dies i.d.R.
+          if (mod_Timer.runTime.m == 0) {
+            if (mod_Timer.runTime.h == 0) {
+              mod_IO.SelectBattActive(1);
+            }
           }
-        }
 
-        // wenn sich der Akku im Standby befindet, akkustand loggen
-        // es ist nicht sichergestellt, dass dies immer passiert
-        // ggf. interessant zum Feststellen der Akkustände oder auch wenn der Akku mehrere Tage im Standby ist 
-        if (mod_Timer.runTime.m == 0) {
-          if ( (mod_Timer.runTime.h == akkuLogMorning) || (mod_Timer.runTime.h == akkuLogEvening) ) {
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+          // wenn sich der Akku im Standby befindet, akkustand loggen
+          // es ist nicht sichergestellt, dass dies immer passiert
+          // ggf. interessant zum Feststellen der Akkustände oder auch wenn der Akku mehrere Tage im Standby ist
+          if (mod_Timer.runTime.m == 0) {
+            if ( (mod_Timer.runTime.h == akkuLogMorning) || (mod_Timer.runTime.h == akkuLogEvening) ) {
+              mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+              delay(1); // Yield()
+              mod_IO.MeasureBatt12(true);
+            }
+          }
+
+          if (triggerStatCharge()) {
+            Serial.println("triggerStatCharge");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
+
+            mod_IO.Charge();
+
+            chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
+            state = State_Charge;
+            break;
+          }
+          if (triggerStatChargeEmergency()) {
+            Serial.println("triggerStatChargeEmergency");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
+
+            mod_IO.Charge();
+
+            chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
+            state = State_ChargeEmergency;
+            break;
+          }
+          if (triggerStartDischarge()) {
+            Serial.println("triggerStartDischarge");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
+
+            // Hier sind wir im Bezug, sonst hätte er nicht getriggert
+            // Initial wird die aktuelle Bezugsleistung Bezugsleistung sowie Korrekturwert verwendet, so kann ich ggf. peaks am Tag besser ausregeln
+            // Der Wandler fährt eh erst mal Rampe
+            lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+            lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
+            pwrControlSkip = dischargeStartRamp; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln
+
+            // Begrenzen (Start)
+            if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
+            if (lastWRpwrset > maxWRpwrsetStart) { lastWRpwrset = maxWRpwrsetStart; };
+            Serial.println("NewWRpower(new): " + String(lastWRpwrset));
+
+            // WR Leistung initial Einstellen+Meldung
             delay(1); // Yield()
-            mod_IO.MeasureBatt12(true);
+            detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
+            Serial.println(detailsMsg);
+            if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
+              Serial.println("SetPowerLimit() ok");
+            }
+            else {
+              Serial.println("SetPowerLimit() nok");
+            }
+            mod_IO.Discharge();
+
+            state = State_Discharge;
+            break;
           }
-        }
-
-        if (triggerStatCharge()) {
-          Serial.println("triggerStatCharge");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
-
-          mod_IO.Charge();
-
-          chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
-
-          state = State_Charge;
           break;
-        }
-        if (triggerStatChargeEmergency()) {
-          Serial.println("triggerStatChargeEmergency");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
-          mod_IO.Charge();
+        // Laden
+        case State_Charge:
+          Serial.println("State_Charge");
+          if (triggerStopCharge()) {
+            Serial.println("triggerStopCharge");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
 
-          chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+            mod_IO.Off();
 
-          state = State_ChargeEmergency;
-          break;
-        }
-        if (triggerStartDischarge()) {
-          Serial.println("triggerStartDischarge");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
-
-          // Hier sind wir im Bezug, sonst hätte er nicht getriggert
-          // Initial wird die aktuelle Bezugsleistung Bezugsleistung sowie Korrekturwert verwendet, so kann ich ggf. peaks am Tag besser ausregeln
-          // Der Wandler fährt eh erst mal Rampe
-          lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
-          lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
-          pwrControlSkip = dischargeStartRamp; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln 
-
-          // Begrenzen (Start)          
-          if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
-          if (lastWRpwrset > maxWRpwrsetStart) { lastWRpwrset = maxWRpwrsetStart; }; 
-          Serial.println("NewWRpower(new): " + String(lastWRpwrset));
-
-          // WR Leistung Einstellen+Meldung
-          delay(1); // Yield()        
-          detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
-          Serial.println(detailsMsg);
-          if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-            Serial.println("doPowerControl() ok");
+            state = State_Standby;
           }
-          else {
-            Serial.println("doPowerControl() nok");
-          }
-          mod_IO.Discharge();
-
-          state = State_Discharge;
           break;
-        }
-        break;
 
-      // Aktive Zustände
-      case State_Charge:
-        Serial.println("State_Charge");
-        if (triggerStopCharge()) {
-          Serial.println("triggerStopCharge");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
+        // Laden (Tiefentladeschutz)
+        case State_ChargeEmergency:
+          Serial.println("State_ChargeEmergency");
+          if (triggerStopChargeEmergency()) {
+            Serial.println("triggerStopChargeEmergency");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
 
-          mod_IO.Off();
+            mod_IO.Off();
+            state = State_Standby;
+          }
+          break;
 
-          state = State_Standby;
-        }
-        break;
+        // Einspeisen
+        case State_Discharge:
+          Serial.println("State_Discharge");
 
-      case State_ChargeEmergency:
-        Serial.println("State_ChargeEmergency");
-        if (triggerStopChargeEmergency()) {
-          Serial.println("triggerStopChargeEmergency");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
+          // Leistungsregelung (Totzeit wegen Rampe beim Einschalten)
+          pwrControlSkip -= 1;
+          if ( pwrControlSkip < 1) {
+            // ab jetzt ab jetzt in einem festen intervall
+            // Aufgruf der Leistungsregelung ausgelagert für schnellere Reaktion, Zeittrigger Regelung 
+            pwrControlSkip = 0; 
+          } else {
+            Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
+            detailsMsg = detailsMsg + ".";
+          }
 
-          mod_IO.Off();
-          state = State_Standby;
-        }
-        break;
+          // Enthladestop trigger auch während der initialisierungsphase, siehe Bedingung innerhalb der Funktion deshalb greift es nicht
+          if (triggerStopDischarge()) {
+            Serial.println("triggerStopDischarge");
+            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
 
-      case State_Discharge:
-        Serial.println("State_Discharge");
+            // zurück auf initialzustand
+            lastWRpwrset = 0;  // defaultWRpwrset;
+            lastEMeterpwr = 0; // 0 wäre egal
+            detailsMsg = "";
 
-        // Leistungsregelung (muss träger sein als die Messung und ggf. beim Einschalten Rampe des Wandlers)
-        pwrControlSkip -= 1;
-        if ( pwrControlSkip < 1) {
-          pwrControlSkip = 0; // ab jetzt ab jetzt in einem festen intervall (jedes mal) regeln. Voraussetzung ist dass die messung mind. drei mal so schnell ist, also immer ein aktueller Messwert vorliegt
-          doPowerControl();
-        } else {
-          Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
-          detailsMsg = detailsMsg + ".";
-        }
+            mod_IO.Off();
+            state = State_Standby;
+          }
+          break;
 
-        // auch während der initialisierungsphase, siehe Bedingung innerhalb der Funktion deshalb greift es nicht
-        if (triggerStopDischarge()) {
-          Serial.println("triggerStopDischarge");
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
-
-          // zurück auf initialzustand
-          lastWRpwrset = 0;  // defaultWRpwrset;
-          lastEMeterpwr = 0; // 0 wäre egal 
-          detailsMsg = "";
-
-          mod_IO.Off();
-          state = State_Standby;
-        }
-        break;
+      } // switch state
 
     }
+    // Ende Zeittrigger Steuerung
 
-  }
+    // Zeittrigger Regelung
+    if ( (mod_Timer.runTime.s - triggertime_regulation_bak.s) >= 10 || mod_Timer.runTime.m != triggertime_regulation_bak.m) {
+      triggertime_regulation_bak = mod_Timer.runTime;
+      //Serial.println("Trigger Regulation");
 
+      switch (state) {
+        // Einspeisen
+        case State_Discharge:
+ 
+          // Leistungsregelung
+          // Muss zwingend Träger sein als die Messung da der Wechselrichter immer differenziell zum Aktuellen sollwert gesetzt wird
+          // (abhängig von Fehlerwert = Energiemeter)
+          // Zusätzlich muss beim Einschalten des Wandlers dessen Rampe beachtet werden
+          if ( pwrControlSkip == 0 ) {
+            Serial.println("State_Discharge Trigger Regulation");
+            doPowerControl();
+          }
+          break;
+      }
+
+    }
+    // Ende Zeittrigger Regelung
+
+  } // 
+  
 }
 
 // --------------------------------------------
