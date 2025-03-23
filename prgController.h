@@ -450,7 +450,7 @@ void Prg_Controller::doPowerControl() {
   // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
   // Trägheit des EMeters (aggregationszeit) berücksichtigen!
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
-  if ( abs(emeterPower) < 3 ) 
+  if ( abs(emeterPower) < 1 ) 
   { 
     // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (selten), in beiden Fällen nichts tun
     Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug zu gering!");
