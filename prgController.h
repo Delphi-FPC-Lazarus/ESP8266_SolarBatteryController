@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.20"
+#define SOFTWARE_VERSION "2.21"
 
 enum PrgState {
   State_Failure,
@@ -448,23 +448,29 @@ void Prg_Controller::doPowerControl() {
   Serial.println("doPowerControl()");
   
   // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
-  // Verhalten des EMeters (mittelung) in der Regelung berücksichtigen!
+  // Trägheit des EMeters (aggregationszeit) berücksichtigen!
   float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
-  if ( emeterPower == 0 ) 
+  if ( abs(emeterPower) < 3 ) 
   { 
-    // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (unwahrscheinlich), in beiden Fällen nichts tun
-    Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug genau 0!");
+    // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (selten), in beiden Fällen nichts tun
+    Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug zu gering!");
+    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(emeterPower)+"W, keine Anpassung notwendig)";
+    Serial.println(detailsMsg);
     return; 
   } 
   delay(1); // Yield()
 
   // Aktuelle Einspeiseleistung des Wechselrichters abfragen
+  // Trägheit der Wechselrichterabfrage (Abfrageintervall) berücksichtigen
+  // (Workaround wäre hier die letzte gesetzte Leistung zu verwenden, dass ist aber schlecht, da die Eingestellte Leistung nicht zwingend anliegt)
   float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
   if ( wrPower == 0 ) { 
     // Fehler wenn genau 0 bzw. speist nicht ein und damit kann ich nicht regeln
     // In Realität wird die Regelung nach dem Setzen der Initialleistung eh für n Minuten ausgesetzt bis der Wandler einspeist
     // Sollte dann wirklich noch keine Leistung eingespeist werden, ist eh was faul
     Serial.println("doPowerControl() wird nicht ausgeführt da WR Leistung unbekannt");
+    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(emeterPower)+"W, WR Leistung konnte nicht ermittelt werden)";
+    Serial.println(detailsMsg);
     return;  
   } 
   delay(1); // Yield()
@@ -475,8 +481,10 @@ void Prg_Controller::doPowerControl() {
   // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
   // wrPower ist die aktuelle Wechselrichter Leistung
   // Bei den Regelungsfaktoren ist das Verhalten von WR/DTU beim Setzen neuer Werte zu berücksichtigen
-  // (manuelle Leistungsregelung "auf null" über die DTU vorher ausprobieren, 50% bis max 70% Messwertabweichung zustellen, manchmal übersteuert der WR)
-  float P = 0.7 * emeterPower;  // P-Anteil (langsame Annähreung)
+  // (manuelle Leistungsregelung "auf null" über die DTU vorher ausprobieren, 50% bis max 70% Messwertabweichung zustellen, 
+  //  manchmal übersteuert der WR besonders bei starker positiver Leistungsänderung, das führt zum Schwingen der Regelung,
+  //  also lieber vorsichtiger aber dafür schneller Regeln, das führt zu einm Besseren Ergebenis)
+  float P = 0.5 * emeterPower;  // P-Anteil (langsame Annähreung)
   //float D = 0.3 * (emeterPower - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
   lastWRpwrset = wrPower + P; // + D; // Regelung
 
@@ -805,8 +813,10 @@ void Prg_Controller::Handle() {
         case State_Discharge:
  
           // Leistungsregelung
-          // Muss zwingend Träger sein als die Messung da der Wechselrichter immer differenziell zum Aktuellen sollwert gesetzt wird
-          // (abhängig von Fehlerwert = Energiemeter)
+          // Muss zwingend Träger sein als die E-Meter/Stromzähler Messung sein (dies ist eine Einstellung im ext vzlogger) 
+          // Muss zwingend Träger sein als die über die DTU Abgefragte WR Leistung (dies ist eine Einstellung in der ext DTU)
+          // Hintergrund ist, da der Wechselrichter immer differenziell zum Aktuellen WR Leistung abhängig von Fehlerwert = Energiemeter gesetzt wird
+          // Zusätzlich muss das Regelverhalten des Wandlers selbst berücksichtigt werden, bei großer Leistungsänderung liegt der auch manchmal im ersten Moment stark daneben
           // Zusätzlich muss beim Einschalten des Wandlers dessen Rampe beachtet werden
           if ( pwrControlSkip == 0 ) {
             Serial.println("State_Discharge Trigger Regulation");
