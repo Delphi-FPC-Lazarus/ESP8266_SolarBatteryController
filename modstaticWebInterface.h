@@ -4,6 +4,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 #include "modLogger.h"
 #include "modTimer.h"
@@ -26,6 +27,7 @@ class ModStatic_WebInterface {
 };
 
 ESP8266WebServer server(80);
+ESP8266HTTPUpdateServer updateserver;
 bool DoESPreset = false;
 
 // --------------------------------------------
@@ -223,6 +225,7 @@ String generateMenue() {
   menu += "<br><br>";
   menu += "<b>Fehlerbehebung</b><br>";
   menu += "<a href='?reset'>Reset / Controller Neu starten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='/update'>Firmwareupdate</a>&nbsp;&nbsp;&nbsp;";
 
   menu += "<br><br><hr><b>Nur f&uuml;r Entwicklung/Tests:</b><hr>";
   menu += "<br><b>Manuelles Steuerungsmenue</b><br>";
@@ -416,7 +419,10 @@ void ModStatic_WebInterface::Init() {
 
   server.on("/debug", handleDebug);
 
+  updateserver.setup(&server);
+
   server.begin();
+
   Serial.println("HTTP server started");
 }
 
