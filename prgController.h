@@ -15,23 +15,33 @@ enum PrgState {
 // --------------------------------------------
 class Prg_Controller {
   private:
+    // Steuerung
     PrgState state;
     _runTime triggertime_control_bak;
     _runTime triggertime_regulation_bak;
     
+    // Totzeit des WR nachcdfm Verbinden mit dem Netz die Leistungsregelung aussetzten und auf Initialleistung bleiben
     int pwrControlSkip;
+    
+    // gemerkte Leistung für Regelung
     float lastEMeterpwr;
+    
+    // zuletzt gesetzte WR Leistung aus Entladestart oder Leistungsregelung
     float lastWRpwrset;
-
+    
+    // Informationen aus der Regelung, wird auch in der Oberfläche angezeigt 
     String detailsMsg;
 
+    // Verzögerung der Ladeende Erkennung
     int chargeEndCounter;
 
+    // Hilfsfunktionem
     bool CheckFailure();
     bool isDay();
     bool SelectBatteryNotFull();
     bool SelectBatteryNotEmpty();
 
+    // Triggerfunktionen
     bool triggerStatCharge();
     bool triggerStopCharge();
 
@@ -41,6 +51,7 @@ class Prg_Controller {
     bool triggerStartDischarge();
     bool triggerStopDischarge();
 
+    // Leistungsregrlung
     void doPowerControl();
 
   public:
