@@ -6,6 +6,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
 
+// Die folgenden Includes sind für das ganze Projekt gültig
 #include "modLogger.h"
 #include "modTimer.h"
 
@@ -13,6 +14,8 @@
 #include "modEMeterClient.h"
 #include "modBatteryWR.h"
 #include "modPowerMeter.h"
+
+#include "modPowerControl.h"
 
 #include "prgController.h"
 

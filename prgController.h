@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.22"
+#define SOFTWARE_VERSION "2.23"
 
 enum PrgState {
   State_Failure,
@@ -23,15 +23,6 @@ class Prg_Controller {
     // Totzeit des WR nachcdfm Verbinden mit dem Netz die Leistungsregelung aussetzten und auf Initialleistung bleiben
     int pwrControlSkip;
     
-    // gemerkte Leistung für Regelung
-    float lastEMeterpwr;
-    
-    // zuletzt gesetzte WR Leistung aus Entladestart oder Leistungsregelung
-    float lastWRpwrset;
-    
-    // Informationen aus der Regelung, wird auch in der Oberfläche angezeigt 
-    String detailsMsg;
-
     // Verzögerung der Ladeende Erkennung
     int chargeEndCounter;
 
@@ -50,9 +41,6 @@ class Prg_Controller {
 
     bool triggerStartDischarge();
     bool triggerStopDischarge();
-
-    // Leistungsregrlung
-    void doPowerControl();
 
   public:
     String GetState();
@@ -80,21 +68,15 @@ const int chargeDetectDelay=5;              // Erkennung muss entsprechend oft v
 
 // Entladeleistung 
 const int dischargeStartRamp=10;            // wegen der Wechselrichter Rampe beim einschalten nach dem Einschalten die ersten Minuten nicht regeln 
-const float maxWRpwrset=300;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung bringt er das eh nicht, max 250 effektiv)
-const float maxWRpwrsetStart=200;           // Maximalwert für den Wechselrichter beim Starten des WR (wegen Akku, Spannungmessung und Entladeendeerkennung)
-const float maxWRpwrsetLowBatt=200;         // Maximalwert für den Wechselrichter bei schwachem Akku (wegen Akku, Spannungmessung und Entladeendeerkennung)
-const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
 
 const float emeterDischargePower=50;        // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
 const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren bzw. differenz starttriggger entladen/tatsächlicher entladeleistung) (negativ weil Trigger auf Einspeisung)
-
 
 // Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
 const float battEmergencyStart=10;          // %Akku Ladug bei der die Ladung am Tag unabhängig von Solarleistung gestartet wird um Schaden am Akku zu verhindern
 const float battFull=100;                   // %Akku bei der keine Ladung mehr gestartet wird (automatiklader, daher unkritisch)
 
 const float battApplicable=30;              // %Akku die mindestens vorhanden sein muss um den Einspeisevorgang (neu)starten (wenn Unterbrochen) 
-const float battLowDischarge=20;            // Akku schwach, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an.
 const float battStopDischarge=10;           // Entladevoragnag stoppen, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an. Tatsächlicher Wert im Standby nach dem Entladestop höher
                                             // Nach Abschaltung der Entladung springt der Wert sprunghaft, der tatsächliche Ladezustand kann erst wenige Minuten nach Entladestop über die Akkuspannung abschätzt werden.
 
@@ -439,10 +421,13 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
-  // Endladen abbrechen wenn ich im Lieferbereich bin, aber der WR auch schon heruntergefahren ist
-  // Damit greift das jedoch nicht in der Initalisierungsphase des WR
+  // Endladen abbrechen wenn ich im Lieferbereich bin (mit Toleranz*)
+  // Aber erst wenn der WR durch die Regelung schon heruntergefahren ist (mit Toleranz*) damit nicht bei kurzer Lastverminderung der Entladevorgang abbricht und komplett neu starten muss.
+  // Dies ist nötig, da ich bei schneller Laständerung schnell in den Lieferbereich komme, dann soll er runterregeln und nicht gleich abschalten.
+  // Dies macht das Abschalten natürlich Träger, das ist aber gewollt.
+  // Allerdings greift damit die Abschaltung im Lieferbereich nicht in der Initalisierungsphase des WR, da dort die Leistung nie heruntergefahren wird
   if ( 
-        (emeterPower < emeterDischargeStopPower) && (lastWRpwrset <= minWRpwrset+1) 
+        (emeterPower < emeterDischargeStopPower) && (mod_PowerControl.GetLastWRpwrset() <= minWRpwrset+10) 
     ) {
     mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
@@ -453,75 +438,6 @@ bool Prg_Controller::triggerStopDischarge() {
   }
 
   return false;
-}
-
-void Prg_Controller::doPowerControl() {
-  Serial.println("doPowerControl()");
-  
-  // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
-  // Trägheit des EMeters (aggregationszeit) berücksichtigen!
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
-  if ( abs(emeterPower) < 1 ) 
-  { 
-    // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (selten), in beiden Fällen nichts tun
-    Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug zu gering!");
-    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(emeterPower)+"W, keine Anpassung notwendig)";
-    Serial.println(detailsMsg);
-    return; 
-  } 
-  delay(1); // Yield()
-
-  // Aktuelle Einspeiseleistung des Wechselrichters abfragen
-  // Trägheit der Wechselrichterabfrage (Abfrageintervall) berücksichtigen
-  // (Workaround wäre hier die letzte gesetzte Leistung zu verwenden, dass ist aber schlecht, da die Eingestellte Leistung nicht zwingend anliegt)
-  float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
-  if ( wrPower == 0 ) { 
-    // Fehler wenn genau 0 bzw. speist nicht ein und damit kann ich nicht regeln
-    // In Realität wird die Regelung nach dem Setzen der Initialleistung eh für n Minuten ausgesetzt bis der Wandler einspeist
-    // Sollte dann wirklich noch keine Leistung eingespeist werden, ist eh was faul
-    Serial.println("doPowerControl() wird nicht ausgeführt da WR Leistung unbekannt");
-    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(emeterPower)+"W, WR Leistung konnte nicht ermittelt werden)";
-    Serial.println(detailsMsg);
-    return;  
-  } 
-  delay(1); // Yield()
-
-  // Regler 
-  // emeterPower ist der Fehlwert
-  // > 0 Bezug: Wechselrichterleistung um Bezug erhöhen (ist positiv)
-  // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
-  // wrPower ist die aktuelle Wechselrichter Leistung
-  // Bei den Regelungsfaktoren ist das Verhalten von WR/DTU beim Setzen neuer Werte zu berücksichtigen
-  // (manuelle Leistungsregelung "auf null" über die DTU vorher ausprobieren, 50% bis max 70% Messwertabweichung zustellen, 
-  //  manchmal übersteuert der WR besonders bei starker positiver Leistungsänderung, das führt zum Schwingen der Regelung,
-  //  also lieber vorsichtiger aber dafür schneller Regeln, das führt zu einm Besseren Ergebenis)
-  float P = 0.5 * emeterPower;  // P-Anteil (langsame Annähreung)
-  //float D = 0.3 * (emeterPower - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
-  lastWRpwrset = wrPower + P; // + D; // Regelung
-
-  // Begrenzen (regelung)
-  if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
-  if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
-  if  (mod_IO.vBatt_activeproz <= battLowDischarge) {
-    Serial.println("Low Battery");
-    if (lastWRpwrset > maxWRpwrsetLowBatt) { lastWRpwrset = maxWRpwrsetLowBatt; }; 
-  }
-  Serial.println("NewWRpower(new): " + String(lastWRpwrset));
-
-  // WR Leistung Einstellen+Meldung
-  // Wert einstellen, neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im wrPower und emeterpower hab ich noch die Werte von davor
-  detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (Vorherige Leistung " + String(wrPower)+ "W  EMeter: "+String(emeterPower)+"W)";
-  Serial.println(detailsMsg);
-  if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-    Serial.println("SetPowerLimit() ok");
-  }
-  else {
-    Serial.println("SetPowerLimit() nok");
-  }
-
-  // Vorherigen Fehlwert für nächsten Zyklus speichern
-  lastEMeterpwr = emeterPower;
-
 }
 
 
@@ -581,6 +497,10 @@ String Prg_Controller::GetStateString() {
 }
 
 String Prg_Controller::GetDetailsMsg() {
+  String detailsMsg = mod_PowerControl.GetDetailsMsg();
+  if (pwrControlSkip > 0) {
+    detailsMsg = detailsMsg + " (keine Regelung " + String(pwrControlSkip) + ")";
+  }
   return detailsMsg;
 }
 
@@ -599,11 +519,11 @@ void Prg_Controller::Init() {
   // Initialzustand
   triggertime_control_bak = mod_Timer.runTime;
   triggertime_regulation_bak = mod_Timer.runTime;
+  
   state = State_Standby;
-  lastWRpwrset = 0; //defaultWRpwrset;
-  lastEMeterpwr = 0; // 0 wäre egal
+  
   pwrControlSkip = dischargeStartRamp; //wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln 
-  detailsMsg = "";  // Meldung aus der Regelung
+  
   chargeEndCounter = 0; // Ladeende erst nach mehreren Durchläufen ohne Ladestrom erkennen
 
   mod_IO.Off();
@@ -726,27 +646,15 @@ void Prg_Controller::Handle() {
             mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
             // Hier sind wir im Bezug, sonst hätte er nicht getriggert
-            // Initial wird die aktuelle Bezugsleistung Bezugsleistung sowie Korrekturwert verwendet, so kann ich ggf. peaks am Tag besser ausregeln
+            
             // Der Wandler fährt eh erst mal Rampe
-            lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
-            lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
             pwrControlSkip = dischargeStartRamp; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln
-
-            // Begrenzen (Start)
-            if (lastWRpwrset < minWRpwrset) { lastWRpwrset = minWRpwrset; };
-            if (lastWRpwrset > maxWRpwrsetStart) { lastWRpwrset = maxWRpwrsetStart; };
-            Serial.println("NewWRpower(new): " + String(lastWRpwrset));
-
-            // WR Leistung initial Einstellen+Meldung
-            delay(1); // Yield()
-            detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
-            Serial.println(detailsMsg);
-            if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-              Serial.println("SetPowerLimit() ok");
-            }
-            else {
-              Serial.println("SetPowerLimit() nok");
-            }
+            
+            // Wechselrichter Leistung setzen
+            // Initial wird die aktuelle Bezugsleistung verwendet
+            mod_PowerControl.InitPowerControl();
+            
+            // Entladen beginnen
             mod_IO.Discharge();
 
             state = State_Discharge;
@@ -791,7 +699,6 @@ void Prg_Controller::Handle() {
             pwrControlSkip = 0; 
           } else {
             Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
-            detailsMsg = detailsMsg + ".";
           }
 
           // Enthladestop trigger auch während der initialisierungsphase, siehe Bedingung innerhalb der Funktion deshalb greift es nicht
@@ -800,10 +707,8 @@ void Prg_Controller::Handle() {
             mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
 
             // zurück auf initialzustand
-            lastWRpwrset = 0;  // defaultWRpwrset;
-            lastEMeterpwr = 0; // 0 wäre egal
-            detailsMsg = "";
-
+            mod_PowerControl.ResetPowerControl();
+            
             mod_IO.Off();
             state = State_Standby;
           }
@@ -831,7 +736,7 @@ void Prg_Controller::Handle() {
           // Zusätzlich muss beim Einschalten des Wandlers dessen Rampe beachtet werden
           if ( pwrControlSkip == 0 ) {
             Serial.println("State_Discharge Trigger Regulation");
-            doPowerControl();
+            mod_PowerControl.DoPowerControl();
           }
           break;
       }

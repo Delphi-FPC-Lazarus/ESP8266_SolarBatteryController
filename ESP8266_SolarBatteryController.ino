@@ -51,6 +51,8 @@
 #include "modBatteryWR.h"
 #include "modPowermeter.h"
 
+#include "modPowerControl.h"
+
 #include "prgController.h"
 
 void setup() {
@@ -98,6 +100,7 @@ void setup() {
   // Jetzt der Controller
 
   // Controller
+  mod_PowerControl.Init();
   prg_Controller.Init(); 
 
   mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_StartupDone, 0); // <- Fertig
@@ -135,6 +138,7 @@ void loop() {
   //mod_Logger.Handle(); // nicht nötig, bei Bedarf
 
   // Controller für die automatische Steuerung, dieser muss immer als leztes in der Loop aufgerufen werden
-  prg_Controller.Handle();
+  //mod_PowerControl.Handle(); // nicht nötig, bei Bedarf 
+  prg_Controller.Handle(); 
 
 }
