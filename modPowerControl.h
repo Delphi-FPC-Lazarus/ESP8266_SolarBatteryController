@@ -29,11 +29,11 @@ class Mod_PowerControl {
     void DoPowerControl();
 
     float GetLastWRpwrset();
-    String GetDetailsMsg();
+    String getDetailsMsg();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_PowerControl mod_PowerControl;
 
@@ -42,7 +42,7 @@ float Mod_PowerControl::GetLastWRpwrset() {
   return lastEMeterpwr;
 }
 
-String Mod_PowerControl::GetDetailsMsg() {
+String Mod_PowerControl::getDetailsMsg() {
   return detailsMsg;
 }
 
@@ -59,7 +59,7 @@ void Mod_PowerControl::ResetPowerControl()
 void Mod_PowerControl::InitPowerControl() {
   
   // Initial wird die aktuelle Bezugsleistung sowie Korrekturwert verwendet, so kann ich ggf. peaks am Tag besser ausregeln
-  lastEMeterpwr = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  lastEMeterpwr = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   lastWRpwrset= lastEMeterpwr; // in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
             
   // Begrenzen (Start)
@@ -71,11 +71,11 @@ void Mod_PowerControl::InitPowerControl() {
   delay(1); // Yield()
   detailsMsg = "Leistung: " + String(lastWRpwrset)+"W (Initialleistung)";
   Serial.println(detailsMsg);
-  if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-    Serial.println("SetPowerLimit() ok");
+  if (mod_BatteryWRClient.setPowerLimit(lastWRpwrset)) {
+    Serial.println("setPowerLimit() ok");
   }
   else {
-    Serial.println("SetPowerLimit() nok");
+    Serial.println("setPowerLimit() nok");
   }
 }
 
@@ -84,7 +84,7 @@ void Mod_PowerControl::DoPowerControl() {
   
   // EMeter Abfragen // < 0 Einspeisung | > 0 Bezug
   // Trägheit des EMeters (aggregationszeit) berücksichtigen!
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  
+  float emeterPower = mod_EMeterClient.getCurrentPower(false);  
   if ( abs(emeterPower) < 1 ) 
   { 
     // wenn genau 0 liegt entweder ein Fehler vor oder es passt perfekt (selten), in beiden Fällen nichts tun
@@ -98,7 +98,7 @@ void Mod_PowerControl::DoPowerControl() {
   // Aktuelle Einspeiseleistung des Wechselrichters abfragen
   // Trägheit der Wechselrichterabfrage (Abfrageintervall) berücksichtigen
   // (Workaround wäre hier die letzte gesetzte Leistung zu verwenden, dass ist aber schlecht, da die Eingestellte Leistung nicht zwingend anliegt)
-  float wrPower = mod_BatteryWRClient.GetCurrentPower(false);
+  float wrPower = mod_BatteryWRClient.getCurrentPower(false);
   if ( wrPower == 0 ) { 
     // Fehler wenn genau 0 bzw. speist nicht ein und damit kann ich nicht regeln
     // In Realität wird die Regelung nach dem Setzen der Initialleistung eh für n Minuten ausgesetzt bis der Wandler einspeist
@@ -136,11 +136,11 @@ void Mod_PowerControl::DoPowerControl() {
   // Wert einstellen, neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im wrPower und emeterpower hab ich noch die Werte von davor
   detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (Vorherige Leistung " + String(wrPower)+ "W  EMeter: "+String(emeterPower)+"W)";
   Serial.println(detailsMsg);
-  if (mod_BatteryWRClient.SetPowerLimit(lastWRpwrset)) {
-    Serial.println("SetPowerLimit() ok");
+  if (mod_BatteryWRClient.setPowerLimit(lastWRpwrset)) {
+    Serial.println("setPowerLimit() ok");
   }
   else {
-    Serial.println("SetPowerLimit() nok");
+    Serial.println("setPowerLimit() nok");
   }
 
   // Vorherigen Fehlwert für nächsten Zyklus speichern
@@ -151,14 +151,14 @@ void Mod_PowerControl::DoPowerControl() {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_PowerControl::Init()
+void Mod_PowerControl::init()
 {
-  Serial.println("modPowerControl_Init()");
+  Serial.println("modPowerControl_init()");
   
   ResetPowerControl();
 }
 
-void Mod_PowerControl::Handle()
+void Mod_PowerControl::handle()
 {
 	// hier nichts tun
 }

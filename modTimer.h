@@ -38,8 +38,8 @@ class Mod_Timer {
     void syncFromNTP();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_Timer mod_Timer;
 
@@ -72,8 +72,8 @@ void Mod_Timer::initRunTime() {
 void Mod_Timer::syncFromNTP() {
   Serial.println("modTimer_syncFromNTP()");
   // lokalen Laufzeittimer mit NTP Zeit initialisieren (Stunden Minuten Sekunden)
-  mod_NTPClient.CalcTimeOffset();
-  mod_NTPClient.Update();
+  mod_NTPClient.calcTimeOffset();
+  mod_NTPClient.update();
 
   runTime.lastmillis = millis();   
   // runTime.d =  // nicht ändern, mit dem zähle ich die Betriebstage
@@ -139,17 +139,17 @@ void Mod_Timer::calcRunTime() {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_Timer::Init()
+void Mod_Timer::init()
 {
-  Serial.println("modTimer_Init()");
+  Serial.println("modTimer_init()");
   // lokalen Laufzeittimer initialisieren
   initRunTime();
   // sync vom ntp
-  //mod_NTPClient.Init();
+  //mod_NTPClient.init();
   syncFromNTP(); // gleich synchronisieen, sonst läuft der timer bei 0 los und synchonisiert erst in ein paar Stunden
 }
 
-void Mod_Timer::Handle()
+void Mod_Timer::handle()
 {
 	calcRunTime();
 }

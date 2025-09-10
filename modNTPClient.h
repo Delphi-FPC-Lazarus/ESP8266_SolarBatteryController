@@ -26,12 +26,12 @@ class Mod_NTPClient {
     time_t NTPepochTime;
     String epochTimeToString(time_t epochTime);
 
-    void CalcTimeOffset();
-    void Update();
+    void calcTimeOffset();
+    void update();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_NTPClient mod_NTPClient;
 
@@ -69,7 +69,7 @@ String Mod_NTPClient::epochTimeToString(time_t epochTime) {
 
 // --------------------------------------------
 // für den externen Aufruf 
-void Mod_NTPClient::Update() {
+void Mod_NTPClient::update() {
   Serial.println("NTP Update");
   timeClient.update();
   
@@ -81,7 +81,7 @@ void Mod_NTPClient::Update() {
   Serial.println(epochTimeToString(NTPepochTime));
 }
 
-void Mod_NTPClient::CalcTimeOffset() {
+void Mod_NTPClient::calcTimeOffset() {
 
   struct tm *ptm = gmtime ((time_t *)&NTPepochTime); 
   int currentDay = ptm->tm_mday;
@@ -107,15 +107,15 @@ void Mod_NTPClient::CalcTimeOffset() {
 
 // --------------------------------------------
 // Standard Init/Handler 
-void Mod_NTPClient::Init() {
-  Serial.println("modHttpNTP_Init()");
+void Mod_NTPClient::init() {
+  Serial.println("modHttpNTP_init()");
   timeClient.begin();
-  Update();  // Datum holen
-  CalcTimeOffset(); // berechnen
-  Update();  // übernehmen
+  update();  // Datum holen
+  calcTimeOffset(); // berechnen
+  update();  // übernehmen
 }
 
-void Mod_NTPClient::Handle() {
+void Mod_NTPClient::handle() {
   // der standard handler tut nix, da ich den NTP Client nur vom Timer aus verwende und der ruft den NTP Update auf wenn er es braucht
 }
 

@@ -20,33 +20,33 @@ class Mod_BatteryWRClient {
     void manBatteryWRSimuOff();
 
     // Abfragefunktion für den externen Zugriff
-    float GetCurrentPower(bool dolog); 
-    bool SetPowerLimit(float pwr);
+    float getCurrentPower(bool dolog); 
+    bool setPowerLimit(float pwr);
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_BatteryWRClient mod_BatteryWRClient;
 
 void Mod_BatteryWRClient::manBatteryWRSimuOn() {
   manBatteryWRSimu = true;
   manBatteryWRSimuValue = 0;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOn, manBatteryWRSimuValue);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOn, manBatteryWRSimuValue);
 }
 void Mod_BatteryWRClient::manBatteryWRSimuOff() {
   if (manBatteryWRSimu == true) {
     manBatteryWRSimu = false;
     manBatteryWRSimuValue = 0;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOff, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRSimuOff, 0);
   }
 }
 
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
-  Serial.println("modBatteryWRClient_GetCurrentPower()");
+float Mod_BatteryWRClient::getCurrentPower(bool dolog) {
+  Serial.println("modBatteryWRClient_getCurrentPower()");
 
   WiFiClient wifi;
   HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
@@ -68,7 +68,7 @@ float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRRequestFail, float(statusCode));
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRRequestFail, float(statusCode));
     return 0;
   }
   String response = httpclient.responseBody();
@@ -93,22 +93,22 @@ float Mod_BatteryWRClient::GetCurrentPower(bool dolog) {
 
   //Serial.print("value "); Serial.println(value);
   if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRPower,value);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRPower,value);
   }
 
   return value;
 }
 
-bool Mod_BatteryWRClient::SetPowerLimit(float pwr) {
+bool Mod_BatteryWRClient::setPowerLimit(float pwr) {
   Serial.println("modBatteryWRClient_SetLimit("+String(pwr)+")");
 
   if (manBatteryWRSimu == true) {
-    Serial.println("Mod_BatteryWRClient::SetPowerLimit skip");
+    Serial.println("Mod_BatteryWRClient::setPowerLimit skip");
     manBatteryWRSimuValue = pwr; 
     return true;
   }
 
-  // mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
+  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
 
   WiFiClient wifi;
   HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
@@ -125,7 +125,7 @@ bool Mod_BatteryWRClient::SetPowerLimit(float pwr) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BatteryWRRequestFail, float(statusCode));
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRRequestFail, float(statusCode));
     return 0;
   }
   String response = httpclient.responseBody();
@@ -150,15 +150,15 @@ bool Mod_BatteryWRClient::SetPowerLimit(float pwr) {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_BatteryWRClient::Init()
+void Mod_BatteryWRClient::init()
 {
-  Serial.println("modBatteryWRClient_Init()");
-  Serial.println(GetCurrentPower(true));
+  Serial.println("modBatteryWRClient_init()");
+  Serial.println(getCurrentPower(true));
   manBatteryWRSimu = false;
   manBatteryWRSimuValue = 0;
 }
 
-void Mod_BatteryWRClient::Handle()
+void Mod_BatteryWRClient::handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt

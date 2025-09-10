@@ -18,10 +18,10 @@ class ModStatic_Wifi {
   public: 
     static void startWifi();
     static void stopWifi();
-    static bool CheckConnected();
+    static bool checkConnected();
 
-    static void Init();
-    static void Handle();
+    static void init();
+    static void handle();
 };
 
 // --------------------------------------------
@@ -69,7 +69,7 @@ void ModStatic_Wifi::stopWifi() {
   WiFi.mode(WIFI_OFF);
 }
 
-bool ModStatic_Wifi::CheckConnected() {
+bool ModStatic_Wifi::checkConnected() {
     if (WiFi.isConnected() == true) {
       WiFiErrorCount = 0;
       return true;
@@ -90,12 +90,12 @@ bool ModStatic_Wifi::CheckConnected() {
 // --------------------------------------------
 // Standard Init/Handler 
 
-void ModStatic_Wifi::Init() {
-  Serial.println("modWifi_Init()");
+void ModStatic_Wifi::init() {
+  Serial.println("modWifi_init()");
   startWifi();
 }
 
-void ModStatic_Wifi::Handle() {
+void ModStatic_Wifi::handle() {
     // zyklisch aufgerufen
     MDNS.update();
 }

@@ -53,23 +53,23 @@ class Mod_PowerMeter {
     void manPowerMeterSimuOff();
 
     // Abfragefunktion für den externen Zugriff
-    float GetCurrentPower(bool dolog); 
+    float getCurrentPower(bool dolog); 
     float lastPower;
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_PowerMeter mod_PowerMeter;
 
 void Mod_PowerMeter::manPowerMeterSimuOn(float value) {
   manPowerMeterSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOn, value);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOn, value);
 }
 void Mod_PowerMeter::manPowerMeterSimuOff() {
   if (manPowerMeterSimu > 0) {
     manPowerMeterSimu = -1;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOff, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PowerMeterSimuOff, 0);
   }
 }
 
@@ -192,8 +192,8 @@ int Mod_PowerMeter::getPowerFromValue(int value) {
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-float Mod_PowerMeter::GetCurrentPower(bool dolog) {
-  Serial.println("modPowerMeter_GetCurrentPower()");
+float Mod_PowerMeter::getCurrentPower(bool dolog) {
+  Serial.println("modPowerMeter_getCurrentPower()");
 
   float pwr = 0;
 
@@ -208,7 +208,7 @@ float Mod_PowerMeter::GetCurrentPower(bool dolog) {
   }
 
   if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_PowerMeterPower,pwr);
+    mod_Logger.add(mod_Timer.runTimeAsString(), logCode_PowerMeterPower,pwr);
   }
   
   lastPower = pwr;
@@ -218,17 +218,17 @@ float Mod_PowerMeter::GetCurrentPower(bool dolog) {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_PowerMeter::Init()
+void Mod_PowerMeter::init()
 {
-  Serial.println("modPowerMeter_Init()");
-  //Serial.println(GetCurrentPower(true));
+  Serial.println("modPowerMeter_init()");
+  //Serial.println(getCurrentPower(true));
   manPowerMeterSimu = -1;
   triggertime_bak = mod_Timer.runTime.m;
   lastPower = 0;
 
 }
 
-void Mod_PowerMeter::Handle()
+void Mod_PowerMeter::handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt
@@ -236,7 +236,7 @@ void Mod_PowerMeter::Handle()
   // zyklische Messung für Bereitstellung
   if ( (mod_Timer.runTime.m != triggertime_bak) ) {
     triggertime_bak = mod_Timer.runTime.m;
-    GetCurrentPower(false);
+    getCurrentPower(false);
   }
 
 }

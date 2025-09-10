@@ -19,30 +19,30 @@ class Mod_EMeterClient {
     void manEMeterSimuOff();
 
     // Abfragefunktion für den externen Zugriff
-    float GetCurrentPower(bool dolog); 
+    float getCurrentPower(bool dolog); 
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_EMeterClient mod_EMeterClient;
 
 void Mod_EMeterClient::manEMeterSimuOn(float value) {
   manEMeterSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterSimuOn, value);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterSimuOn, value);
 }
 void Mod_EMeterClient::manEMeterSimuOff() {
   if (manEMeterSimu != 0) {
     manEMeterSimu = 0;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterSimuOff, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterSimuOff, 0);
   }
 }
 
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-float Mod_EMeterClient::GetCurrentPower(bool dolog) {
-  Serial.println("modEMeterClient_GetCurrentPower()");
+float Mod_EMeterClient::getCurrentPower(bool dolog) {
+  Serial.println("modEMeterClient_getCurrentPower()");
 
   WiFiClient wifi;
   HttpClient httpclient = HttpClient(wifi, EMETERIP, EMETERPORT);
@@ -64,7 +64,7 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterRequestFail, float(statusCode));
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterRequestFail, float(statusCode));
     return 0;
   }
   String response = httpclient.responseBody();
@@ -94,7 +94,7 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
 
   //Serial.print("value "); Serial.println(value);
   if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower,value);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterPower,value);
   }
 
   return value;
@@ -103,14 +103,14 @@ float Mod_EMeterClient::GetCurrentPower(bool dolog) {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_EMeterClient::Init()
+void Mod_EMeterClient::init()
 {
-  Serial.println("modEMeterClient_Init()");
-  Serial.println(GetCurrentPower(true));
+  Serial.println("modEMeterClient_init()");
+  Serial.println(getCurrentPower(true));
   manEMeterSimu = 0;
 }
 
-void Mod_EMeterClient::Handle()
+void Mod_EMeterClient::handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt

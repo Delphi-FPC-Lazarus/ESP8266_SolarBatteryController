@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.23"
+#define SOFTWARE_VERSION "2.24"
 
 enum PrgState {
   State_Failure,
@@ -27,7 +27,7 @@ class Prg_Controller {
     int chargeEndCounter;
 
     // Hilfsfunktionem
-    bool CheckFailure();
+    bool checkFailure();
     bool isDay();
     bool SelectBatteryNotFull();
     bool SelectBatteryNotEmpty();
@@ -43,15 +43,15 @@ class Prg_Controller {
     bool triggerStopDischarge();
 
   public:
-    String GetState();
-    String GetStateString();
-    String GetDetailsMsg();
+    String getState();
+    String getStateString();
+    String getDetailsMsg();
     
-    void SetStandbyMode();
+    void setStandbyMode();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Prg_Controller prg_Controller;
 
@@ -84,16 +84,16 @@ const float battStopDischarge=10;           // Entladevoragnag stoppen, während
 // --------------------------------------------
 // Sicherheitsabschaltung
 
-bool Prg_Controller::CheckFailure() {
+bool Prg_Controller::checkFailure() {
   // Abschaltung weil Akkufehler, BMS hat abgeschaltet (passiert ggf. schon bei 5%), Sicherung geflogen, hier können später noch weiter Bedingungen aufgenommen werden.
   // Diese Prüfung wird auf der aktuell aktiven Batteie auf der aktuell aktiven Batterie ausgeführt, nicht generell auf beiden
   // Achtung, greift diese Routine geht die Software auf Fehler, bedeutet es wird auch nicht mehr geladen. Manueller Eingriff nötig!
 
-  if (!mod_IO.BattActiveValid()) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+  if (!mod_IO.isBattActiveValid()) {
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
     return true;
   } else {
     return false;
@@ -117,7 +117,7 @@ boolean Prg_Controller::isDay() {
 
 bool Prg_Controller::SelectBatteryNotFull() {
 
-  if (mod_IO.Batt1Valid() && mod_IO.Batt2Valid()) {
+  if (mod_IO.isBatt1Valid() && mod_IO.isBatt2Valid()) {
 
     Serial.println("SelectBatteryNotFull() 2 Akku Betrieb");
     // 2 AKku Betrieb ->
@@ -126,13 +126,13 @@ bool Prg_Controller::SelectBatteryNotFull() {
       Serial.println("Prüfung 1 dann 2");
       // erst Batt 1 dann Batt 2
       if (mod_IO.vBatt_1proz < battFull) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(1);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(1);
         return true;
       } else {
         if (mod_IO.vBatt_2proz < battFull) {
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-          mod_IO.SelectBattActive(2);
+          mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+          mod_IO.selectBattActive(2);
           return true;
         }
       }
@@ -140,13 +140,13 @@ bool Prg_Controller::SelectBatteryNotFull() {
       Serial.println("Prüfung 2 dann 1");
       // erst Batt 2 dann Batt 1
       if (mod_IO.vBatt_2proz < battFull) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(2);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(2);
         return true;
       } else {
         if (mod_IO.vBatt_1proz < battFull) {
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-          mod_IO.SelectBattActive(1);
+          mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+          mod_IO.selectBattActive(1);
           return true;
         }
       }
@@ -157,11 +157,11 @@ bool Prg_Controller::SelectBatteryNotFull() {
 
     Serial.println("SelectBatteryNotFull() 1 Akku Betrieb");    
     // 1 Akku Betrieb ->
-    if (mod_IO.Batt1Valid()) {
+    if (mod_IO.isBatt1Valid()) {
       // nur Batt 1
       if (mod_IO.vBatt_1proz < battFull) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(1);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(1);
         return true;
       }
     }
@@ -174,7 +174,7 @@ bool Prg_Controller::SelectBatteryNotFull() {
 
 bool Prg_Controller::SelectBatteryNotEmpty() {
   
-  if (mod_IO.Batt1Valid() && mod_IO.Batt2Valid()) {
+  if (mod_IO.isBatt1Valid() && mod_IO.isBatt2Valid()) {
 
     Serial.println("SelectBatteryNotEmpty() 2 Akku Betrieb");
     // 2 AKku Betrieb ->
@@ -183,13 +183,13 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
       Serial.println("Prüfung 1 dann 2");
       // erst Batt 1 dann Batt 2
       if (mod_IO.vBatt_1proz >= battApplicable) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(1);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(1);
         return true;
       } else {
         if (mod_IO.vBatt_2proz >= battApplicable) {
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-          mod_IO.SelectBattActive(2);
+          mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+          mod_IO.selectBattActive(2);
           return true;
         }
       }
@@ -197,13 +197,13 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
       Serial.println("Prüfung 2 dann 1");
       // erst Batt 2 dann Batt 1
       if (mod_IO.vBatt_2proz >= battApplicable) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(2);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(2);
         return true;
       } else {
         if (mod_IO.vBatt_1proz >= battApplicable) {
-          mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-          mod_IO.SelectBattActive(1);
+          mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+          mod_IO.selectBattActive(1);
           return true;
         }
       }
@@ -214,11 +214,11 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
 
     Serial.println("SelectBatteryNotEmpty() 1 Akku Betrieb");    
     // 1 AKku Betrieb ->
-    if (mod_IO.Batt1Valid()) {
+    if (mod_IO.isBatt1Valid()) {
       // nur Batt 1
       if (mod_IO.vBatt_1proz >= battApplicable) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
-        mod_IO.SelectBattActive(1);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+        mod_IO.selectBattActive(1);
         return true;
       }
     }
@@ -237,7 +237,7 @@ bool Prg_Controller::triggerStatCharge() {
   // Wenn die Batterie nicht voll ist und genügend Überschusseinspeisung zur Verfügung steht (in dem Zustand wird nicht geladen, also Einspeisung/Überschuss muss mindestens Ladeleistung sein)
   // ggf. noch Zeitbegrenzung das er nicht zu früh anfängt wegen Geräuschentwicklung, technisch ist das nicht nötig
 
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  float emeterPower = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
@@ -249,12 +249,12 @@ bool Prg_Controller::triggerStatCharge() {
       if (SelectBatteryNotFull()) {
         // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
         delay(1); // Yield()
-        mod_IO.MeasureBattActive(false);
+        mod_IO.measureBattActive(false);
         delay(1); // Yield()
 
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
         return true;
       } else {
         return false;
@@ -273,11 +273,11 @@ bool Prg_Controller::triggerStopCharge() {
   // Hier nicht auf auf Spannung triggern (ggf. wird hier später noch eine Erkennung eingebaut wenn das Ladegerät abgeschaltet hat)
 
   delay(1); // Yield()
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  float emeterPower = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
-  mod_PowerMeter.GetCurrentPower(false);  
+  mod_PowerMeter.getCurrentPower(false);  
   if (mod_PowerMeter.lastPower < chargeDetectPower) {
     chargeEndCounter += 1;
     Serial.print("chargeEndCounter "); Serial.println(chargeEndCounter);
@@ -292,10 +292,10 @@ bool Prg_Controller::triggerStopCharge() {
         (emeterPower > 0) || 
         (isDay() == false)
      ) { 
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
     
-    mod_PowerMeter.GetCurrentPower(true);  
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+    mod_PowerMeter.getCurrentPower(true);  
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
     return true;
   }
   else {
@@ -309,28 +309,28 @@ bool Prg_Controller::triggerStatChargeEmergency() {
   // Dies wird einfach für beide Akkus nacheinander getan
 
   if ( 
-        (mod_IO.Batt1Valid()) &&
+        (mod_IO.isBatt1Valid()) &&
         (mod_IO.vBatt_1proz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_IO.SelectBattActive(1);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1, mod_IO.vBatt_1);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_1proz);
+    mod_IO.selectBattActive(1);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBatt1, mod_IO.vBatt_1);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_1proz);
     return true;
   }
 
   if ( 
-        (mod_IO.Batt2Valid()) &&
+        (mod_IO.isBatt2Valid()) &&
         (mod_IO.vBatt_2proz <= battEmergencyStart) && 
         (isDay() == true) && (mod_Timer.runTime.h > 12)
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_IO.SelectBattActive(2);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2, mod_IO.vBatt_2);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_2proz);
+    mod_IO.selectBattActive(2);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBatt2, mod_IO.vBatt_2);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_2proz);
     return true;
   }
 
@@ -340,7 +340,7 @@ bool Prg_Controller::triggerStatChargeEmergency() {
 bool Prg_Controller::triggerStopChargeEmergency() {
   // Stoptrigger für das Notfall Laden des Akkus (activebattery)
   
-  mod_PowerMeter.GetCurrentPower(false);  
+  mod_PowerMeter.getCurrentPower(false);  
   if (mod_PowerMeter.lastPower < chargeDetectPower) {
     chargeEndCounter += 1;
     Serial.print("chargeEndCounter "); Serial.println(chargeEndCounter);
@@ -354,9 +354,9 @@ bool Prg_Controller::triggerStopChargeEmergency() {
         (chargeEndCounter > chargeDetectDelay) ||
         (isDay() == false) 
      ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_PowerMeter.GetCurrentPower(true);  
+    mod_PowerMeter.getCurrentPower(true);  
     return true;
   }
   else {
@@ -373,7 +373,7 @@ bool Prg_Controller::triggerStartDischarge() {
   // Wenn die Batterie genügend Ladung hat und der Bezug/Verbrauch (einspeisung grad nicht aktiv) > der zu erwartenden Entladeleisung liegt
   // Zusätzlich kann über die Zeit geprüft werden, dass das erst Abends passiert damit der Akku nicht bereits am Tag entladen wird  (je nach dem ob man das will oder nicht, bei kleinem Akku nicht), Achtung: Start/Stop Bedingung gemeinsam anpassen
 
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  float emeterPower = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
@@ -382,12 +382,12 @@ bool Prg_Controller::triggerStartDischarge() {
     if (SelectBatteryNotEmpty()) { 
       // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
       delay(1); // Yield()
-      mod_IO.MeasureBattActive(false);
+      mod_IO.measureBattActive(false);
       delay(1); // Yield()
 
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
       return true;
     }
     else {
@@ -409,15 +409,15 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( 
         (mod_IO.vBatt_activeproz <= battStopDischarge)
     ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
     return true;
   }
 
   delay(1); // Yield()
-  float emeterPower = mod_EMeterClient.GetCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
+  float emeterPower = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   if ( emeterPower == 0 ) { return false; } // Fehler wenn genau 0
   delay(1); // Yield()
 
@@ -429,11 +429,11 @@ bool Prg_Controller::triggerStopDischarge() {
   if ( 
         (emeterPower < emeterDischargeStopPower) && (mod_PowerControl.GetLastWRpwrset() <= minWRpwrset+10) 
     ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
 
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_EMeterPower, emeterPower);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, mod_IO.vBatt_active);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, mod_IO.vBatt_activeproz);
     return true;
   }
 
@@ -444,7 +444,7 @@ bool Prg_Controller::triggerStopDischarge() {
 // --------------------------------------------
 // Servicefunktionen
 
-String Prg_Controller::GetState() {
+String Prg_Controller::getState() {
   switch (state) {
       // Fehlerzustand
       case State_Failure:
@@ -470,7 +470,7 @@ String Prg_Controller::GetState() {
   }
 }
 
-String Prg_Controller::GetStateString() {
+String Prg_Controller::getStateString() {
   switch (state) {
       // Fehlerzustand
       case State_Failure:
@@ -496,8 +496,8 @@ String Prg_Controller::GetStateString() {
   }
 }
 
-String Prg_Controller::GetDetailsMsg() {
-  String detailsMsg = mod_PowerControl.GetDetailsMsg();
+String Prg_Controller::getDetailsMsg() {
+  String detailsMsg = mod_PowerControl.getDetailsMsg();
   if (pwrControlSkip > 0) {
     detailsMsg = detailsMsg + " (keine Regelung " + String(pwrControlSkip) + ")";
   }
@@ -506,15 +506,15 @@ String Prg_Controller::GetDetailsMsg() {
 
 // --------------------------------------------
 
-void Prg_Controller::SetStandbyMode() {
+void Prg_Controller::setStandbyMode() {
   state = State_Standby;
 }
 
 // --------------------------------------------
 // Standardfunktionen
 
-void Prg_Controller::Init() {
-  Serial.println("prgController_Init()");
+void Prg_Controller::init() {
+  Serial.println("prgController_init()");
   
   // Initialzustand
   triggertime_control_bak = mod_Timer.runTime;
@@ -526,35 +526,35 @@ void Prg_Controller::Init() {
   
   chargeEndCounter = 0; // Ladeende erst nach mehreren Durchläufen ohne Ladestrom erkennen
 
-  mod_IO.Off();
+  mod_IO.setOff();
   delay(1); // Yield()
-  mod_IO.SelectBattActive(1);
+  mod_IO.selectBattActive(1);
 
   // Akkuzustände ins Protokoll schreiben
   delay(1); // Yield()
-  mod_IO.MeasureBatt12(true);
+  mod_IO.measureBatt12(true);
 
   // Aktuive Batterie ermittel, dies ist für den Betrieb wichtig 
   delay(1); // Yield()
-  mod_IO.MeasureBattActive(true);
+  mod_IO.measureBattActive(true);
   delay(1); // Yield()
 
   // Fehlerzustand gleich prüfen
-  if ( (state != State_Failure) && CheckFailure() ) {
-    Serial.println("CheckFailure");
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
+  if ( (state != State_Failure) && checkFailure() ) {
+    Serial.println("checkFailure");
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
 
-    mod_IO.Off();
+    mod_IO.setOff();
     
     state = State_Failure;
   } 
 
-  Serial.println("prgController_Init() Done");
+  Serial.println("prgController_init() Done");
 }
 
-void Prg_Controller::Handle() {
+void Prg_Controller::handle() {
 
-  if (mod_IO.IsmanIOMode() == false) {
+  if (mod_IO.isManIOMode() == false) {
 
     // ZeitTrigger Steuerung
     // die Entscheidungsstruktur für den Modus triggert einmal pro Minute
@@ -565,25 +565,25 @@ void Prg_Controller::Handle() {
       Serial.println("Trigger Controller");
 
       // WifiCheck
-      if (ModStatic_Wifi::CheckConnected() != true) {
-        Serial.println("CheckConnected Fehlgeschlagen");
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
+      if (ModStatic_Wifi::checkConnected() != true) {
+        Serial.println("checkConnected Fehlgeschlagen");
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_WifiErrorDetected,0);
         //
       }
 
       // Akkumessung (wird für die Fehlerprüfung und in den verschiedenen Stages für die jeweiligen Triggerfunktionen benötigt deshalb hier abfragen)
       delay(1); // Yield()
-      mod_IO.MeasureBatt12(false);
+      mod_IO.measureBatt12(false);
       delay(1); // Yield()
-      mod_IO.MeasureBattActive(false);
+      mod_IO.measureBattActive(false);
       delay(1); // Yield()
 
       // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
-      if ( (state != State_Failure) && CheckFailure() ) {
-        Serial.println("CheckFailure");
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
+      if ( (state != State_Failure) && checkFailure() ) {
+        Serial.println("checkFailure");
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
 
-        mod_IO.Off();
+        mod_IO.setOff();
 
         state = State_Failure;
       }
@@ -604,7 +604,7 @@ void Prg_Controller::Handle() {
           // damit greift dies i.d.R.
           if (mod_Timer.runTime.m == 0) {
             if (mod_Timer.runTime.h == 0) {
-              mod_IO.SelectBattActive(1);
+              mod_IO.selectBattActive(1);
             }
           }
 
@@ -613,17 +613,17 @@ void Prg_Controller::Handle() {
           // ggf. interessant zum Feststellen der Akkustände oder auch wenn der Akku mehrere Tage im Standby ist
           if (mod_Timer.runTime.m == 0) {
             if ( (mod_Timer.runTime.h == akkuLogMorning) || (mod_Timer.runTime.h == akkuLogEvening) ) {
-              mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
+              mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Separator, 0);
               delay(1); // Yield()
-              mod_IO.MeasureBatt12(true);
+              mod_IO.measureBatt12(true);
             }
           }
 
           if (triggerStatCharge()) {
             Serial.println("triggerStatCharge");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
 
-            mod_IO.Charge();
+            mod_IO.setCharge();
 
             chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
 
@@ -632,9 +632,9 @@ void Prg_Controller::Handle() {
           }
           if (triggerStatChargeEmergency()) {
             Serial.println("triggerStatChargeEmergency");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
-            mod_IO.Charge();
+            mod_IO.setCharge();
 
             chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
 
@@ -643,7 +643,7 @@ void Prg_Controller::Handle() {
           }
           if (triggerStartDischarge()) {
             Serial.println("triggerStartDischarge");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
             // Hier sind wir im Bezug, sonst hätte er nicht getriggert
             
@@ -655,7 +655,7 @@ void Prg_Controller::Handle() {
             mod_PowerControl.InitPowerControl();
             
             // Entladen beginnen
-            mod_IO.Discharge();
+            mod_IO.setDischarge();
 
             state = State_Discharge;
             break;
@@ -667,9 +667,9 @@ void Prg_Controller::Handle() {
           Serial.println("State_Charge");
           if (triggerStopCharge()) {
             Serial.println("triggerStopCharge");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
 
-            mod_IO.Off();
+            mod_IO.setOff();
 
             state = State_Standby;
           }
@@ -680,9 +680,9 @@ void Prg_Controller::Handle() {
           Serial.println("State_ChargeEmergency");
           if (triggerStopChargeEmergency()) {
             Serial.println("triggerStopChargeEmergency");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
 
-            mod_IO.Off();
+            mod_IO.setOff();
             state = State_Standby;
           }
           break;
@@ -704,12 +704,12 @@ void Prg_Controller::Handle() {
           // Enthladestop trigger auch während der initialisierungsphase, siehe Bedingung innerhalb der Funktion deshalb greift es nicht
           if (triggerStopDischarge()) {
             Serial.println("triggerStopDischarge");
-            mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
+            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StopDischarge,0);
 
             // zurück auf initialzustand
             mod_PowerControl.ResetPowerControl();
             
-            mod_IO.Off();
+            mod_IO.setOff();
             state = State_Standby;
           }
           break;

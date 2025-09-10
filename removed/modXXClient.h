@@ -23,30 +23,30 @@ class Mod_XXClient {
     void manXXSimuOff();
 
     // Abfragefunktion für den externen Zugriff
-    float GetCurrentPower(bool dolog); 
+    float getCurrentPower(bool dolog); 
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_XXClient mod_XXClient;
 
 void Mod_XXClient::manXXSimuOn(float value) {
   manXXSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_XXSimuOn, value);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_XXSimuOn, value);
 }
 void Mod_XXClient::manXXSimuOff() {
   if (manXXSimu > 0) {
     manXXSimu = -1;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_XXSimuOff, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_XXSimuOff, 0);
   }
 }
 
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-float Mod_XXClient::GetCurrentPower(bool dolog) {
-  Serial.println("modXXClient_GetCurrentPower()");
+float Mod_XXClient::getCurrentPower(bool dolog) {
+  Serial.println("modXXClient_getCurrentPower()");
 
   return -1;
 }
@@ -54,14 +54,14 @@ float Mod_XXClient::GetCurrentPower(bool dolog) {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_XXClient::Init()
+void Mod_XXClient::init()
 {
-  Serial.println("modXXClient_Init()");
-  //Serial.println(GetCurrentPower(true));
+  Serial.println("modXXClient_init()");
+  //Serial.println(getCurrentPower(true));
   manXXSimu = -1;
 }
 
-void Mod_XXClient::Handle()
+void Mod_XXClient::handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt

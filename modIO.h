@@ -17,43 +17,43 @@ class Mod_IO {
     float manBatt1Simu;
     float manBatt2Simu;
 
-    float VBattMeasurement(uint8_t channel);
+    float vBattMeasurement(uint8_t channel);
     float vBattToProz(float spgvalue);
   public:
-    void SetmanIOModeOn();
-    void SetmanIOModeOff();
-    bool IsmanIOMode();
+    void setManIOModeOn();
+    void setManIOModeOff();
+    bool isManIOMode();
 
-    void SetmanBattSimuOn(byte battselect, float value);
-    void SetmanBattSimuOff(byte battselect);
+    void setManBattSimuOn(byte battselect, float value);
+    void setManBattSimuOff(byte battselect);
     
-    void Off();
-    void Charge();
-    void Discharge();
+    void setOff();
+    void setCharge();
+    void setDischarge();
 
-    bool IsOff();
+    bool isOff();
 
     // Batterie für den aktuellen Lade-/Entladevorgang
-    byte GetBattActive();
-    void SelectBattActive(byte battselect);
-    void MeasureBattActive(bool dolog);
+    byte getBattActive();
+    void selectBattActive(byte battselect);
+    void measureBattActive(bool dolog);
     float vBatt_active;
     float vBatt_activeproz;
 
     // Batterie 1/2 für den vorgeschalteten Auswahlprozess
-    void MeasureBatt12(bool dolog);
+    void measureBatt12(bool dolog);
     float vBatt_1;
     float vBatt_1proz;
     float vBatt_2;
     float vBatt_2proz;
 
-    bool BattActiveValid();
-    bool Batt1Valid();
-    bool Batt2Valid();
+    bool isBattActiveValid();
+    bool isBatt1Valid();
+    bool isBatt2Valid();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_IO mod_IO;
 
@@ -124,9 +124,9 @@ float Mod_IO::vBattToProz(float spgvalue) {
   return proz;
 }
 
-float Mod_IO::VBattMeasurement(uint8_t channel) {
+float Mod_IO::vBattMeasurement(uint8_t channel) {
   if (!extadcpresent) {
-    //mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
+    //mod_Logger.add(mod_Timer.runTimeAsString(),logCode_extADCMeasureFailed, channel);
     Serial.println("Messung nicht möglich!");
     return 0;
   }
@@ -141,7 +141,7 @@ float Mod_IO::VBattMeasurement(uint8_t channel) {
   for (int i = 0; i < avgCount; i++) 
   {  
     value = ads.readADC_SingleEnded(channel);
-    //Serial.print("VBattMeasurement() Value: "); Serial.println(value);
+    //Serial.print("vBattMeasurement() Value: "); Serial.println(value);
     valuesum += value;
     //delay(1); // messen mit festenm intervall
     yield();    
@@ -150,57 +150,57 @@ float Mod_IO::VBattMeasurement(uint8_t channel) {
   float valuekorr = ( valuesum / avgCount ) - CALVOLTOFFSET;
   float volt = CALVOLT/(float)CALVOLTVALUE * (float)valuekorr;
   
-  Serial.print("VBattMeasurement() Value: "); Serial.println(value);
-  Serial.print("VBattMeasurement() volt: "); Serial.println(volt);
+  Serial.print("vBattMeasurement() Value: "); Serial.println(value);
+  Serial.print("vBattMeasurement() volt: "); Serial.println(volt);
  
   return volt;
 }
 
-void Mod_IO::SetmanIOModeOn() {
+void Mod_IO::setManIOModeOn() {
   if (manIOMode != true) {
     manIOMode = true;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOn,0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOn,0);
   }
 }
-void Mod_IO::SetmanIOModeOff() {
+void Mod_IO::setManIOModeOff() {
   if (manIOMode != false) {
     manIOMode = false;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOff,0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanIOModeOff,0);
   }
 }
-bool Mod_IO::IsmanIOMode() {
+bool Mod_IO::isManIOMode() {
   return manIOMode;
 }
 
-void Mod_IO::SetmanBattSimuOn(byte battselect, float value) {
+void Mod_IO::setManBattSimuOn(byte battselect, float value) {
   if (battselect == 1) {
     manBatt1Simu = value;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
   }
   if (battselect == 2) {
     manBatt2Simu = value;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOn, value);
   }
 }
 
-void Mod_IO::SetmanBattSimuOff(byte battselect) {
+void Mod_IO::setManBattSimuOff(byte battselect) {
   if (battselect == 1) {
     if (manBatt1Simu > 0) {
       manBatt1Simu = -1;
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 1);
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 1);
     }
   }
   if (battselect == 2) {
     if (manBatt2Simu > 0) {
       manBatt2Simu = -1;
-      mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 2);
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOmanBattSimuOff, 2);
     }
   }
 }
 
-void Mod_IO::Off() {
+void Mod_IO::setOff() {
   Serial.println("IO Off");
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOoff,0);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOoff,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_AC_OFF);
@@ -208,9 +208,9 @@ void Mod_IO::Off() {
   digitalWrite(dout_ACmode, R_AC_OFF); 
 }
 
-void Mod_IO::Charge() {
+void Mod_IO::setCharge() {
   Serial.println("IO Charge");
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOcharge,0);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOcharge,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_AC_OFF);
@@ -220,9 +220,9 @@ void Mod_IO::Charge() {
   digitalWrite(dout_ACea, R_AC_ON);
 }
 
-void Mod_IO::Discharge() {
+void Mod_IO::setDischarge() {
   Serial.println("IO Discharge");
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_IOdischarge,0);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_IOdischarge,0);
 
   // erst abschalten bevor lade/entlade Realais umgeschaltet werden
   digitalWrite(dout_ACea, R_AC_OFF);
@@ -232,11 +232,11 @@ void Mod_IO::Discharge() {
   digitalWrite(dout_ACea, R_AC_ON);
 }
 
-bool Mod_IO::IsOff() {
+bool Mod_IO::isOff() {
   return digitalRead(dout_ACea);
 }
 
-byte Mod_IO::GetBattActive() {
+byte Mod_IO::getBattActive() {
   if (digitalRead(dout_BATTselect) == R_BATT_OFF) {
     return 1;
   } else { 
@@ -244,9 +244,9 @@ byte Mod_IO::GetBattActive() {
   }
 }
 
-void Mod_IO::SelectBattActive(byte battselect) {
+void Mod_IO::selectBattActive(byte battselect) {
   Serial.print("IO battselect:"); Serial.println(battselect);
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_BattSelect,battselect);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BattSelect,battselect);
 
   if (battselect == 1) {
     digitalWrite(dout_BATTselect, R_BATT_OFF);
@@ -257,8 +257,8 @@ void Mod_IO::SelectBattActive(byte battselect) {
 
 }
 
-void Mod_IO::MeasureBattActive(bool dolog) {
-  Serial.println("IO MeasureBattActive");
+void Mod_IO::measureBattActive(bool dolog) {
+  Serial.println("IO measureBattActive");
 
   // Messe die aktuell aktive Batterie (Batteriepack)
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
@@ -268,13 +268,13 @@ void Mod_IO::MeasureBattActive(bool dolog) {
     if (manBatt1Simu > 0) {
       vBatt_active = manBatt1Simu;
     } else {
-      vBatt_active = VBattMeasurement(ain_batt1);
+      vBatt_active = vBattMeasurement(ain_batt1);
     }
   } else {
     if (manBatt2Simu > 0) {
       vBatt_active = manBatt2Simu;
     } else {
-      vBatt_active = VBattMeasurement(ain_batt2);
+      vBatt_active = vBattMeasurement(ain_batt2);
     }
   }
   
@@ -283,13 +283,13 @@ void Mod_IO::MeasureBattActive(bool dolog) {
   Serial.print("% Gemessen Battaktiv:"); Serial.println(vBatt_activeproz);
 
   if (dolog == true) {    
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattActive, vBatt_active);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_activeproz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattActive, vBatt_active);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_activeproz);
   }  
 }
 
-void Mod_IO::MeasureBatt12(bool dolog) {
-  Serial.println("IO MeasureBatt12");
+void Mod_IO::measureBatt12(bool dolog) {
+  Serial.println("IO measureBatt12");
 
   // Messe nacheinander die Batterien (Batteriepacks)
   // Zu bachten ist, dass dies nur im Standby stimmt und während dem Lade-/Entlade-Vorgang 
@@ -297,13 +297,13 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   if (manBatt1Simu > 0) {
     vBatt_1 = manBatt1Simu;
   } else {
-    vBatt_1 = VBattMeasurement(ain_batt1);
+    vBatt_1 = vBattMeasurement(ain_batt1);
   }
 
   if (manBatt2Simu > 0) {
     vBatt_2 = manBatt2Simu;
   } else {
-    vBatt_2 = VBattMeasurement(ain_batt2);
+    vBatt_2 = vBattMeasurement(ain_batt2);
   }
 
   vBatt_1proz = vBattToProz(vBatt_1);
@@ -315,30 +315,30 @@ void Mod_IO::MeasureBatt12(bool dolog) {
   Serial.print("% Gemessen Batt2: "); Serial.println(vBatt_2proz);
 
   if (dolog == true) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt1,vBatt_1);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_1proz);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBatt2,vBatt_2);
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_2proz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBatt1,vBatt_1);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_1proz);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBatt2,vBatt_2);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_VBattProz, vBatt_2proz);
   }  
 }
 
-bool Mod_IO::BattActiveValid() {
+bool Mod_IO::isBattActiveValid() {
   return (mod_IO.vBatt_active > 1); // > 0  
 }
 
-bool Mod_IO::Batt1Valid() {
+bool Mod_IO::isBatt1Valid() {
   return (mod_IO.vBatt_1 > 1); // > 0 
 }
 
-bool Mod_IO::Batt2Valid() {
+bool Mod_IO::isBatt2Valid() {
   return (mod_IO.vBatt_2 > 1); // > 0 
 }
 
 // --------------------------------------------
 // Standard Init/Handler 
 
-void Mod_IO::Init() {
-  Serial.println("modIO_Init()");
+void Mod_IO::init() {
+  Serial.println("modIO_init()");
 
   manIOMode = false;
   manBatt1Simu = -1;
@@ -382,17 +382,17 @@ void Mod_IO::Init() {
 
   if (ads.begin()) {
     Serial.println("ADS1X15 initialisierung ok");
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCok, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_extADCok, 0);
     extadcpresent = true;
   } else {
     Serial.println("ADS1X15 initialisierung fehlgeschalgen");
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_extADCfailed, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_extADCfailed, 0);
     extadcpresent = false;
   }
-  Serial.println("modIO_Init() Done");
+  Serial.println("modIO_init() Done");
 }
 
-void Mod_IO::Handle() {
+void Mod_IO::handle() {
   // hier nur Abfragen, keine Steuerung da zyklisch aufgerufen
   // z.B. Tasterabfrage und ggf. BatterieMessung (ohne Relaissteurung) durchführen
   // measureBattActive(false);

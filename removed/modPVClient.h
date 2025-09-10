@@ -25,30 +25,30 @@ class Mod_PVClient {
     void manPVSimuOff();
 
     // Abfragefunktion für den externen Zugriff
-    float GetCurrentPower(bool dolog); 
+    float getCurrentPower(bool dolog); 
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_PVClient mod_PVClient;
 
 void Mod_PVClient::manPVSimuOn(float value) {
   manPVSimu = value;
-  mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVSimuOn, value);
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PVSimuOn, value);
 }
 void Mod_PVClient::manPVSimuOff() {
   if (manPVSimu > 0) {
     manPVSimu = -1;
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVSimuOff, 0);
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PVSimuOff, 0);
   }
 }
 
 // ------------------------------------------
 // Abfragefunktion für den externen Zugriff
 
-float Mod_PVClient::GetCurrentPower(bool dolog) {
-  Serial.println("modPVClient_GetCurrentPower()");
+float Mod_PVClient::getCurrentPower(bool dolog) {
+  Serial.println("modPVClient_getCurrentPower()");
 
   delay(100); // Yield()
 
@@ -62,7 +62,7 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
   int statusCode = httpclient.responseStatusCode();
   Serial.println("Responsecode:" + String(statusCode));
   if ( statusCode != 200 ) {
-    mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVRequestFail, float(statusCode));
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PVRequestFail, float(statusCode));
     return -1;
   }
   String response = httpclient.responseBody();
@@ -116,7 +116,7 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
       //Serial.println("");
 
       if (dolog == true) {
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_PVPower,Value);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_PVPower,Value);
       }
 
       return Value;
@@ -132,14 +132,14 @@ float Mod_PVClient::GetCurrentPower(bool dolog) {
 // ------------------------------------------
 // Standard Init/Handler 
 
-void Mod_PVClient::Init()
+void Mod_PVClient::init()
 {
-  Serial.println("modPVClient_Init()");
-  //Serial.println(GetCurrentPower(true));
+  Serial.println("modPVClient_init()");
+  //Serial.println(getCurrentPower(true));
   manPVSimu = -1;
 }
 
-void Mod_PVClient::Handle()
+void Mod_PVClient::handle()
 {
 	// der standard handler tut nix, wenn der in der Mainloop mit aufgerufen würde, wäre die Hölle los
   // Es wird eine Abfrage Funktion zur Verfügung gestellt

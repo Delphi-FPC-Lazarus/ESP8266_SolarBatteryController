@@ -167,21 +167,21 @@ class Mod_Logger {
 
     localLogItem localLog[localLogSize];  // Log
   
-    void Prepare();
-    String DumpItem(uint iLog);
+    void prepare();
+    String dumpItem(uint iLog);
   public:
-    void Add(String timestamp, byte code, float value);
-    String Dump();
+    void add(String timestamp, byte code, float value);
+    String dump();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    void Init();
-    void Handle();
+    void init();
+    void handle();
 };
 Mod_Logger mod_Logger;
 
 // ------------------------------------------
 
-void Mod_Logger::Prepare() {
+void Mod_Logger::prepare() {
   Serial.println("localLog_Perpare()");
   for (int iLog = 0; iLog <= localLogSize-1; iLog++) {
     localLog[iLog].timeStamp = "";
@@ -193,7 +193,7 @@ void Mod_Logger::Prepare() {
 // ------------------------------------------
 // Addlog und LogDump für den externen Aufruf
 
-void Mod_Logger::Add(String timestamp, byte code, float value) {
+void Mod_Logger::add(String timestamp, byte code, float value) {
   localLogIndex += 1;
   if (localLogIndex > localLogSize-1) {
     localLogIndex = 0;
@@ -204,7 +204,7 @@ void Mod_Logger::Add(String timestamp, byte code, float value) {
   localLog[localLogIndex].logValue = value;
 }
 
-String Mod_Logger::DumpItem(uint iLog) {
+String Mod_Logger::dumpItem(uint iLog) {
   String msg = "";
   if (localLog[iLog].logCode > 0) {  // logcode muss gesetzt sein, timestamp sollte immer gesetzt werden, value ist optional
     msg += localLog[iLog].timeStamp;
@@ -223,12 +223,12 @@ String Mod_Logger::DumpItem(uint iLog) {
   return msg;
 }
 
-String Mod_Logger::Dump() {
+String Mod_Logger::dump() {
 
   // dump wie geschrieben
   //String msgDbg = "";  
   //for (int iLog = 0; iLog <= localLogSize-1; iLog++) {
-  //  msgDbg += DumpItem(iLog);
+  //  msgDbg += dumpItem(iLog);
   //  msgDbg += "\r\n";
   //}
   //Serial.println(msgDbg);
@@ -239,13 +239,13 @@ String Mod_Logger::Dump() {
     // vom aktuellen Index+1 bis Ende sofern der zuletzt geschriebener Index nicht der letzte war, also dahinter noch alte Einträge zu finden sind
     if (localLogIndex < localLogSize-1) {
       for (int iLog = localLogIndex+1; iLog <= localLogSize-1; iLog++) {
-        msgAll += DumpItem(iLog);       
+        msgAll += dumpItem(iLog);       
       }    
     }
 
     // vom Anfang bis zum aktuellen Index Loggen der zuletzt geschrieben wurde, das kann der erste aber auch der letzte sein
     for (int iLog = 0; iLog <= localLogIndex; iLog++) {
-     msgAll += DumpItem(iLog);
+     msgAll += dumpItem(iLog);
     }
   }
   return msgAll;
@@ -254,15 +254,15 @@ String Mod_Logger::Dump() {
 // --------------------------------------------
 // Standard Init/Handler 
 
-void Mod_Logger::Init() {
-  Serial.println("modLogger_Init()");
+void Mod_Logger::init() {
+  Serial.println("modLogger_init()");
 
-  Prepare();
-  Add("00", logCode_InternalLogInit, 0);  // damit beginnt das log mit einem separator. Unscheinbar aber damit weiß ich das log is initialisiert
+  prepare();
+  add("00", logCode_InternalLogInit, 0);  // damit beginnt das log mit einem separator. Unscheinbar aber damit weiß ich das log is initialisiert
 
 }
 
-void Mod_Logger::Handle() {
+void Mod_Logger::handle() {
   // der tut nichts
 }
 

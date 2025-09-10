@@ -71,39 +71,39 @@ void setup() {
   // Achtung, reihenfolge beachten
 
   // Wifi
-  ModStatic_Wifi::Init();
+  ModStatic_Wifi::init();
 
   // Webinterface
-  ModStatic_WebInterface::Init(); 
+  ModStatic_WebInterface::init(); 
 
   // Timer
-  mod_NTPClient.Init();
-  mod_Timer.Init();  // benötigt Wifi für initiales ntp update
+  mod_NTPClient.init();
+  mod_Timer.init();  // benötigt Wifi für initiales ntp update
 
   // Logger 
-  mod_Logger.Init(); // sollte immer mit Zeitstempel vom Timer aufgerufen werden
+  mod_Logger.init(); // sollte immer mit Zeitstempel vom Timer aufgerufen werden
 
-  mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_Startup, 0); // Jetzt kommen alle anderen Module und Steuerungsmodul(e) -> 
+  mod_Logger.add(mod_Timer.runTimeAsString(), logCode_Startup, 0); // Jetzt kommen alle anderen Module und Steuerungsmodul(e) -> 
 
   // EMeter Client
-  mod_EMeterClient.Init();
+  mod_EMeterClient.init();
 
   // Battery WR Client
-  mod_BatteryWRClient.Init();
+  mod_BatteryWRClient.init();
 
   // Powermeter
-  mod_PowerMeter.Init();
+  mod_PowerMeter.init();
 
   // I/O
-  mod_IO.Init();
+  mod_IO.init();
 
   // Jetzt der Controller
 
   // Controller
-  mod_PowerControl.Init();
-  prg_Controller.Init(); 
+  mod_PowerControl.init();
+  prg_Controller.init(); 
 
-  mod_Logger.Add(mod_Timer.runTimeAsString(), logCode_StartupDone, 0); // <- Fertig
+  mod_Logger.add(mod_Timer.runTimeAsString(), logCode_StartupDone, 0); // <- Fertig
 
   Serial.println("------------------------------------------------");
 }
@@ -113,32 +113,32 @@ void loop() {
   // Loop wird auch bei Verwendung des Schedulers (sofern ich ihn verwende) bei jedem Durchlauf durchlaufen!
 
   // Netzwerk
-  ModStatic_Wifi::Handle();
+  ModStatic_Wifi::handle();
 
   // WebInterface für Benutzerabfrage und Eingriffe
-  ModStatic_WebInterface::Handle();
+  ModStatic_WebInterface::handle();
 
   // Lokaler Timer, dieser muss immer zu Beginn der Loop aufgerufen werden
-  //modNTPClient_Handle(); // nicht nötig, von mod_Timer verwendet
-  mod_Timer.Handle();
+  //modNTPClient_handle(); // nicht nötig, von mod_Timer verwendet
+  mod_Timer.handle();
 
   // EMeter Client
-  //mod_EMeterClient.Handle(); // nicht nötig, bei Bedarf
+  //mod_EMeterClient.handle(); // nicht nötig, bei Bedarf
 
   // Battery WR Client
-  //mod_BatteryWRClient.Handle(); // nicht nötig, bei Bedarf
+  //mod_BatteryWRClient.handle(); // nicht nötig, bei Bedarf
 
   // Powermeter
-  mod_PowerMeter.Handle();
+  mod_PowerMeter.handle();
 
   // IO 
-  mod_IO.Handle();
+  mod_IO.handle();
 
   // Logger
-  //mod_Logger.Handle(); // nicht nötig, bei Bedarf
+  //mod_Logger.handle(); // nicht nötig, bei Bedarf
 
   // Controller für die automatische Steuerung, dieser muss immer als leztes in der Loop aufgerufen werden
-  //mod_PowerControl.Handle(); // nicht nötig, bei Bedarf 
-  prg_Controller.Handle(); 
+  //mod_PowerControl.handle(); // nicht nötig, bei Bedarf 
+  prg_Controller.handle(); 
 
 }

@@ -25,8 +25,8 @@ class ModStatic_WebInterface {
 
   public:
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
-    static void Init();
-    static void Handle();
+    static void init();
+    static void handle();
 };
 
 ESP8266WebServer server(80);
@@ -54,92 +54,92 @@ void handleMenue() {
     }
 
     // Messen
-    if (server.argName(i) == "measurebattactive") {
-      mod_IO.MeasureBattActive(true);
+    if (server.argName(i) == "measureBattActive") {
+      mod_IO.measureBattActive(true);
     }
-    if (server.argName(i) == "measurebatt12") {
-      mod_IO.MeasureBatt12(true);
+    if (server.argName(i) == "measureBatt12") {
+      mod_IO.measureBatt12(true);
     }
     if (server.argName(i) == "measureemeter") {
-      mod_EMeterClient.GetCurrentPower(true);
+      mod_EMeterClient.getCurrentPower(true);
     }
     if (server.argName(i) == "measurewr") {
-      mod_BatteryWRClient.GetCurrentPower(true);
+      mod_BatteryWRClient.getCurrentPower(true);
     }
     if (server.argName(i) == "measurepowermeter") {
-      mod_PowerMeter.GetCurrentPower(true);
+      mod_PowerMeter.getCurrentPower(true);
     }
 
     // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
-      prg_Controller.SetStandbyMode();
-      mod_IO.SetmanIOModeOn();
-      mod_IO.Off();
+      prg_Controller.setStandbyMode();
+      mod_IO.setManIOModeOn();
+      mod_IO.setOff();
     }
     if (server.argName(i) == "charge") {
-      prg_Controller.SetStandbyMode();
-      mod_IO.SetmanIOModeOn();
-      mod_IO.Charge();
+      prg_Controller.setStandbyMode();
+      mod_IO.setManIOModeOn();
+      mod_IO.setCharge();
     }
     if (server.argName(i) == "discharge") {
-      prg_Controller.SetStandbyMode();
-      mod_IO.SetmanIOModeOn();
-      mod_IO.Discharge();
+      prg_Controller.setStandbyMode();
+      mod_IO.setManIOModeOn();
+      mod_IO.setDischarge();
     }
     if (server.argName(i) == "auto") {
-      prg_Controller.SetStandbyMode();
-      mod_IO.Off();
-      mod_IO.SetmanIOModeOff();
+      prg_Controller.setStandbyMode();
+      mod_IO.setOff();
+      mod_IO.setManIOModeOff();
     }
 
     // Batterie Simulation
     if (server.argName(i) == "simubatt1select") {
-      if (mod_IO.IsOff()) {
-        mod_IO.SelectBattActive(1);
+      if (mod_IO.isOff()) {
+        mod_IO.selectBattActive(1);
       }
     } 
     if (server.argName(i) == "simubatt2select") {
-      if (mod_IO.IsOff()) {
-        mod_IO.SelectBattActive(2);
+      if (mod_IO.isOff()) {
+        mod_IO.selectBattActive(2);
       }
 
     } 
     if (server.argName(i) == "simubatt1off") {
-      mod_IO.SetmanBattSimuOff(1);
+      mod_IO.setManBattSimuOff(1);
     }
     if (server.argName(i) == "simubatt1a") {
-      mod_IO.SetmanBattSimuOn(1, 27.0);
+      mod_IO.setManBattSimuOn(1, 27.0);
     }
     if (server.argName(i) == "simubatt1b") {
-      mod_IO.SetmanBattSimuOn(1, 26.5);
+      mod_IO.setManBattSimuOn(1, 26.5);
     }
     if (server.argName(i) == "simubatt1c") {
-      mod_IO.SetmanBattSimuOn(1, 26);
+      mod_IO.setManBattSimuOn(1, 26);
     }
     if (server.argName(i) == "simubatt1d") {
-      mod_IO.SetmanBattSimuOn(1, 25.7);
+      mod_IO.setManBattSimuOn(1, 25.7);
     }
     if (server.argName(i) == "simubatt1e") {
-      mod_IO.SetmanBattSimuOn(1, 25.5);
+      mod_IO.setManBattSimuOn(1, 25.5);
     }
   
     if (server.argName(i) == "simubatt2off") {
-      mod_IO.SetmanBattSimuOff(2);
+      mod_IO.setManBattSimuOff(2);
     }
     if (server.argName(i) == "simubatt2a") {
-      mod_IO.SetmanBattSimuOn(2, 27.0);
+      mod_IO.setManBattSimuOn(2, 27.0);
     }
     if (server.argName(i) == "simubatt2b") {
-      mod_IO.SetmanBattSimuOn(2, 26.5);
+      mod_IO.setManBattSimuOn(2, 26.5);
     }
     if (server.argName(i) == "simubatt2c") {
-      mod_IO.SetmanBattSimuOn(2, 26);
+      mod_IO.setManBattSimuOn(2, 26);
     }
     if (server.argName(i) == "simubatt2d") {
-      mod_IO.SetmanBattSimuOn(2, 25.7);
+      mod_IO.setManBattSimuOn(2, 25.7);
     }
     if (server.argName(i) == "simubatt2e") {
-      mod_IO.SetmanBattSimuOn(2, 25.5);
+      mod_IO.setManBattSimuOn(2, 25.5);
     }
 
     // Emeter Simulation
@@ -187,24 +187,24 @@ void handleMenue() {
     // Zeitsteuerung Simulation (log in dem fall erst nach dem setzen)
     if (server.argName(i) == "simutimeoff") {
         mod_Timer.syncFromNTP();
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
     }
     if (server.argName(i) == "simutimeday") {
         mod_Timer.runTime.h = 13;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
     }
     if (server.argName(i) == "simutimenight") {
         mod_Timer.runTime.h = 3;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
     }
     if (server.argName(i) == "simutimeinc") {
         mod_Timer.syncFromNTP();
         mod_Timer.runTime.d += 1;
-        mod_Logger.Add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
+        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
     }
 
     //if (server.argName(i) == "") {
@@ -220,8 +220,8 @@ String generateMenue() {
   // Menü mit Links
   String menu = "<br>";
   menu += "<b>Messen</b><br>";
-  menu += "<a href='?measurebattactive'>Batt aktiv</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?measurebatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measureBattActive'>Batt aktiv</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?measureBatt12'>Batt 1/2</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measureemeter'>E-Meter (Stromz&auml;hler)</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurewr'>Wechselrichter (Einspeisung)</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?measurepowermeter'>Powermeter (Laden/Einspeisen)</a>&nbsp;&nbsp;&nbsp;";
@@ -238,7 +238,7 @@ String generateMenue() {
   menu += "<a href='?off'>Aus</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?charge'>Laden</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?discharge'>Entladen</a>&nbsp;&nbsp;&nbsp;";
-  if ( (mod_IO.IsmanIOMode() == true) ) {
+  if ( (mod_IO.isManIOMode() == true) ) {
     menu += "&nbsp;&nbsp;&nbsp; (Manuelle Steuerung ist aktiv!)";
   }  
   menu += "<br><br>";
@@ -319,40 +319,40 @@ void handleRoot() {
   message += "<hr>";
   message += "<b>Zeit:</b>&nbsp;" + mod_Timer.runTimeAsString() + "(Tage hh:nn)";
   message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-  if ( (mod_IO.IsmanIOMode() == true) ) {
+  if ( (mod_IO.isManIOMode() == true) ) {
     message += "<b>Status:</b>&nbsp;Manueller Modus";
   }
   else {
-    message += "<b>Status:</b>&nbsp;" + prg_Controller.GetStateString();
+    message += "<b>Status:</b>&nbsp;" + prg_Controller.getStateString();
   }
-  if ( ( prg_Controller.GetState() != "C") && ( prg_Controller.GetState() != "D") )
+  if ( ( prg_Controller.getState() != "C") && ( prg_Controller.getState() != "D") )
   {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    mod_IO.MeasureBatt12(false);
+    mod_IO.measureBatt12(false);
     message += "<b>Akku1:";
-    if (mod_IO.GetBattActive() == 1) { message += "(aktiv)"; }
+    if (mod_IO.getBattActive() == 1) { message += "(aktiv)"; }
     message += "</b>&nbsp;"+String(mod_IO.vBatt_1proz)+"% ("+String(mod_IO.vBatt_1)+"V)";
     message += " / ";
     message += "<b>Akku2:";
-    if (mod_IO.GetBattActive() == 2) { message += "(aktiv)"; }
+    if (mod_IO.getBattActive() == 2) { message += "(aktiv)"; }
     message += "</b>&nbsp;"+String(mod_IO.vBatt_2proz)+"% ("+String(mod_IO.vBatt_2)+"V)";
   }
   else {
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    if (mod_IO.GetBattActive() == 1) { message += "Akku1:(aktiv)"; }
-    if (mod_IO.GetBattActive() == 2) { message += "Akku2:(aktiv)"; }
+    if (mod_IO.getBattActive() == 1) { message += "Akku1:(aktiv)"; }
+    if (mod_IO.getBattActive() == 2) { message += "Akku2:(aktiv)"; }
 
-    if ( prg_Controller.GetState() == "D") {
+    if ( prg_Controller.getState() == "D") {
       //message += "&nbsp;&nbsp;&nbsp;&nbsp;";
       message += "<br>";
-      message += prg_Controller.GetDetailsMsg();
+      message += prg_Controller.getDetailsMsg();
     }
   }
   message += "<hr><br>";
   
   // Log
   message += "Log:<br>";
-  String logdump = mod_Logger.Dump();
+  String logdump = mod_Logger.dump();
   logdump.replace("\r\n", "<br>");
   message += logdump;
 
@@ -381,7 +381,7 @@ void handleState() {
   Serial.println("handleState()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  String message = prg_Controller.GetState();
+  String message = prg_Controller.getState();
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
@@ -391,7 +391,7 @@ void handleStateString() {
   Serial.println("handleStateString()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  String message = prg_Controller.GetStateString();
+  String message = prg_Controller.getStateString();
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
@@ -401,7 +401,7 @@ void handleStatePower() {
   Serial.println("handleStatePower()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  mod_PowerMeter.GetCurrentPower(false);
+  mod_PowerMeter.getCurrentPower(false);
   String message =  String(mod_PowerMeter.lastPower);
 
   server.send(200, "text/plain", message);
@@ -410,8 +410,8 @@ void handleStatePower() {
 
 // --------------------------------------------
 
-void ModStatic_WebInterface::Init() {
-  Serial.println("prgWebinterface_Init()");
+void ModStatic_WebInterface::init() {
+  Serial.println("prgWebinterface_init()");
 
   DoESPreset = false;
 
@@ -429,7 +429,7 @@ void ModStatic_WebInterface::Init() {
   Serial.println("HTTP server started");
 }
 
-void ModStatic_WebInterface::Handle() {
+void ModStatic_WebInterface::handle() {
   // zyklisch aufgerufen
   server.handleClient();
 
