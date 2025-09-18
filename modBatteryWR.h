@@ -15,6 +15,7 @@ class Mod_BatteryWRClient {
     bool manBatteryWRSimu;
     float manBatteryWRSimuValue;
 
+    bool sendCmd(String cmd);
   public:
     void manBatteryWRSimuOn();
     void manBatteryWRSimuOff();
@@ -22,6 +23,8 @@ class Mod_BatteryWRClient {
     // Abfragefunktion für den externen Zugriff
     float getCurrentPower(bool dolog); 
     bool setPowerLimit(float pwr);
+    bool setEnable();
+    bool setDisable();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void init();
@@ -109,14 +112,31 @@ bool Mod_BatteryWRClient::setPowerLimit(float pwr) {
   }
 
   // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
+  return sendCmd("{ \"id\": 0, \"cmd\": \"limit_nonpersistent_absolute\", \"val\": "+String(pwr)+"}");
+}
 
+bool Mod_BatteryWRClient::setEnable() {
+   Serial.println("modBatteryWRClient_setEnable()");
+
+  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_.. passiert im dischargemodus ständig, deshalb nicht ins log.
+  return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 1 }");
+}
+
+bool Mod_BatteryWRClient::setDisable() {
+   Serial.println("modBatteryWRClient_setDisable()");
+  
+  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_... passiert im dischargemodus ständig, deshalb nicht ins log
+  return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 0 }");
+}
+
+bool Mod_BatteryWRClient::sendCmd(String cmd) {
   WiFiClient wifi;
   HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
 
   delay(100); // Yield()
 
   Serial.println("http post");
-  httpclient.post("/api/ctrl", "application/json", "{ \"id\": 0, \"cmd\": \"limit_nonpersistent_absolute\", \"val\": "+String(pwr)+"}");
+  httpclient.post("/api/ctrl", "application/json", cmd);
   Serial.println("http post done");
 
   delay(100); // Yield()
