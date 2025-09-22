@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.24"
+#define SOFTWARE_VERSION "2.25"
 
 enum PrgState {
   State_Failure,
@@ -47,7 +47,8 @@ class Prg_Controller {
     String getStateString();
     String getDetailsMsg();
     
-    void setStandbyMode();
+    void setManualModeOn();
+    void setManualModeOff();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void init();
@@ -506,7 +507,15 @@ String Prg_Controller::getDetailsMsg() {
 
 // --------------------------------------------
 
-void Prg_Controller::setStandbyMode() {
+void Prg_Controller::setManualModeOn() {
+  mod_IO.setManIOModeOn();
+  mod_IO.setOff();
+  state = State_Standby;
+}
+
+void Prg_Controller::setManualModeOff() {
+  mod_IO.setManIOModeOff();
+  mod_IO.setOff();
   state = State_Standby;
 }
 

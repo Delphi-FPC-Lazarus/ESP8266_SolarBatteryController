@@ -72,24 +72,18 @@ void handleMenue() {
 
     // Manuelle Steuerung zum Laden und Entladen
     if (server.argName(i) == "off") {
-      prg_Controller.setStandbyMode();
-      mod_IO.setManIOModeOn();
-      mod_IO.setOff();
+      prg_Controller.setManualModeOn();
     }
     if (server.argName(i) == "charge") {
-      prg_Controller.setStandbyMode();
-      mod_IO.setManIOModeOn();
+      prg_Controller.setManualModeOn();
       mod_IO.setCharge();
     }
     if (server.argName(i) == "discharge") {
-      prg_Controller.setStandbyMode();
-      mod_IO.setManIOModeOn();
+      prg_Controller.setManualModeOn();
       mod_IO.setDischarge();
     }
     if (server.argName(i) == "auto") {
-      prg_Controller.setStandbyMode();
-      mod_IO.setOff();
-      mod_IO.setManIOModeOff();
+      prg_Controller.setManualModeOff();
     }
 
     // Batterie Simulation
