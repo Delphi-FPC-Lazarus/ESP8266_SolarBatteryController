@@ -75,10 +75,14 @@ const byte logCode_PowerMeterPower      = 47;
 
 const byte logCode_BattSelect           = 48;
 
+const byte logCode_StateStandby         = 49;
+const byte logCode_StateReady           = 50;
+
+
 // Anzahl der hinterlegten Meldungen (maxlogcode+2) wegen 0 basierend und dummyeintrag 
 // Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 // obacht, wenn ein komma vergessen wird, wird's schräg", deshalb der Dummyeintrag hinten dran
-const int logMsgCount = 50;   
+const int logMsgCount = 52;   
 
 const String logMsg[logMsgCount] = {
   "",
@@ -146,6 +150,9 @@ const String logMsg[logMsgCount] = {
   "PowerMeter Leistung",
 
   "Batterieauswahl(aktive Batterie)",
+
+  "<b><font color=green>Status Standby</font></b>",
+  "<b><font color=green>Status Bereitschaft</font></b>",
 
   "DUMMYEINTRAG_DO_NOT_DELETE" // letzer eintrag ohne abschließendes komma, damit kann ich das nicht vergessen und sehe wenn ich mich beim Erweitern der Liste vertan habe
 

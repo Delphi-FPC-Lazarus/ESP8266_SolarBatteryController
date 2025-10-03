@@ -2,14 +2,15 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.26"
+#define SOFTWARE_VERSION "2.27"
 
 enum PrgState {
-  State_Failure,
-  State_Standby,
-  State_Charge, 
-  State_ChargeEmergency,
-  State_Discharge
+  State_Failure,          // system failure
+  State_Standby,          // standby, hardware disconnected
+  State_Charge,           // charge battery
+  State_ChargeEmergency,  // charge battery to prevent deep discharge
+  State_Ready,            // ready to discharge, WR connected
+  State_Discharge         // discharge battery
 };
 
 // --------------------------------------------
@@ -29,8 +30,8 @@ class Prg_Controller {
     // Hilfsfunktionem
     bool checkFailure();
     bool isDay();
-    bool SelectBatteryNotFull();
-    bool SelectBatteryNotEmpty();
+    bool selectBatteryNotFull();
+    bool selectBatteryNotEmpty();
 
     // Triggerfunktionen
     bool triggerStatCharge();
@@ -51,7 +52,9 @@ class Prg_Controller {
     String getState();
     String getStateString();
     String getDetailsMsg();
-    
+
+    void setState(PrgState newState);
+
     void setManualModeOn();
     void setManualModeOff();
 
@@ -121,11 +124,11 @@ boolean Prg_Controller::isDay() {
   } 
 }
 
-bool Prg_Controller::SelectBatteryNotFull() {
+bool Prg_Controller::selectBatteryNotFull() {
 
   if (mod_IO.isBatt1Valid() && mod_IO.isBatt2Valid()) {
 
-    Serial.println("SelectBatteryNotFull() 2 Akku Betrieb");
+    Serial.println("selectBatteryNotFull() 2 Akku Betrieb");
     // 2 AKku Betrieb ->
     // Toggle je nach dem ob ein gerader oder ungerader Tag ist um die Akkunutzung besser zu verteilen. Die Funktion wird vom Ladetrigger aufgerufen, im Idealfall sowieso zweimal dann wäre es egal
     if (mod_Timer.runTime.d % 2 == 0) {
@@ -161,7 +164,7 @@ bool Prg_Controller::SelectBatteryNotFull() {
 
   } else {
 
-    Serial.println("SelectBatteryNotFull() 1 Akku Betrieb");    
+    Serial.println("selectBatteryNotFull() 1 Akku Betrieb");    
     // 1 Akku Betrieb ->
     if (mod_IO.isBatt1Valid()) {
       // nur Batt 1
@@ -178,11 +181,11 @@ bool Prg_Controller::SelectBatteryNotFull() {
 
 }
 
-bool Prg_Controller::SelectBatteryNotEmpty() {
+bool Prg_Controller::selectBatteryNotEmpty() {
   
   if (mod_IO.isBatt1Valid() && mod_IO.isBatt2Valid()) {
 
-    Serial.println("SelectBatteryNotEmpty() 2 Akku Betrieb");
+    Serial.println("selectBatteryNotEmpty() 2 Akku Betrieb");
     // 2 AKku Betrieb ->
     // Toggle je nach dem ob ein gerader oder ungerader Tag ist um die Akkunutzung besser zu verteilen. Die Funktion wird vom Ladetrigger aufgerufen, im Idealfall sowieso zweimal dann wäre es egal
     if (mod_Timer.runTime.d % 2 == 0) {
@@ -218,7 +221,7 @@ bool Prg_Controller::SelectBatteryNotEmpty() {
 
   } else {
 
-    Serial.println("SelectBatteryNotEmpty() 1 Akku Betrieb");    
+    Serial.println("selectBatteryNotEmpty() 1 Akku Betrieb");    
     // 1 AKku Betrieb ->
     if (mod_IO.isBatt1Valid()) {
       // nur Batt 1
@@ -252,7 +255,7 @@ bool Prg_Controller::triggerStatCharge() {
         (isDay() == true) 
      ) {
       
-      if (SelectBatteryNotFull()) {
+      if (selectBatteryNotFull()) {
         // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
         delay(1); // Yield()
         mod_IO.measureBattActive(false);
@@ -385,7 +388,7 @@ bool Prg_Controller::triggerStartDischarge() {
 
   if (emeterPower > emeterDischargePower) {
 
-    if (SelectBatteryNotEmpty()) { 
+    if (selectBatteryNotEmpty()) { 
       // da sich ggf. die aktive Batterie geändert hat, aktive Batterie neu messen
       delay(1); // Yield()
       mod_IO.measureBattActive(false);
@@ -467,6 +470,9 @@ String Prg_Controller::getState() {
       case State_ChargeEmergency:
         return "C";
         break;
+      case State_Ready:
+        return "R";
+        break;
       case State_Discharge:
         return "D";
         break;
@@ -493,6 +499,9 @@ String Prg_Controller::getStateString() {
       case State_ChargeEmergency:
         return "<font color=orange>Laden (Tiefentladeschutz)</font>";
         break;
+      case State_Ready:
+        return "Bereit zum Entladen/Einspeisen";
+        break;
       case State_Discharge:
         return "<font color=green>Entladen/Einspeisen</font>";
         break;
@@ -511,65 +520,89 @@ String Prg_Controller::getDetailsMsg() {
 }
 
 // --------------------------------------------
+// Funktionen für den Statuswechsel, 
+// der Status darf generell nur über diese Funktionen gewechselt werden damit Hardwarzustand und Status übereinstimmen
+void Prg_Controller::setState(PrgState newState) {
+  // neuen Status übernehmen
+  state = newState;
+  // Hardware entsprechend neuem Status schalten
+  switch (newState ) {
+    case State_Failure:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
+      mod_IO.setOff();
+      
+      break;
+    case State_Standby:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StateStandby,0);
+      mod_IO.setOff();
+
+      break;	
+    case State_Charge:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
+      mod_IO.setCharge();
+      chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
+      break;	
+  	case State_ChargeEmergency:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
+      mod_IO.setCharge();
+      chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
+
+      break;
+  	case State_Ready:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StateReady,0);
+
+      // TODO
+      break;
+  	case State_Discharge:
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
+      // Hier sind wir im Bezug, sonst hätte er nicht getriggert
+      // Der Wandler fährt eh erst mal Rampe
+      pwrControlSkip = dischargeStartRamp; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln
+      // Wechselrichter Leistung setzen
+      // Initial wird die aktuelle Bezugsleistung verwendet
+      mod_PowerControl.InitPowerControl();
+      // Entladen beginnen
+      mod_IO.setDischarge();
+
+      break;
+	}
+}
 
 void Prg_Controller::setManualModeOn() {
   mod_IO.setManIOModeOn();
-  mod_IO.setOff();
-  state = State_Standby;
+  setState(State_Standby);
 }
 
 void Prg_Controller::setManualModeOff() {
   mod_IO.setManIOModeOff();
-  mod_IO.setOff();
-  state = State_Standby;
+  setState(State_Standby);
 }
 
 // --------------------------------------------
+// Verarbeitung für die verschiedenen Status (Stati)
 
 void Prg_Controller::processStateStandby() {
           // Prüfe Trigger für Statuswechsel
           
           if (triggerStatCharge()) {
             Serial.println("triggerStatCharge");
-            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartCharge,0);
 
-            mod_IO.setCharge();
-
-            chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
-
-            state = State_Charge;
+            setState(State_Charge);
             return;
           }
           
           if (triggerStatChargeEmergency()) {
             Serial.println("triggerStatChargeEmergency");
-            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartChargeEmergency,0);
 
-            mod_IO.setCharge();
-
-            chargeEndCounter = 0; // zurücksetzen, hiermit wird gezählt damit bei Kurzer Unterbrechung nicht das Ladeende erkannt wird
-
-            state = State_ChargeEmergency;
+            setState(State_ChargeEmergency);
             return;
           }
           
           if (triggerStartDischarge()) {
             Serial.println("triggerStartDischarge");
-            mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
 
-            // Hier sind wir im Bezug, sonst hätte er nicht getriggert
-            
-            // Der Wandler fährt eh erst mal Rampe
-            pwrControlSkip = dischargeStartRamp; // wegen der Wechselrichter Rampe nach dem Einschalten die ersten Minuten nicht regeln
-            
-            // Wechselrichter Leistung setzen
-            // Initial wird die aktuelle Bezugsleistung verwendet
-            mod_PowerControl.InitPowerControl();
-            
-            // Entladen beginnen
-            mod_IO.setDischarge();
-
-            state = State_Discharge;
+            setState(State_Discharge);
             return;
           }
 
@@ -581,10 +614,8 @@ void Prg_Controller::processStateCharge() {
           if (triggerStopCharge()) {
             Serial.println("triggerStopCharge");
             mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StopCharge,0);
+            setState(State_Standby);
 
-            mod_IO.setOff();
-
-            state = State_Standby;
             return;
           }
 
@@ -596,9 +627,8 @@ void Prg_Controller::processStateChargeEmergency() {
           if (triggerStopChargeEmergency()) {
             Serial.println("triggerStopChargeEmergency");
             mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StopChargeEmergency,0);
+            setState(State_Standby);
 
-            mod_IO.setOff();
-            state = State_Standby;
             return;
           }
 
@@ -615,8 +645,8 @@ void Prg_Controller::processStateDischarge() {
             // zurück auf initialzustand
             mod_PowerControl.ResetPowerControl();
             
-            mod_IO.setOff();
-            state = State_Standby;
+            setState(State_Standby);
+
             return;
           }
 
@@ -654,11 +684,8 @@ void Prg_Controller::init() {
   // Fehlerzustand gleich prüfen
   if ( (state != State_Failure) && checkFailure() ) {
     Serial.println("checkFailure");
-    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
 
-    mod_IO.setOff();
-    
-    state = State_Failure;
+    setState(State_Failure);
   } 
 
   Serial.println("prgController_init() Done");
@@ -693,11 +720,7 @@ void Prg_Controller::handle() {
       // Immer Fehlerprüfung aufrufen, in jedem Status außer wenn ich bereits im System failure status bin, dann ist eh alles tot
       if ( (state != State_Failure) && checkFailure() ) {
         Serial.println("checkFailure");
-        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_SystemFailure,0);
-
-        mod_IO.setOff();
-
-        state = State_Failure;
+        setState(State_Failure);
       }
 
       switch (state) {
