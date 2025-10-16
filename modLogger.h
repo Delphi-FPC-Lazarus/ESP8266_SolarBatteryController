@@ -64,25 +64,26 @@ const byte logCode_BatteryWRSimuOff     = 38;
 const byte logCode_BatteryWRRequestFail = 39;
 const byte logCode_BatteryWRPowerSet    = 40;
 const byte logCode_BatteryWRPower       = 41;
+const byte logCode_BatteryWREnable      = 42;
+const byte logCode_BatteryWRDisable     = 43;
 
-const byte logCode_extADCMeasureFailed  = 42;
-const byte logCode_extADCok             = 43;
-const byte logCode_extADCfailed         = 44;
+const byte logCode_extADCMeasureFailed  = 44;
+const byte logCode_extADCok             = 45;
+const byte logCode_extADCfailed         = 46;
 
-const byte logCode_PowerMeterSimuOn     = 45;
-const byte logCode_PowerMeterSimuOff    = 46;
-const byte logCode_PowerMeterPower      = 47;
+const byte logCode_PowerMeterSimuOn     = 47;
+const byte logCode_PowerMeterSimuOff    = 48;
+const byte logCode_PowerMeterPower      = 49;
 
-const byte logCode_BattSelect           = 48;
+const byte logCode_BattSelect           = 50;
 
-const byte logCode_StateStandby         = 49;
-const byte logCode_StateReady           = 50;
-
+const byte logCode_StateStandby         = 51;
+const byte logCode_StateReady           = 52;
 
 // Anzahl der hinterlegten Meldungen (maxlogcode+2) wegen 0 basierend und dummyeintrag 
 // Entspricht der Anzahl der Einträge (weniger merkt der Compiler, mehr nicht)
 // obacht, wenn ein komma vergessen wird, wird's schräg", deshalb der Dummyeintrag hinten dran
-const int logMsgCount = 52;   
+const int logMsgCount = 54;   
 
 const String logMsg[logMsgCount] = {
   "",
@@ -139,6 +140,8 @@ const String logMsg[logMsgCount] = {
   "<b><font color=red>WR Abfrage/Setzen fehlgeschlagen</font></b>",
   "WR Leistungsvorgabe",
   "WR Leistung",
+  "WR Einschalten",
+  "WR Ausschalten",
 
   "<b><font color=red>Messung von externen ADC fehlgeschlagen</font></b><!--ERROR-->",
 

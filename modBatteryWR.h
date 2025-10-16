@@ -116,16 +116,24 @@ bool Mod_BatteryWRClient::setPowerLimit(float pwr) {
 }
 
 bool Mod_BatteryWRClient::setEnable() {
-   Serial.println("modBatteryWRClient_setEnable()");
+  Serial.println("modBatteryWRClient_setEnable()");
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWREnable, 0);
 
-  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_.. passiert im dischargemodus ständig, deshalb nicht ins log.
+  if (manBatteryWRSimu == true) {
+    return true;
+  }
+
   return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 1 }");
 }
 
 bool Mod_BatteryWRClient::setDisable() {
-   Serial.println("modBatteryWRClient_setDisable()");
+  Serial.println("modBatteryWRClient_setDisable()");
+  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRDisable, 0);
   
-  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_... passiert im dischargemodus ständig, deshalb nicht ins log
+  if (manBatteryWRSimu == true) {
+    return true;
+  }
+
   return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 0 }");
 }
 

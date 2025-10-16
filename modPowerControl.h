@@ -28,6 +28,9 @@ class Mod_PowerControl {
     void InitPowerControl();
     void DoPowerControl();
 
+    void DisableWR();
+    void EnableWR();
+
     float GetLastWRpwrset();
     String getDetailsMsg();
 
@@ -146,6 +149,16 @@ void Mod_PowerControl::DoPowerControl() {
   // Vorherigen Fehlwert für nächsten Zyklus speichern
   lastEMeterpwr = emeterPower;
 
+}
+
+void Mod_PowerControl::DisableWR() {
+  Serial.println("DisableWR");
+  mod_BatteryWRClient.setDisable();
+}
+
+void Mod_PowerControl::EnableWR() {
+  Serial.println("EnableWR");
+  mod_BatteryWRClient.setEnable();
 }
 
 // ------------------------------------------

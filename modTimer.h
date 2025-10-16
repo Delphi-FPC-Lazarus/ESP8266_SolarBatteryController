@@ -127,7 +127,7 @@ void Mod_Timer::calcRunTime() {
   }
 
   // Resynchronisation
-  if ( (runTime.d > runTime.ntp_lastdaysyn) && (runTime.h == 3) && (runTime.m == 00) ) { // zu einem definierten Zeitpunkt mitten in der Nacht, keinesfalls direkt zum Tageswechsel
+  if ( (runTime.d > runTime.ntp_lastdaysyn) && (runTime.h == 1) && (runTime.m == 00) ) { // zu einem definierten Zeitpunkt mitten in der Nacht, keinesfalls direkt zum Tageswechsel
     Serial.println("--------------");
     Serial.println("modTimer Resynchronisation");
     runTime.ntp_lastdaysyn = runTime.d;
