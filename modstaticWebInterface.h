@@ -157,13 +157,18 @@ void handleMenue() {
     }
 
     // Wechselrichter Simulation
-    if (server.argName(i) == "simuwroff") {
+    if (server.argName(i) == "simuwroff") {        
       mod_BatteryWRClient.manBatteryWRSimuOff();
     }
     if (server.argName(i) == "simuwra") {
       mod_BatteryWRClient.manBatteryWRSimuOn();
     }
-
+    if (server.argName(i) == "simuwrena") {
+      mod_BatteryWRClient.setEnable();
+    }    
+    if (server.argName(i) == "simuwrdisa") {
+      mod_BatteryWRClient.setDisable();
+    }
     // PowerMeter Simulation
     if (server.argName(i) == "simuPowerMeteroff") {
       mod_PowerMeter.manPowerMeterSimuOff();
@@ -184,21 +189,31 @@ void handleMenue() {
         mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
     }
     if (server.argName(i) == "simutimeday") {
-        mod_Timer.runTime.h = 13;
+        mod_Timer.runTime.h = 12;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
         mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuDay,0);
     }
     if (server.argName(i) == "simutimenight") {
-        mod_Timer.runTime.h = 3;
+        mod_Timer.runTime.h = 2;
         mod_Timer.runTime.m = 0;
         mod_Timer.runTime.s = 0;
         mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuNight,0);
     }
-    if (server.argName(i) == "simutimeinc") {
-        mod_Timer.syncFromNTP();
+    if (server.argName(i) == "simutimeinchour") {
+        if (mod_Timer.runTime.h < 23) {
+          mod_Timer.runTime.h += 1;
+          mod_Timer.runTime.m = 57;
+        } else {
+          mod_Timer.runTime.d += 1;
+          mod_Timer.runTime.h = 0;
+          mod_Timer.runTime.m = 57;
+        }
+    }
+    if (server.argName(i) == "simutimeincday") {
         mod_Timer.runTime.d += 1;
-        mod_Logger.add(mod_Timer.runTimeAsString(),logCode_TimeSimuOff,0);
+        mod_Timer.runTime.h = 0;
+        mod_Timer.runTime.m = 57;
     }
 
     //if (server.argName(i) == "") {
@@ -268,6 +283,8 @@ String generateMenue() {
   menu += "WR&nbsp;";
   menu += "<a href='?simuwroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuwra'>Simulation</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuwrena'>Einschalten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simuwrdisa'>Ausschalten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "PowerMeter&nbsp;";
   menu += "<a href='?simuPowerMeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
@@ -277,7 +294,8 @@ String generateMenue() {
   menu += "<br>";
   menu += "Zeit&nbsp;";
   menu += "<a href='?simutimeoff'>Auto</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simutimeinc'>N&auml;chster</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simutimeinchour'>N&auml;chsteStunde</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?simutimeincday'>N&auml;chsterTag</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimeday'>Tag</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simutimenight'>Nacht</a>&nbsp;&nbsp;&nbsp;";
 
@@ -319,8 +337,10 @@ void handleRoot() {
   else {
     message += "<b>Status:</b>&nbsp;" + prg_Controller.getStateString();
   }
+  
   if ( ( prg_Controller.getState() != "C") && ( prg_Controller.getState() != "D") )
   {
+    // Alle Zustände außer ladung und entladung, von Fehler über Standby bis Bereitschaft
     message += "&nbsp;&nbsp;&nbsp;&nbsp;";
     mod_IO.measureBatt12(false);
     message += "<b>Akku1:";
@@ -330,22 +350,28 @@ void handleRoot() {
     message += "<b>Akku2:";
     if (mod_IO.getBattActive() == 2) { message += "(aktiv)"; }
     message += "</b>&nbsp;"+String(mod_IO.vBatt_2proz)+"% ("+String(mod_IO.vBatt_2)+"V)";
-  }
-  else {
-    message += "&nbsp;&nbsp;&nbsp;&nbsp;";
-    if (mod_IO.getBattActive() == 1) { message += "Akku1:(aktiv)"; }
-    if (mod_IO.getBattActive() == 2) { message += "Akku2:(aktiv)"; }
 
-    if ( prg_Controller.getState() == "D") {
-      //message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+    if (prg_Controller.getState() == "R") {
       message += "<br>";
       message += prg_Controller.getDetailsMsg();
     }
   }
-  message += "<hr><br>";
+  else {
+    // Lade- oder Entadezustand
+    message += "&nbsp;&nbsp;&nbsp;&nbsp;";
+    if (mod_IO.getBattActive() == 1) { message += "Akku1:(aktiv)"; }
+    if (mod_IO.getBattActive() == 2) { message += "Akku2:(aktiv)"; }
+
+    if (prg_Controller.getState() == "D") {
+      message += "<br>";
+      message += prg_Controller.getDetailsMsg();
+    }
+  }
+  message += "<hr>";
+  message += "<a href='?'>Refresh</a><br>";
   
   // Log
-  message += "Log:<br>";
+  message += "<br>Log:<br>";
   String logdump = mod_Logger.dump();
   logdump.replace("\r\n", "<br>");
   message += logdump;

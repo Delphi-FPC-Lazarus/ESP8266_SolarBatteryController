@@ -153,11 +153,25 @@ void Mod_PowerControl::DoPowerControl() {
 
 void Mod_PowerControl::DisableWR() {
   Serial.println("DisableWR");
+
+  // Leistung runter
+  if (mod_BatteryWRClient.setPowerLimit(10)) {
+    Serial.println("setPowerLimit() ok");
+  }
+  else {
+    Serial.println("setPowerLimit() nok");
+  }
+
+  // Abschalten
   mod_BatteryWRClient.setDisable();
 }
 
 void Mod_PowerControl::EnableWR() {
   Serial.println("EnableWR");
+
+  // Leistung hier nicht ändern
+
+  // Einschalten
   mod_BatteryWRClient.setEnable();
 }
 
