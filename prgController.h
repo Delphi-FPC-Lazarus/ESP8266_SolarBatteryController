@@ -666,11 +666,11 @@ void Prg_Controller::init() {
 void Prg_Controller::handle() {
 
   if (mod_IO.isManIOMode() == false) {
+    // Sicherheitsrelevante Funktionen müssen außerhalb der Folgenden Zeitsteuerungen bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
 
-    // ZeitTrigger Steuerung
+    // ZeitTrigger Steuerung (träge)
     // die Entscheidungsstruktur für den Modus triggert einmal pro Minute
-    // d.h. alles was hier innerhalb passiert, kann niemals schneller passieren, das ist wichtig!
-    // Sicherheitsrelevante Funktionen müssen außerhalb bzw. durch Hardware/BMS/Ladecontroller etc. abgefangen werden
+    // d.h. alles was hier innerhalb passiert, kann niemals schneller passieren, das ist wichtig um die Hardware (relais) zu schonen
     if ( mod_Timer.runTime.m != triggertime_control_bak.m ) {
       triggertime_control_bak = mod_Timer.runTime;
       Serial.println("Trigger Controller");
@@ -863,10 +863,11 @@ void Prg_Controller::handle() {
 
       } // switch state
 
-    }
-    // Ende Zeittrigger Steuerung
+    } // Ende Zeittrigger Steuerung
 
-    // Zeittrigger Regelung
+    // Zeittrigger Regelung (Mittelschnell)
+    // Die Regelung läuft schneller als die Steuerung. Allerdings muss die Regelung immer entsprechend langsamer als die Messdatenerfassung laufen
+    // Siehe entsprechenden Hinweis
     if ( (mod_Timer.runTime.s - triggertime_regulation_bak.s) >= 10 || mod_Timer.runTime.m != triggertime_regulation_bak.m) {
       triggertime_regulation_bak = mod_Timer.runTime;
       //Serial.println("Trigger Regulation");
@@ -888,8 +889,7 @@ void Prg_Controller::handle() {
           break;
       }
 
-    }
-    // Ende Zeittrigger Regelung
+    } // Ende Zeittrigger Regelung
 
   } // 
   
