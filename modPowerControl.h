@@ -42,7 +42,7 @@ Mod_PowerControl mod_PowerControl;
 
 // ------------------------------------------
 float Mod_PowerControl::GetLastWRpwrset() {
-  return lastEMeterpwr;
+  return lastWRpwrset;
 }
 
 String Mod_PowerControl::getDetailsMsg() {
