@@ -3,7 +3,7 @@
 #pragma once
 
 // Entladeleistung 
-const float maxWRpwrset=400;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung begrenzt der WR, Sicherungen beachten!)
+const float maxWRpwrset=450;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung begrenzt der WR, DC Strom/Sicherungen beachten!)
 const float maxWRpwrsetLowBatt=200;         // Maximalwert für den Wechselrichter bei schwachem Akku (wegen Akku, Spannungmessung und Entladeendeerkennung)
 const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
 
@@ -101,6 +101,8 @@ void Mod_PowerControl::DoPowerControl() {
     Serial.println("doPowerControl() wird nicht ausgeführt da Einseisung/Bezug zu gering!");
     detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(currentEMeterpwr)+"W, keine Anpassung notwendig)";
     Serial.println(detailsMsg);
+
+    // dieser Messwert ist immer zwingend erforderlich, daher abbrechen wenn nicht verfügbar
     return; 
   } 
   delay(1); // Yield()
@@ -112,9 +114,11 @@ void Mod_PowerControl::DoPowerControl() {
     // In Realität wird die Regelung nach dem Setzen der Initialleistung eh für n Minuten ausgesetzt bis der Wandler einspeist
     // Sollte dann wirklich noch keine Leistung eingespeist werden, ist was faul
     Serial.println("doPowerControl() wird nicht ausgeführt da WR Leistung unbekannt");
-    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (EMeter: "+String(currentEMeterpwr)+"W, WR Leistung konnte nicht ermittelt werden)";
+    detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (WR: "+String(currentWRpwr)+"W, WR Leistung konnte nicht ermittelt werden)";
     Serial.println(detailsMsg);
-    return;  
+
+    // dieser Wert wird derzeit nur für die Anzeige benötigt
+    //return;  
   } 
   delay(1); // Yield()
 
@@ -134,7 +138,8 @@ void Mod_PowerControl::DoPowerControl() {
   //  manchmal übersteuert der WR besonders bei starker positiver Leistungsänderung, das führt zum Schwingen der Regelung, der andere WR ist eher träge)
 
   // Regelung
-  float P = 0.5 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
+  //float P = 0.5 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
+  float P = 0.9 * currentEMeterpwr; // P-Anteil 
   //float D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
 
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung
@@ -173,12 +178,14 @@ void Mod_PowerControl::DisableWR() {
   Serial.println("DisableWR");
 
   // Leistung runter
-  if (mod_BatteryWRClient.setPowerLimit(10)) {
+  if (mod_BatteryWRClient.setPowerLimit(minWRpwrset)) {
     Serial.println("setPowerLimit() ok");
   }
   else {
     Serial.println("setPowerLimit() nok");
   }
+
+  delay(1000); // der WR oder die DTU haben sonst manchmal Probleme
 
   // Abschalten
   mod_BatteryWRClient.setDisable();
@@ -187,7 +194,7 @@ void Mod_PowerControl::DisableWR() {
 void Mod_PowerControl::EnableWR() {
   Serial.println("EnableWR");
 
-  // Leistung hier nicht ändern
+  // Leistung hier nicht ändern, dies wird vorab durch die Init Leistungsregelung getan
 
   // Einschalten
   mod_BatteryWRClient.setEnable();

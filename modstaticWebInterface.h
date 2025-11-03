@@ -421,8 +421,16 @@ void handleStatePower() {
   Serial.println("handleStatePower()");
   digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
 
-  mod_PowerMeter.getCurrentPower(false);
-  String message =  String(mod_PowerMeter.lastPower);
+  // Hier ist es besser im Modus Einspeisung die Leistung des Wechselrichters zu verwenden, die ist genauer
+  // ansonsten das powermeter beim laden
+  String message = "";
+  if (prg_Controller.getState() == "D") {
+    float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
+    message =  String(currentWRpwr);
+  } else {
+    mod_PowerMeter.getCurrentPower(false);
+    message =  String(mod_PowerMeter.lastPower);
+  }
 
   server.send(200, "text/plain", message);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH

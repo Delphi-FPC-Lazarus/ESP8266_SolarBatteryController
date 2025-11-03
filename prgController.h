@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.33"
+#define SOFTWARE_VERSION "2.35"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -603,13 +603,17 @@ void Prg_Controller::setState(PrgState newState, bool increasedstate) {
   	case State_Discharge:
       mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StartDischarge,0);
       // Wechselrichter aktivieren (aktiviert bei geringer Leistungsvorgabe)
-      mod_PowerControl.EnableWR();
+
       // Wechselrichter Leistung setzen
-      // Initial wird die aktuelle Bezugsleistung verwendet
+      // Initial wird die aktuelle Bezugsleistung verwendet, hier darf keine WR Leistung verwendet werden da i.d.R. deaktiviert
       // Je nach dem, ob das unmittelbar nach dem durchlaufen des Bereitschaftsstatus passiert, 
       // ist ggf. noch die Sperrzeit für die Regelung aktiv oder auch nicht. 
       // Im letzteren Fall wird im Regelintervall die Leistung im Anschluss sofort wieder angepasst. 
       mod_PowerControl.InitPowerControl();
+
+      delay(1000); // der WR oder die DTU haben sonst manchmal Probleme
+
+      mod_PowerControl.EnableWR();
 
       break;
 	}
