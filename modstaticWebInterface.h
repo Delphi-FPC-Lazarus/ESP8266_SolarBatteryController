@@ -86,10 +86,10 @@ void handleMenue() {
       prg_Controller.setManualModeOff();
     }
       if (server.argName(i) == "wrenable") {
-      mod_BatteryWRClient.setEnable();
+      mod_BatteryWRClient.setEnable(true);
     }    
     if (server.argName(i) == "wrdisable") {
-      mod_BatteryWRClient.setDisable();
+      mod_BatteryWRClient.setDisable(true);
     }
 
 

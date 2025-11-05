@@ -62,7 +62,7 @@ const byte logCode_WifiErrorDetected    = 36;
 const byte logCode_BatteryWRSimuOn      = 37;
 const byte logCode_BatteryWRSimuOff     = 38;
 const byte logCode_BatteryWRRequestFail = 39;
-const byte logCode_BatteryWRPowerSet    = 40;
+const byte logCode_BatteryWRSetFail     = 40;
 const byte logCode_BatteryWRPower       = 41;
 const byte logCode_BatteryWREnable      = 42;
 const byte logCode_BatteryWRDisable     = 43;
@@ -138,7 +138,7 @@ const String logMsg[logMsgCount] = {
   "<b>WRsimulation an</b>",
   "<b>WRsimulation aus</b>",
   "<b><font color=red>WR Abfrage/Setzen fehlgeschlagen</font></b>",
-  "WR Leistungsvorgabe",
+  "<b><font color=red>WR Befehl fehlgeschlagen</font></b>",
   "WR Leistung",
   "WR Einschalten",
   "WR Ausschalten",

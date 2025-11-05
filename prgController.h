@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.35"
+#define SOFTWARE_VERSION "2.36"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -611,7 +611,7 @@ void Prg_Controller::setState(PrgState newState, bool increasedstate) {
       // Im letzteren Fall wird im Regelintervall die Leistung im Anschluss sofort wieder angepasst. 
       mod_PowerControl.InitPowerControl();
 
-      delay(1000); // der WR oder die DTU haben sonst manchmal Probleme
+      delay(5000); // der WR oder die DTU brauchen hier scheinbar etwas
 
       mod_PowerControl.EnableWR();
 
@@ -851,6 +851,9 @@ void Prg_Controller::handle() {
         // Einspeisen
         case State_Discharge:
           Serial.println("State_Discharge");
+
+          // prüfen ob Wechselrichter wirklich eingeschaltet ist, woraround für potentiellen WR bug
+          mod_PowerControl.ReEnableWR();
 
           // Prüfe Trigger für Statuswechsel
 

@@ -23,8 +23,8 @@ class Mod_BatteryWRClient {
     // Abfragefunktion für den externen Zugriff
     float getCurrentPower(bool dolog); 
     bool setPowerLimit(float pwr);
-    bool setEnable();
-    bool setDisable();
+    bool setEnable(bool dolog);
+    bool setDisable(bool dolog);
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void init();
@@ -50,6 +50,7 @@ void Mod_BatteryWRClient::manBatteryWRSimuOff() {
 
 float Mod_BatteryWRClient::getCurrentPower(bool dolog) {
   Serial.println("modBatteryWRClient_getCurrentPower()");
+  // passiert ständig, kein Log
 
   WiFiClient wifi;
   HttpClient httpclient = HttpClient(wifi, BATTERYWRIP, BATTERYWRPORT);
@@ -104,6 +105,7 @@ float Mod_BatteryWRClient::getCurrentPower(bool dolog) {
 
 bool Mod_BatteryWRClient::setPowerLimit(float pwr) {
   Serial.println("modBatteryWRClient_SetLimit("+String(pwr)+")");
+  // passiert ständig, kein Log
 
   if (manBatteryWRSimu == true) {
     Serial.println("Mod_BatteryWRClient::setPowerLimit skip");
@@ -111,13 +113,14 @@ bool Mod_BatteryWRClient::setPowerLimit(float pwr) {
     return true;
   }
 
-  // mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRPowerSet,pwr); passiert im dischargemodus ständig, deshalb nicht ins log
   return sendCmd("{ \"id\": 0, \"cmd\": \"limit_nonpersistent_absolute\", \"val\": "+String(pwr)+"}");
 }
 
-bool Mod_BatteryWRClient::setEnable() {
+bool Mod_BatteryWRClient::setEnable(bool dolog) {
   Serial.println("modBatteryWRClient_setEnable()");
-  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWREnable, 0);
+  if (dolog == true) {
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWREnable, 0);
+  }
 
   if (manBatteryWRSimu == true) {
     return true;
@@ -126,9 +129,11 @@ bool Mod_BatteryWRClient::setEnable() {
   return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 1 }");
 }
 
-bool Mod_BatteryWRClient::setDisable() {
+bool Mod_BatteryWRClient::setDisable(bool dolog) {
   Serial.println("modBatteryWRClient_setDisable()");
-  mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRDisable, 0);
+  if (dolog == true) {
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRDisable, 0);
+  }
   
   if (manBatteryWRSimu == true) {
     return true;
@@ -171,6 +176,10 @@ bool Mod_BatteryWRClient::sendCmd(String cmd) {
   delay(1); // Yield()
 
   bool value = doc["success"];
+
+  if (value != true) {
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRSetFail, 0);
+  }
 
   return value;
 }

@@ -30,6 +30,7 @@ class Mod_PowerControl {
 
     void DisableWR();
     void EnableWR();
+    void ReEnableWR();
 
     float GetLastWRpwrset();
     String getDetailsMsg();
@@ -117,7 +118,7 @@ void Mod_PowerControl::DoPowerControl() {
     detailsMsg = "Leistung: " + String(lastWRpwrset) + "W  (WR: "+String(currentWRpwr)+"W, WR Leistung konnte nicht ermittelt werden)";
     Serial.println(detailsMsg);
 
-    // dieser Wert wird derzeit nur für die Anzeige benötigt
+    // dieser Wert wird derzeit nur für die Anzeige benötigt, achtung: kann 0 sein wenn noch disabled oder Rampe aktiv
     //return;  
   } 
   delay(1); // Yield()
@@ -185,10 +186,13 @@ void Mod_PowerControl::DisableWR() {
     Serial.println("setPowerLimit() nok");
   }
 
-  delay(1000); // der WR oder die DTU haben sonst manchmal Probleme
-
   // Abschalten
-  mod_BatteryWRClient.setDisable();
+  delay(1000);
+  if (mod_BatteryWRClient.setDisable(true)) {
+    Serial.println("SetDisabled() ok");
+  } else {
+    Serial.println("SetDisabled() nok");
+  }
 }
 
 void Mod_PowerControl::EnableWR() {
@@ -197,7 +201,27 @@ void Mod_PowerControl::EnableWR() {
   // Leistung hier nicht ändern, dies wird vorab durch die Init Leistungsregelung getan
 
   // Einschalten
-  mod_BatteryWRClient.setEnable();
+  delay(1000);
+  if (mod_BatteryWRClient.setEnable(true)) {
+    Serial.println("SetEnable() ok");
+  } else {
+    Serial.println("SetEnable() nok");
+  }
+}
+
+void Mod_PowerControl::ReEnableWR() {
+  Serial.println("EnableReWR");
+
+  // wenn keine Leistung kommt sicherheitshalber noch mal den einschaltbefehl schicken. Wenn der WR schon enabled ist, tut das auch nichts
+  float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
+  if ( currentWRpwr == 0 ) { 
+    // Einschalten
+    if (mod_BatteryWRClient.setEnable(true)) {
+      Serial.println("SetEnable() ok");
+    } else {
+      Serial.println("SetEnable() nok");
+    }
+  }
 }
 
 // ------------------------------------------
