@@ -85,6 +85,13 @@ void handleMenue() {
     if (server.argName(i) == "auto") {
       prg_Controller.setManualModeOff();
     }
+      if (server.argName(i) == "wrenable") {
+      mod_BatteryWRClient.setEnable();
+    }    
+    if (server.argName(i) == "wrdisable") {
+      mod_BatteryWRClient.setDisable();
+    }
+
 
     // Batterie Simulation
     if (server.argName(i) == "simubatt1select") {
@@ -162,12 +169,6 @@ void handleMenue() {
     }
     if (server.argName(i) == "simuwra") {
       mod_BatteryWRClient.manBatteryWRSimuOn();
-    }
-    if (server.argName(i) == "simuwrena") {
-      mod_BatteryWRClient.setEnable();
-    }    
-    if (server.argName(i) == "simuwrdisa") {
-      mod_BatteryWRClient.setDisable();
     }
     // PowerMeter Simulation
     if (server.argName(i) == "simuPowerMeteroff") {
@@ -250,7 +251,14 @@ String generateMenue() {
   if ( (mod_IO.isManIOMode() == true) ) {
     menu += "&nbsp;&nbsp;&nbsp; (Manuelle Steuerung ist aktiv!)";
   }  
+  menu += "<br>";
+
+  menu += "WR:&nbsp;";
+  menu += "<a href='?wrenable'>Einschalten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?wrdisable'>Ausschalten</a>&nbsp;&nbsp;&nbsp;";
+
   menu += "<br><br>";
+
   menu += "<b>Simulationsmenue</b><br>";
   menu += "Batterieauswahl&nbsp;";
   menu += "<a href='?simubatt1select'>Batterie 1</a>&nbsp;&nbsp;&nbsp;";
@@ -283,8 +291,6 @@ String generateMenue() {
   menu += "WR&nbsp;";
   menu += "<a href='?simuwroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simuwra'>Simulation</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simuwrena'>Einschalten</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simuwrdisa'>Ausschalten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
   menu += "PowerMeter&nbsp;";
   menu += "<a href='?simuPowerMeteroff'>Auto</a>&nbsp;&nbsp;&nbsp;";
