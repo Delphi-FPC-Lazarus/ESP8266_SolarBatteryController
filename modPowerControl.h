@@ -140,7 +140,7 @@ void Mod_PowerControl::DoPowerControl() {
 
   // Regelung
   //float P = 0.5 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
-  float P = 0.9 * currentEMeterpwr; // P-Anteil 
+  float P = 0.8 * currentEMeterpwr; // P-Anteil 
   //float D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
 
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung

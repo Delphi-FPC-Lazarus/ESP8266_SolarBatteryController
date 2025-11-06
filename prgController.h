@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.36"
+#define SOFTWARE_VERSION "2.37"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -706,6 +706,10 @@ void Prg_Controller::handle() {
           // ab jetzt ab jetzt in einem festen intervall
           // Aufgruf der Leistungsregelung ausgelagert für schnellere Reaktion, Zeittrigger Regelung 
           pwrControlSkip = 0; 
+
+          // prüfen ob Wechselrichter wirklich eingeschaltet ist, woraround für potentiellen WR bug
+          // mod_PowerControl.ReEnableWR();
+          
         } else {
           Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
         }
