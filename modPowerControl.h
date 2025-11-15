@@ -3,7 +3,7 @@
 #pragma once
 
 // Entladeleistung 
-const float maxWRpwrset=450;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung begrenzt der WR, DC Strom/Sicherungen beachten!)
+const float maxWRpwrset=430;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung begrenzt der WR, DC Strom/Sicherungen beachten!)
 const float maxWRpwrsetLowBatt=200;         // Maximalwert für den Wechselrichter bei schwachem Akku (wegen Akku, Spannungmessung und Entladeendeerkennung)
 const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
 
@@ -215,6 +215,13 @@ void Mod_PowerControl::ReEnableWR() {
   // wenn keine Leistung kommt sicherheitshalber noch mal den einschaltbefehl schicken. Wenn der WR schon enabled ist, tut das auch nichts
   float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
   if ( currentWRpwr == 0 ) { 
+    // Ausschalten
+    if (mod_BatteryWRClient.setEnable(false)) {
+      Serial.println("SetEnable() ok");
+    } else {
+      Serial.println("SetEnable() nok");
+    }
+    delay(1000);
     // Einschalten
     if (mod_BatteryWRClient.setEnable(true)) {
       Serial.println("SetEnable() ok");
