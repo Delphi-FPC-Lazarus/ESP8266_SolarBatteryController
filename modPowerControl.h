@@ -221,7 +221,9 @@ void Mod_PowerControl::ReEnableWR() {
     } else {
       Serial.println("SetEnable() nok");
     }
-    delay(1000);
+    
+    delay(5000);
+
     // Einschalten
     if (mod_BatteryWRClient.setEnable(true)) {
       Serial.println("SetEnable() ok");

@@ -94,12 +94,12 @@ void handleMenue() {
 
 
     // Batterie Simulation
-    if (server.argName(i) == "simubatt1select") {
+    if (server.argName(i) == "batt1select") {
       if (mod_IO.isOff()) {
         mod_IO.selectBattActive(1);
       }
     } 
-    if (server.argName(i) == "simubatt2select") {
+    if (server.argName(i) == "batt2select") {
       if (mod_IO.isOff()) {
         mod_IO.selectBattActive(2);
       }
@@ -256,14 +256,15 @@ String generateMenue() {
   menu += "WR:&nbsp;";
   menu += "<a href='?wrenable'>Einschalten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?wrdisable'>Ausschalten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<br>";
+
+  menu += "Batterieauswahl&nbsp;";
+  menu += "<a href='?batt1select'>Batterie 1</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?batt2select'>Batterie 2</a>&nbsp;&nbsp;&nbsp;";
 
   menu += "<br><br>";
 
   menu += "<b>Simulationsmenue</b><br>";
-  menu += "Batterieauswahl&nbsp;";
-  menu += "<a href='?simubatt1select'>Batterie 1</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<a href='?simubatt2select'>Batterie 2</a>&nbsp;&nbsp;&nbsp;";
-  menu += "<br>";
   menu += "Batterie1&nbsp;";
   menu += "<a href='?simubatt1off'>Auto</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?simubatt1a'>27</a>&nbsp;&nbsp;&nbsp;";

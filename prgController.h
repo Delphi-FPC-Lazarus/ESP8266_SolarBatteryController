@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.38"
+#define SOFTWARE_VERSION "2.39"
 
 enum PrgState {
   State_Failure,          // system failure
