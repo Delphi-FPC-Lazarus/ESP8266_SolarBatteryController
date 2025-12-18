@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.39"
+#define SOFTWARE_VERSION "2.40"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -705,11 +705,7 @@ void Prg_Controller::handle() {
         if ( pwrControlSkip < 1) {
           // ab jetzt ab jetzt in einem festen intervall
           // Aufgruf der Leistungsregelung ausgelagert für schnellere Reaktion, Zeittrigger Regelung 
-          pwrControlSkip = 0; 
-
-          // prüfen ob Wechselrichter wirklich eingeschaltet ist, woraround für potentiellen WR bug
-          // mod_PowerControl.ReEnableWR();
-          
+          pwrControlSkip = 0;
         } else {
           Serial.print("PwrControlSkip "); Serial.println(pwrControlSkip);
         }
@@ -856,8 +852,25 @@ void Prg_Controller::handle() {
         case State_Discharge:
           Serial.println("State_Discharge");
 
-          // prüfen ob Wechselrichter wirklich eingeschaltet ist, woraround für potentiellen WR bug
-          mod_PowerControl.ReEnableWR();
+          if (pwrControlSkip == 0) {
+            // Prüfen ob Wechselrichter wirklich eingeschaltet ist (nicht während der Rampen Phase). 
+            // Wenn er nicht einspeist, noch mal in den Bereitschaftsmodus zurückwechseln, dann wird beim nächsten Steuerungzyklus wieder eingeschaltet
+            // woraround für potentiellen WR bug
+
+            if (!mod_PowerControl.IsDelivering()) {
+              Serial.println("!IsDelivering");
+              mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Resynch,0);
+              
+              // zurück in den Ready state, damit wird beim nächsten Steuerungszyklus wieder auf Entladung geschaltet
+              // setState(State_Ready, false);              
+
+              // zurück auf Standby,  damit wird beim nächsten Steuerungszyklus wieder auf Entladung geschaltet
+              setState(State_Standby, false);
+
+              break;  
+            }
+
+          }
 
           // Prüfe Trigger für Statuswechsel
 

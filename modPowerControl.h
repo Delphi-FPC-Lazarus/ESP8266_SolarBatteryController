@@ -30,7 +30,8 @@ class Mod_PowerControl {
 
     void DisableWR();
     void EnableWR();
-    void ReEnableWR();
+
+    bool IsDelivering();
 
     float GetLastWRpwrset();
     String getDetailsMsg();
@@ -209,29 +210,31 @@ void Mod_PowerControl::EnableWR() {
   }
 }
 
+bool Mod_PowerControl::IsDelivering () {
+  float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
+  if ( currentWRpwr > 0 ) { 
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/*
 void Mod_PowerControl::ReEnableWR() {
   Serial.println("EnableReWR");
 
   // wenn keine Leistung kommt sicherheitshalber noch mal den einschaltbefehl schicken. Wenn der WR schon enabled ist, tut das auch nichts
   float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
   if ( currentWRpwr == 0 ) { 
-    // Ausschalten
-    if (mod_BatteryWRClient.setEnable(false)) {
-      Serial.println("SetEnable() ok");
-    } else {
-      Serial.println("SetEnable() nok");
-    }
-    
-    delay(5000);
-
     // Einschalten
     if (mod_BatteryWRClient.setEnable(true)) {
       Serial.println("SetEnable() ok");
     } else {
       Serial.println("SetEnable() nok");
     }
-  }
+  } 
 }
+*/
 
 // ------------------------------------------
 // Standard Init/Handler 

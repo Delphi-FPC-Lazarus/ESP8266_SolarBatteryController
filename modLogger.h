@@ -119,7 +119,7 @@ const String logMsg[logMsgCount] = {
   "<b><font color=green>Entladevorgang beendet</font></b>",
   "<b><font color=orange>Ladevorgang beendet (Tiefentladeschutz)</font></b>",
 
-  "<b><font color=green>Resynchronisation</font></b>",
+  "<b><font color=orange>Resynchronisation des Wechselrichters notwendig</font></b>",
 
   "<b>PVsimulation an</b>",
   "<b>PVsimulation aus</b>",
