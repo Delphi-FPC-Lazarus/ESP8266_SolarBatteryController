@@ -3,7 +3,7 @@
 #pragma once
 
 // Entladeleistung 
-const float maxWRpwrset=400;                // Maximalwert für den Wechselrichter (achtung, je Eingangsspannung begrenzt der WR, DC Strom/Sicherungen beachten!)
+const float maxWRpwrset=600;                // Maximalwert für den Wechselrichter (DC Strom/Sicherungen/Verkabelung beachten! Achtung, je Eingangsspannung begrenzt der WR ggf früher)
 const float maxWRpwrsetLowBatt=200;         // Maximalwert für den Wechselrichter bei schwachem Akku (wegen Akku, Spannungmessung und Entladeendeerkennung)
 const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
 
