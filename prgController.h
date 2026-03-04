@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.42"
+#define SOFTWARE_VERSION "2.43"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -857,7 +857,13 @@ void Prg_Controller::handle() {
             // Wenn er nicht einspeist, noch mal in den Bereitschaftsmodus zurückwechseln, dann wird beim nächsten Steuerungzyklus wieder eingeschaltet
             // woraround für potentiellen WR bug
 
-            if (!mod_PowerControl.IsDelivering()) {
+            bool delivering = mod_PowerControl.IsDelivering();
+            for (int i = 0; i < 2 && !delivering; i++) {
+                Serial.printf("!IsDelivering - Prüfung %d\n", i + 1);
+                delay(1000);
+                delivering = mod_PowerControl.IsDelivering();
+            }
+            if (!delivering) {
               Serial.println("!IsDelivering");
               mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Resynch,0);
               
