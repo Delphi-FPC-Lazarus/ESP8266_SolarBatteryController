@@ -125,25 +125,35 @@ void Mod_PowerControl::DoPowerControl() {
   delay(1); // Yield()
 
   // Regler 
-  // currentEMeterpwr ist der Fehlwert
+
+  // currentEMeterpwr ist der aktuelle Fehlwert (Netzbezug/Lieferung)
   // > 0 Bezug: Wechselrichterleistung um Bezug erhöhen (ist positiv)
   // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
+  // dies ist der einzige Wert der wirklich korrekt ist, weil er vom Stromzähler kommt
 
   // currentWRpwr ist die aktuelle Wechselrichter Leistung
-
-  // Trägheit der Wechselrichterabfrage (Abfrageintervall) berücksichtigen bei verwendung gemessener WR Leistung da die Eingestellte Leistung nicht zwingend anliegt
-  // Andererseits ist es so das abhängig von der WR Firmware die wirkliche Leistung generell von der einstellten abweicht, 
-  // in dem Falle ist es wiederum besser inkremental zur zuletzt eingestellten Leistung zu Arbeiten weil der Fehler zwischen Soll/Ist dann egal ist
+  // Trägheit der Wechselrichterabfrage (Abfrageintervall DTU) und Regelungsunenauigkeiten (insbesondere nach dem Setzen eines neuen Sollwertes, mal recht genau mal im ersten Moment völlig daneben) 
+  // und Messfehler bei verwendung gemessener WR Leistung berücksichtigen.
+  // Zudem ist es leider so, dass abhängig von der WR Firmware die wirkliche Leistung generell von der einstellten abweicht, Offsetfehler, womit diese Werte für die Regelung unbrauchbar sind.  
+  // In dem Falle muss zwingend mit einem Inkremental-Rgeler gearbeitet werden, also inkremental zur zuletzt eingestellten Leistung zu regeln, nicht versuchen Absolut  weil dann ist der Fehler zwischen Soll/Ist egal.
 
   // Bei den Regelungsfaktoren ist das Verhalten von WR/DTU beim Setzen neuer Werte zu berücksichtigen
   // (manuelle Leistungsregelung "auf null" über die DTU vorher ausprobieren, 50% bis max 70% Messwertabweichung zustellen, 
   //  manchmal übersteuert der WR besonders bei starker positiver Leistungsänderung, das führt zum Schwingen der Regelung, der andere WR ist eher träge)
 
   // Regelung
-  //float P = 0.5 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
-  float P = 0.8 * currentEMeterpwr; // P-Anteil 
-  //float D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
-
+  //float D = 0;
+  float P = 0;
+  if (currentEMeterpwr > 0) {
+    // Beszug, fast direkt auf den Wert springen, mit 0,8 recht nah dran. manchmal rennt er aber auchdrüber
+    //D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
+    P = 0.8 * currentEMeterpwr; // P-Anteil 
+  }
+  else {
+    // Langsam aus der Lieferung annähern damit er nicht schwingt, so bin ggf. kurz in der Lieferung, besser als Bezug
+    P = 0.6 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
+  }
+ 
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung
   float currentWRpwrset = lastWRpwrset + P; // + D; // Regelung
   // Begrenzen (regelung)
