@@ -9,7 +9,7 @@ const float minWRpwrset=10;                 // Minimalwert für den Wechselricht
 
 const float battLowDischarge=20;            // Akku schwach, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an.
 
-const float targetpwr=-10;                  // Offset die Regelung, 0 wäre optimal, da der Wert jedoch immer um den Zielwert schwankt kann der Zielwert hier verschoben werden um Einspeisung zu vermeiden 
+const float targetpwr=-5;                  // Offset die Regelung, 0 wäre optimal, da der Wert jedoch immer um den Zielwert schwankt kann der Zielwert hier verschoben werden um Einspeisung zu vermeiden 
 
 // --------------------------------------------
 class Mod_PowerControl {
