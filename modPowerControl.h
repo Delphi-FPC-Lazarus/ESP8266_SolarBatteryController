@@ -9,6 +9,8 @@ const float minWRpwrset=10;                 // Minimalwert für den Wechselricht
 
 const float battLowDischarge=20;            // Akku schwach, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an.
 
+const float targetpwr=-10;                  // Offset die Regelung, 0 wäre optimal, da der Wert jedoch immer um den Zielwert schwankt kann der Zielwert hier verschoben werden um Einspeisung zu vermeiden 
+
 // --------------------------------------------
 class Mod_PowerControl {
   private:    
@@ -109,6 +111,9 @@ void Mod_PowerControl::DoPowerControl() {
   } 
   delay(1); // Yield()
 
+  // Fehlerwert ist der Aktuelle Bezug/Einspeisung mit Offset
+  float errorpowr = currentEMeterpwr - targetpwr;
+
   // Aktuelle Einspeiseleistung des Wechselrichters abfragen
   float currentWRpwr = mod_BatteryWRClient.getCurrentPower(false);
   if ( currentWRpwr == 0 ) { 
@@ -126,7 +131,7 @@ void Mod_PowerControl::DoPowerControl() {
 
   // Regler 
 
-  // currentEMeterpwr ist der aktuelle Fehlwert (Netzbezug/Lieferung)
+  // errorpowr ist der aktuelle Fehlwert (Netzbezug/Lieferung)
   // > 0 Bezug: Wechselrichterleistung um Bezug erhöhen (ist positiv)
   // < 0 Lieferung: Wechselrichterkesitung um Lieferung verrringern (ist negativ)
   // dies ist der einzige Wert der wirklich korrekt ist, weil er vom Stromzähler kommt
@@ -144,14 +149,14 @@ void Mod_PowerControl::DoPowerControl() {
   // Regelung
   //float D = 0;
   float P = 0;
-  if (currentEMeterpwr > 0) {
+  if (errorpowr > 0) {
     // Beszug, fast direkt auf den Wert springen, mit 0,8 recht nah dran. manchmal rennt er aber auchdrüber
     //D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
-    P = 0.8 * currentEMeterpwr; // P-Anteil 
+    P = 0.8 * errorpowr; // P-Anteil 
   }
   else {
     // Langsam aus der Lieferung annähern damit er nicht schwingt, so bin ggf. kurz in der Lieferung, besser als Bezug
-    P = 0.6 * currentEMeterpwr;  // P-Anteil (langsame Annähreung)
+    P = 0.6 * errorpowr;  // P-Anteil (langsame Annähreung)
   }
  
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung
