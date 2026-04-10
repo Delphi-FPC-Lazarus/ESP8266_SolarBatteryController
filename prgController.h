@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.45"
+#define SOFTWARE_VERSION "2.46"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -872,6 +872,11 @@ void Prg_Controller::handle() {
 
               // zurück auf Standby,  damit wird beim nächsten Steuerungszyklus wieder auf Entladung geschaltet
               setState(State_Standby, false);
+
+              // Wchselrichter neu starten, hierbei verliert er seinen aktuellen Status! 
+              // Das darf ich nur hier wo ich schon in den Standby gewechselt habe machen.
+              // Wenn der Status nach einer Minute in den Bereitschaftsmodus wechselt, wird der WR eh wieder auf disabled und powerlimit eingestellt
+              mod_PowerControl.RestartWR();
 
               break;  
             }

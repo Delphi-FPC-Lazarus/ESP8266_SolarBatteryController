@@ -25,6 +25,7 @@ class Mod_BatteryWRClient {
     bool setPowerLimit(float pwr);
     bool setEnable(bool dolog);
     bool setDisable(bool dolog);
+    bool doRestart(bool dolog);
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
     void init();
@@ -140,6 +141,19 @@ bool Mod_BatteryWRClient::setDisable(bool dolog) {
   }
 
   return sendCmd("{ \"id\": 0, \"cmd\": \"power\", \"val\": 0 }");
+}
+
+bool Mod_BatteryWRClient::doRestart(bool dolog) {
+  Serial.println("modBatteryWRClient_setDisable()");
+  if (dolog == true) {
+    mod_Logger.add(mod_Timer.runTimeAsString(),logCode_BatteryWRRestart, 0);
+  }
+  
+  if (manBatteryWRSimu == true) {
+    return true;
+  }
+
+  return sendCmd("{ \"id\": 0, \"cmd\": \"restart\" }");
 }
 
 bool Mod_BatteryWRClient::sendCmd(String cmd) {

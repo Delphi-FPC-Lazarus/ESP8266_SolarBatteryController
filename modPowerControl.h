@@ -32,6 +32,7 @@ class Mod_PowerControl {
 
     void DisableWR();
     void EnableWR();
+    void RestartWR();
 
     bool IsDelivering();
 
@@ -222,6 +223,21 @@ void Mod_PowerControl::EnableWR() {
     Serial.println("SetEnable() ok");
   } else {
     Serial.println("SetEnable() nok");
+  }
+}
+
+
+void Mod_PowerControl::RestartWR() {
+  Serial.println("ResetWR");
+
+  // ACHTUNG, dies verwirft die Leistungseinstellung sowie auch den ein/aus Zustand, dies daraf daher nur im Stanby getan werden
+
+  // Einschalten
+  delay(1000);
+  if (mod_BatteryWRClient.doRestart(true)) {
+    Serial.println("doRestart() ok");
+  } else {
+    Serial.println("doRestart() nok");
   }
 }
 

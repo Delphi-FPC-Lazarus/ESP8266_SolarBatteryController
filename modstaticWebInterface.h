@@ -91,7 +91,9 @@ void handleMenue() {
     if (server.argName(i) == "wrdisable") {
       mod_BatteryWRClient.setDisable(true);
     }
-
+    if (server.argName(i) == "wrrestart") {
+      mod_BatteryWRClient.doRestart(true);
+    }
 
     // Batterie Simulation
     if (server.argName(i) == "batt1select") {
@@ -256,6 +258,7 @@ String generateMenue() {
   menu += "WR:&nbsp;";
   menu += "<a href='?wrenable'>Einschalten</a>&nbsp;&nbsp;&nbsp;";
   menu += "<a href='?wrdisable'>Ausschalten</a>&nbsp;&nbsp;&nbsp;";
+  menu += "<a href='?wrrestart'>Restart</a>&nbsp;&nbsp;&nbsp;";
   menu += "<br>";
 
   menu += "Batterieauswahl&nbsp;";
