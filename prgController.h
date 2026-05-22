@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.46"
+#define SOFTWARE_VERSION "2.47"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -549,8 +549,13 @@ String Prg_Controller::getDetailsMsg() {
 // Funktionen für den Statuswechsel, 
 // der Status darf generell nur über diese Funktionen gewechselt werden damit Hardwarzustand und Status übereinstimmen
 void Prg_Controller::setState(PrgState newState, bool increasedstate) {
+
   // neuen Status übernehmen
   state = newState;
+
+  // Fehler merker, falls etwas schief geht dass den Stauswechsel verhindert
+  bool err = false;
+
   // Hardware entsprechend neuem Status schalten
   switch (newState ) {
     case State_Failure:
@@ -566,10 +571,14 @@ void Prg_Controller::setState(PrgState newState, bool increasedstate) {
   	case State_Ready:
       // Das Entladen muss immer über diesen Status laufen
       mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StateReady,0);
+
+      // Regelung zurück auf initialzustand, Leistung rausnehmen
+      if (!mod_PowerControl.ResetPowerControl()) { err = true; };
+
+      delay(5000); // der WR oder die DTU brauchen hier scheinbar etwas
+
       // Wechselrichter deaktivieren und Leistungsvorgabe auf einen geringen Wert setzen
-      mod_PowerControl.DisableWR();
-      // Regelung zurück auf initialzustand
-      mod_PowerControl.ResetPowerControl();
+      if (!mod_PowerControl.DisableWR()) { err = true; };
 
       if ( increasedstate ) {
         // Wechsel von Standby auf Ready
@@ -609,14 +618,22 @@ void Prg_Controller::setState(PrgState newState, bool increasedstate) {
       // Je nach dem, ob das unmittelbar nach dem durchlaufen des Bereitschaftsstatus passiert, 
       // ist ggf. noch die Sperrzeit für die Regelung aktiv oder auch nicht. 
       // Im letzteren Fall wird im Regelintervall die Leistung im Anschluss sofort wieder angepasst. 
-      mod_PowerControl.InitPowerControl();
+      if (!mod_PowerControl.InitPowerControl()) { err = true; };
 
       delay(5000); // der WR oder die DTU brauchen hier scheinbar etwas
 
-      mod_PowerControl.EnableWR();
+      if (!mod_PowerControl.EnableWR())  { err = true; };
 
       break;
-	}
+  }
+
+  // Fehlerbehandlung, zurück auf Standby State
+  // den Ursprünglichen Status zu behalten wäre gefährlich da ich den Stand der Hardware nicht kenne
+  if (err) {
+      state = State_Standby;
+      mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StateStandby,0);
+      mod_IO.setOff();
+  }
 }
 
 void Prg_Controller::setManualModeOn() {
@@ -876,7 +893,7 @@ void Prg_Controller::handle() {
               // Wchselrichter neu starten, hierbei verliert er seinen aktuellen Status! 
               // Das darf ich nur hier wo ich schon in den Standby gewechselt habe machen.
               // Wenn der Status nach einer Minute in den Bereitschaftsmodus wechselt, wird der WR eh wieder auf disabled und powerlimit eingestellt
-              mod_PowerControl.RestartWR();
+              // mod_PowerControl.RestartWR(); // macht manchmal Ärger
 
               break;  
             }

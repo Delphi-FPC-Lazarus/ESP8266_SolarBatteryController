@@ -26,13 +26,14 @@ class Mod_PowerControl {
 
   public:
     // Leistungsregrlung
-    void ResetPowerControl();
-    void InitPowerControl();
+    bool ResetPowerControl();
+    bool InitPowerControl();
+
     void DoPowerControl();
 
-    void DisableWR();
-    void EnableWR();
-    void RestartWR();
+    bool DisableWR();
+    bool EnableWR();
+    bool RestartWR();
 
     bool IsDelivering();
 
@@ -58,16 +59,27 @@ String Mod_PowerControl::getDetailsMsg() {
 // ------------------------------------------
 // Leistungsregelung
 
-void Mod_PowerControl::ResetPowerControl()
+bool Mod_PowerControl::ResetPowerControl()
 {
   lastWRpwrset = 0; 
   lastWRpwr = 0; 
   lastEMeterpwr = 0;
 
   detailsMsg = "";  // Meldung aus der Regelung
+  
+  // Leistung runter
+  if (mod_BatteryWRClient.setPowerLimit(minWRpwrset)) {
+    Serial.println("setPowerLimit() ok");
+    return true;
+  }
+  else {
+    Serial.println("setPowerLimit() nok");
+    return false;
+  }
+
 }
 
-void Mod_PowerControl::InitPowerControl() {
+bool Mod_PowerControl::InitPowerControl() {
   
   // Initial wird die aktuelle Bezugsleistung verwendet
   lastEMeterpwr = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
@@ -88,9 +100,11 @@ void Mod_PowerControl::InitPowerControl() {
   Serial.println(detailsMsg);
   if (mod_BatteryWRClient.setPowerLimit(lastWRpwrset)) {
     Serial.println("setPowerLimit() ok");
+    return true;
   }
   else {
     Serial.println("setPowerLimit() nok");
+    return false;
   }
 }
 
@@ -192,52 +206,51 @@ void Mod_PowerControl::DoPowerControl() {
 
 }
 
-void Mod_PowerControl::DisableWR() {
+bool Mod_PowerControl::DisableWR() {
   Serial.println("DisableWR");
 
-  // Leistung runter
-  if (mod_BatteryWRClient.setPowerLimit(minWRpwrset)) {
-    Serial.println("setPowerLimit() ok");
-  }
-  else {
-    Serial.println("setPowerLimit() nok");
-  }
+  // nur ausschalten, Leistung hier nicht ändern, dies wird vorab durch die Reset Leistungsregelung getan
 
   // Abschalten
   delay(1000);
   if (mod_BatteryWRClient.setDisable(true)) {
     Serial.println("SetDisabled() ok");
+    return true;
   } else {
     Serial.println("SetDisabled() nok");
+    return false;
   }
 }
 
-void Mod_PowerControl::EnableWR() {
+bool Mod_PowerControl::EnableWR() {
   Serial.println("EnableWR");
 
-  // Leistung hier nicht ändern, dies wird vorab durch die Init Leistungsregelung getan
+  // nur einschalten, Leistung hier nicht ändern, dies wird vorab durch die Init Leistungsregelung getan
 
   // Einschalten
   delay(1000);
   if (mod_BatteryWRClient.setEnable(true)) {
     Serial.println("SetEnable() ok");
+    return true;
   } else {
     Serial.println("SetEnable() nok");
+    return false;
   }
 }
 
 
-void Mod_PowerControl::RestartWR() {
+bool Mod_PowerControl::RestartWR() {
   Serial.println("ResetWR");
 
-  // ACHTUNG, dies verwirft die Leistungseinstellung sowie auch den ein/aus Zustand, dies daraf daher nur im Stanby getan werden
-
-  // Einschalten
+  // Zurücksetzen
+  // ACHTUNG, dies verwirft die Leistungseinstellung sowie auch den ein/aus Zustand, dies daraf daher nur im Stanby getan werden bzw. generell mit Bedacht
   delay(1000);
   if (mod_BatteryWRClient.doRestart(true)) {
     Serial.println("doRestart() ok");
+    return true;
   } else {
     Serial.println("doRestart() nok");
+    return false;
   }
 }
 
@@ -274,7 +287,7 @@ void Mod_PowerControl::init()
 {
   Serial.println("modPowerControl_init()");
   
-  ResetPowerControl();
+  // hier nichts tun, auch kein reset powercontrol, das wird gemach bevor es benötigt wird
 }
 
 void Mod_PowerControl::handle()
