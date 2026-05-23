@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.47"
+#define SOFTWARE_VERSION "2.48"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -77,7 +77,7 @@ const int chargeDetectDelay=5;              // Erkennung muss entsprechend oft v
 // Entladeleistung 
 const int dischargeStartRamp=10;            // wegen der Wechselrichter Rampe beim einschalten nach dem Einschalten die ersten Minuten nicht regeln 
 
-const float emeterDischargePower=50;        // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
+const float emeterDischargePower=10;        // Trigger das Entladen begonnen werden kann (entspricht mind. Entladeleistung des Wandlers) (positiv weil Trigger auf Bezug)
 const float emeterDischargeStopPower=-50;   // Trigger das Entladen abzubrechen (im normalfall 0 weil ich nicht aus dem Akku einspeisen will, etwas tolleranz gewähren bzw. differenz starttriggger entladen/tatsächlicher entladeleistung) (negativ weil Trigger auf Einspeisung)
 
 // Batteriemessung (Leerlauf wie vom Akkuhersteller beschrieben)
