@@ -164,6 +164,8 @@ void Mod_PowerControl::DoPowerControl() {
   // Regelung
   //float D = 0;
   float P = 0;
+
+  // bei kleineren und mittleren Sprüngen schnell reagieren 
   if (errorpowr > 0) {
     // Beszug, fast direkt auf den Wert springen, mit 0,8 recht nah dran. manchmal rennt er aber auchdrüber
     //D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
@@ -172,6 +174,12 @@ void Mod_PowerControl::DoPowerControl() {
   else {
     // Langsam aus der Lieferung annähern damit er nicht schwingt, so bin ggf. kurz in der Lieferung, besser als Bezug
     P = 0.6 * errorpowr;  // P-Anteil (langsame Annähreung)
+  }
+  // allerdings sprünge über mehrere hundert Watt vermeiden
+  // weil dann der Wechselrichter komische Dinge tut, u.a. völlig falsche Leistung einstellt bzw. braucht zum Einstellen länger als die Regelung schnell ist
+  // oder kann im schlimmsten Falle Fehler schmeißeb wenn er sich intern total vertut
+  if (P > 150) {
+    P = 150; 
   }
  
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung

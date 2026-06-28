@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.48"
+#define SOFTWARE_VERSION "2.49"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -681,6 +681,15 @@ void Prg_Controller::init() {
     setState(State_Failure, false);
   } 
 
+  // Wechselrichter sicherheitshalber neustarten
+  // Achtung: wenn man dies im eingeschalteten Zustand tut, vergisst er natürlich seine temporären Einstellungen
+  // somit startet er im Status ein auf Vollast bzw. max permanent eingestelltes limit 
+  // Auch öftere Neustarts scheint er nicht so zu mögen. 
+  // Für den Fehlerfall (WR ist im Fehlerzustand) sollte er aber mit dem Controller neustart neu gesartet werden,
+  // hier ist er nicht mit dem Netz verbunden und wird auch vom Controller noch nicht angesporochen, insofern sollte es  hier unkritisch sein.
+  // Das einzige was passieren kann ist, das er bei einem Neustart des ganzen Netzwerks noch nicht erreichbar ist, dann wird der fehler geloggt.
+  mod_PowerControl.RestartWR();
+
   Serial.println("prgController_init() Done");
 }
 
@@ -880,6 +889,7 @@ void Prg_Controller::handle() {
                 delay(1000);
                 delivering = mod_PowerControl.IsDelivering();
             }
+
             if (!delivering) {
               Serial.println("!IsDelivering");
               mod_Logger.add(mod_Timer.runTimeAsString(),logCode_Resynch,0);
@@ -889,11 +899,6 @@ void Prg_Controller::handle() {
 
               // zurück auf Standby,  damit wird beim nächsten Steuerungszyklus wieder auf Entladung geschaltet
               setState(State_Standby, false);
-
-              // Wchselrichter neu starten, hierbei verliert er seinen aktuellen Status! 
-              // Das darf ich nur hier wo ich schon in den Standby gewechselt habe machen.
-              // Wenn der Status nach einer Minute in den Bereitschaftsmodus wechselt, wird der WR eh wieder auf disabled und powerlimit eingestellt
-              // mod_PowerControl.RestartWR(); // macht manchmal Ärger
 
               break;  
             }
