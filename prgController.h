@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SOFTWARE_VERSION "2.49"
+#define SOFTWARE_VERSION "2.50"
 
 enum PrgState {
   State_Failure,          // system failure
@@ -633,6 +633,13 @@ void Prg_Controller::setState(PrgState newState, bool increasedstate) {
       state = State_Standby;
       mod_Logger.add(mod_Timer.runTimeAsString(),logCode_StateStandby,0);
       mod_IO.setOff();
+
+      delay(10000);
+
+      // hier ist er nicht mit dem Netz verbunden und wird auch vom Controller noch nicht angesporochen, insofern sollte es  hier unkritisch sein.
+      // Das einzige was passieren kann ist, das er bei einem Neustart des ganzen Netzwerks noch nicht erreichbar ist, dann wird der fehler geloggt.
+      mod_PowerControl.RestartWR();
+
   }
 }
 
@@ -899,6 +906,12 @@ void Prg_Controller::handle() {
 
               // zurück auf Standby,  damit wird beim nächsten Steuerungszyklus wieder auf Entladung geschaltet
               setState(State_Standby, false);
+
+              delay(10000);
+
+              // hier ist er nicht mit dem Netz verbunden und wird auch vom Controller noch nicht angesporochen, insofern sollte es  hier unkritisch sein.
+              // Das einzige was passieren kann ist, das er bei einem Neustart des ganzen Netzwerks noch nicht erreichbar ist, dann wird der fehler geloggt.
+              mod_PowerControl.RestartWR();
 
               break;  
             }

@@ -7,7 +7,7 @@ const float maxWRpwrset=600;                // Maximalwert für den Wechselricht
 const float maxWRpwrsetLowBatt=200;         // Maximalwert für den Wechselrichter bei schwachem Akku (wegen Akku, Spannungmessung und Entladeendeerkennung)
 const float minWRpwrset=10;                 // Minimalwert für den Wechselrichter
 
-const float battLowDischarge=20;            // Akku schwach, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an.
+const float battLowDischarge=17;            // Akku schwach, während dem entladen funktioniet die Akkumessung leider nicht, zeigt immer weniger an.
 
 const float targetpwr=-5;                  // Offset die Regelung, 0 wäre optimal, da der Wert jedoch immer um den Zielwert schwankt kann der Zielwert hier verschoben werden um Einspeisung zu vermeiden 
 
@@ -16,6 +16,7 @@ class Mod_PowerControl {
   private:    
     // zuletzt gesetzte WR Leistung aus Entladestart und Leistungsregelung
     float lastWRpwrset;
+    bool pwrsetLimitActive;
     // zuletzt ermittlte WR Leistung
     float lastWRpwr;
     // zuletzt ermittlete EMeter Leistung
@@ -38,6 +39,7 @@ class Mod_PowerControl {
     bool IsDelivering();
 
     float GetLastWRpwrset();
+    bool GetLastWRpwrsetLimitActive();
     String getDetailsMsg();
 
     // Standard Funktionen für Setup und Loop Aufruf aus dem Hauptprogramm
@@ -52,6 +54,11 @@ float Mod_PowerControl::GetLastWRpwrset() {
   return lastWRpwrset;
 }
 
+bool Mod_PowerControl::GetLastWRpwrsetLimitActive() {
+  // zugeänglich gemacht
+  return pwrsetLimitActive;
+}
+
 String Mod_PowerControl::getDetailsMsg() {
   return detailsMsg;
 }
@@ -61,6 +68,8 @@ String Mod_PowerControl::getDetailsMsg() {
 
 bool Mod_PowerControl::ResetPowerControl()
 {
+  pwrsetLimitActive = false;
+
   lastWRpwrset = 0; 
   lastWRpwr = 0; 
   lastEMeterpwr = 0;
@@ -81,6 +90,8 @@ bool Mod_PowerControl::ResetPowerControl()
 
 bool Mod_PowerControl::InitPowerControl() {
   
+  pwrsetLimitActive = false;
+
   // Initial wird die aktuelle Bezugsleistung verwendet
   lastEMeterpwr = mod_EMeterClient.getCurrentPower(false);  // < 0 Einspeisung | > 0 Bezug
   lastWRpwrset= lastEMeterpwr;  // initial aus EMeter übernehmen, in dem Falle positiv sonst hätte der Trigger nicht ausgelöst
@@ -89,7 +100,10 @@ bool Mod_PowerControl::InitPowerControl() {
   if (lastWRpwrset > maxWRpwrset) { lastWRpwrset = maxWRpwrset; }; 
   if  (mod_IO.vBatt_activeproz <= battLowDischarge) {
     Serial.println("Low Battery");
-    if (lastWRpwrset > maxWRpwrsetLowBatt) { lastWRpwrset = maxWRpwrsetLowBatt; }; 
+    if (lastWRpwrset > maxWRpwrsetLowBatt) { 
+      lastWRpwrset = maxWRpwrsetLowBatt;
+      pwrsetLimitActive = true; 
+    }; 
   }
   Serial.println("InitPowerControl: " + String(lastWRpwrset));
   lastWRpwr = lastWRpwrset;   	// initial davon ausgehen, dass nach der Rampe der Istwert dem Sollwert entspricht    
@@ -169,19 +183,22 @@ void Mod_PowerControl::DoPowerControl() {
   if (errorpowr > 0) {
     // Beszug, fast direkt auf den Wert springen, mit 0,8 recht nah dran. manchmal rennt er aber auchdrüber
     //D = 0.3 * (currentEMeterpwr - lastEMeterpwr);  // D-Anteil (schnelle Korrektur)
-    P = 0.8 * errorpowr; // P-Anteil 
+    P = 0.8 * errorpowr; // P-Anteil (schnelle Annäherung 0.7 - 0.8)
   }
   else {
     // Langsam aus der Lieferung annähern damit er nicht schwingt, so bin ggf. kurz in der Lieferung, besser als Bezug
-    P = 0.6 * errorpowr;  // P-Anteil (langsame Annähreung)
+    P = 0.6 * errorpowr;  // P-Anteil (langsame Annähreung 0.5 - 0.6)
   }
   // allerdings sprünge über mehrere hundert Watt vermeiden
   // weil dann der Wechselrichter komische Dinge tut, u.a. völlig falsche Leistung einstellt bzw. braucht zum Einstellen länger als die Regelung schnell ist
   // oder kann im schlimmsten Falle Fehler schmeißeb wenn er sich intern total vertut
-  if (P > 150) {
-    P = 150; 
+  // tatsächlich ist bei manuellem setzen zu erkennen, dass bei einem powerset Änderung von 100W der Bezug/Lieferung um deutlich mehr springt
+  if (P > 100) {
+    P = 100; 
   }
  
+  pwrsetLimitActive = false;
+
   //float currentWRpwrset = currentWRpwr + P; // + D; // Regelung
   float currentWRpwrset = lastWRpwrset + P; // + D; // Regelung
   // Begrenzen (regelung)
@@ -189,13 +206,22 @@ void Mod_PowerControl::DoPowerControl() {
   if (currentWRpwrset > maxWRpwrset) { currentWRpwrset = maxWRpwrset; }; 
   if  (mod_IO.vBatt_activeproz <= battLowDischarge) {
     Serial.println("Low Battery");
-    if (currentWRpwrset > maxWRpwrsetLowBatt) { currentWRpwrset = maxWRpwrsetLowBatt; }; 
+    if (currentWRpwrset > maxWRpwrsetLowBatt) { 
+      currentWRpwrset = maxWRpwrsetLowBatt; 
+      pwrsetLimitActive = true;
+    }; 
   }
   Serial.println("NewcurrentWRpwr(new): " + String(currentWRpwrset));
 
   // WR Leistung Einstellen+Meldung
   // Wert einstellen, neue Leistung ist jetzt in lastpwrset abgelegt, wie wird gesetzt. im currentWRpwr und currentEMeterpwr hab ich noch die Werte von davor
-  detailsMsg = "Leistung (soll/ist): " + String(currentWRpwrset) + "W/" + String(currentWRpwr) + "W" +
+  detailsMsg = "Leistung (soll/ist): " + String(currentWRpwrset) + "W/" + String(currentWRpwr) + "W";
+
+  if (pwrsetLimitActive) {
+    detailsMsg = detailsMsg + " (AkkuSchutz)";
+  }
+
+  detailsMsg = detailsMsg +
                " (Vorherige Leistung " + String(lastWRpwrset) + "W/" + String(lastWRpwr) + "W" +
                " EMeter: "+String(currentEMeterpwr)+"W)";
                
